@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wukkie.uk - Bug Tracker for the World</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: #2563eb;
+            color: white;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .auth-section {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .location-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: end;
+        }
+
+        .location-input {
+            flex: 1;
+        }
+
+        .get-location-btn {
+            background: #10b981;
+            white-space: nowrap;
+            height: fit-content;
+        }
+
+        .get-location-btn:hover {
+            background: #059669;
+        }
+
+        .hashtags-input {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .status-message {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .status-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        #map {
+            height: 300px;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+
+        .issues-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .issue-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+
+        .issue-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .issue-distance {
+            font-size: 0.8rem;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .issue-description {
+            color: #4b5563;
+            margin-bottom: 0.5rem;
+        }
+
+        .issue-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .issue-hashtags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .hashtag {
+            background: #eff6ff;
+            color: #2563eb;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .issue-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .vote-btn {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .loading {
+            text-align: center;
+            color: #6b7280;
+            padding: 2rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>Wukkie.uk</h1>
+                    <div class="tagline">oopsie woopsie de trein is stukkie wukkie...</div>
+                </div>
+                <div class="auth-section">
+                    <div id="user-info" class="hidden">
+                        <span id="username"></span>
+                    </div>
+                    <button id="login-btn">Login with Bluesky</button>
+                    <button id="logout-btn" class="hidden">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-grid">
+            <div class="card">
+                <h2>Report an Issue</h2>
+                <div id="auth-required" class="hidden">
+                    <p>Please login with Bluesky to report issues.</p>
+                </div>
+
+                <form id="issue-form">
+                    <div id="status-message" class="status-message"></div>
+
+                    <div class="form-group">
+                        <label for="title">Issue Title *</label>
+                        <input type="text" id="title" name="title" required
+                               placeholder="e.g. Broken streetlight on Main Street">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea id="description" name="description" required
+                                  placeholder="Describe the issue in detail..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            <option value="infrastructure">Infrastructure</option>
+                            <option value="environment">Environment</option>
+                            <option value="safety">Safety</option>
+                            <option value="transport">Transport</option>
+                            <option value="social">Social Services</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priority">Priority</label>
+                        <select id="priority" name="priority">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <div class="location-group">
+                            <input type="text" id="location" name="location"
+                                   placeholder="Address or description" class="location-input">
+                            <button type="button" class="get-location-btn" id="get-location">
+                                📍 Get Location
+                            </button>
+                        </div>
+                        <input type="hidden" id="lat" name="lat">
+                        <input type="hidden" id="lng" name="lng">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hashtags">Hashtags</label>
+                        <input type="text" id="hashtags" name="hashtags"
+                               placeholder="#pothole #mainstreet #infrastructure"
+                               class="hashtags-input">
+                    </div>
+
+                    <button type="submit" id="submit-btn">Report Issue</button>
+                </form>
+
+                <div id="map"></div>
+            </div>
+
+            <div class="card">
+                <h2>Recent Issues</h2>
+                <div id="issues-loading" class="loading">Loading issues...</div>
+                <div id="issues-list" class="issues-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

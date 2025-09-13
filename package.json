@@ -1,0 +1,36 @@
+{
+  "name": "wukkie.uk",
+  "version": "0.1.0",
+  "description": "A proof-of-concept bug tracker for the world, built on Bluesky/ATProto",
+  "main": "src/worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:dev": "wrangler deploy --env dev",
+    "start": "wrangler dev --local",
+    "preview": "wrangler dev --remote"
+  },
+  "keywords": [
+    "atproto",
+    "bluesky",
+    "issue-tracking",
+    "civic-engagement",
+    "cloudflare-workers"
+  ],
+  "author": "Joop Kiefte",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.22.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LaVLaS/wukkie.uk.git"
+  },
+  "homepage": "https://wukkie.uk",
+  "bugs": {
+    "url": "https://github.com/LaVLaS/wukkie.uk/issues"
+  }
+}
