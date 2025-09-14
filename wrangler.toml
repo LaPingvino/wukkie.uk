@@ -1,27 +1,7 @@
-name = "wukkie-uk"
+name = "wukkie"
 main = "src/worker.js"
 compatibility_date = "2024-01-15"
 compatibility_flags = ["nodejs_compat"]
 
-[env.production]
-name = "wukkie-uk"
-routes = [
-  { pattern = "wukkie.uk/*", zone_name = "wukkie.uk" },
-  { pattern = "www.wukkie.uk/*", zone_name = "wukkie.uk" }
-]
-
-[env.dev]
-name = "wukkie-uk-dev"
-
-# Environment variables
 [vars]
 ENVIRONMENT = "production"
-
-[env.dev.vars]
-ENVIRONMENT = "development"
-
-# KV storage (uncomment and configure when needed)
-# [[kv_namespaces]]
-# binding = "WUKKIE_KV"
-# id = "your-kv-namespace-id"
-# preview_id = "your-preview-kv-namespace-id"
