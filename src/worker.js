@@ -26,6 +26,8 @@ const HTML_CONTENT = `<!DOCTYPE html>
         @media (max-width: 768px) {
             .main-grid { grid-template-columns: 1fr; gap: 1rem; }
             .header-content { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .auth-section { flex-direction: column; width: 100%; gap: 0.5rem; }
+            .auth-section button { width: 100%; }
             .container { padding: 0 1rem; }
             button { padding: 0.75rem 1rem; font-size: 1rem; min-height: 44px; }
             .get-location-btn { font-size: 0.9rem; padding: 0.5rem; }
@@ -83,6 +85,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                         <div class="user-status" id="user-status"></div>
                     </div>
                     <button id="login-btn">Login with Bluesky</button>
+                    <button id="demo-login-btn" style="background: #10b981; margin-left: 0.5rem;" title="Try the app without a Bluesky account">🎭 Demo Login</button>
                     <button id="logout-btn" class="hidden">Logout</button>
                 </div>
             </div>
@@ -93,7 +96,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
         <div class="demo-notice">
             <strong>🚧 Proof of Concept Demo</strong><br>
             This is an early proof of concept for world issue tracking on ATProto.
-            Login with your Bluesky account (requires <a href="https://bsky.app/settings/app-passwords" target="_blank" style="color: #2563eb;">app password</a>). Issues are currently stored locally.
+            <strong>Quick start:</strong> Use "🎭 Demo Login" to try it instantly, or login with your Bluesky account (requires <a href="https://bsky.app/settings/app-passwords" target="_blank" style="color: #2563eb;">app password</a>). All issues are currently stored locally for testing.
         </div>
 
         <div class="main-grid">
@@ -205,6 +208,7 @@ class WukkieApp {
 
     setupEventListeners() {
         document.getElementById('login-btn').addEventListener('click', () => this.login());
+        document.getElementById('demo-login-btn').addEventListener('click', () => this.demoLogin());
         document.getElementById('logout-btn').addEventListener('click', () => this.logout());
         document.getElementById('issue-form').addEventListener('submit', (e) => this.submitIssue(e));
         document.getElementById('get-location').addEventListener('click', () => this.getCurrentLocation());
@@ -223,9 +227,30 @@ class WukkieApp {
         if (stored) {
             try {
                 this.session = JSON.parse(stored);
-                this.updateAuthUI(true);
+
+                // If it's a demo session, just update UI
+                if (this.session.isDemo) {
+                    this.updateAuthUI(true);
+                    return;
+                }
+
+                // For real Bluesky sessions, validate they're still valid
+                const response = await fetch('https://bsky.social/xrpc/com.atproto.server.getSession', {
+                    headers: {
+                        'Authorization': `Bearer ${this.session.accessJwt}`
+                    }
+                });
+
+                if (response.ok) {
+                    this.updateAuthUI(true);
+                } else {
+                    // Session expired, clear it
+                    localStorage.removeItem('wukkie_session');
+                    this.session = null;
+                }
             } catch (error) {
                 localStorage.removeItem('wukkie_session');
+                this.session = null;
             }
         }
     }
@@ -382,6 +407,21 @@ class WukkieApp {
             throw networkError;
         }
     }
+
+    demoLogin() {
+        // Create a fake session for demo purposes
+        this.session = {
+            accessJwt: 'demo-jwt-token',
+            refreshJwt: 'demo-refresh-token',
+            handle: 'demo.wukkie.uk',
+            did: 'did:plc:demo123',
+            isDemo: true
+        };
+
+        localStorage.setItem('wukkie_session', JSON.stringify(this.session));
+        this.updateAuthUI(true);
+        this.showStatus('🎭 Demo mode activated! You can now create issues (stored locally)', 'success');
+    }
 </text>
 
 <old_text line=55>
@@ -392,14 +432,20 @@ class WukkieApp {
                 </div>
 
     logout() {
+        const wasDemo = this.session && this.session.isDemo;
         this.session = null;
         localStorage.removeItem('wukkie_session');
         this.updateAuthUI(false);
-        this.showStatus('Logged out successfully', 'success');
+
+        const message = wasDemo ?
+            '🎭 Demo session ended' :
+            'Logged out successfully';
+        this.showStatus(message, 'success');
     }
 
     updateAuthUI(loggedIn) {
         document.getElementById('login-btn').classList.toggle('hidden', loggedIn);
+        document.getElementById('demo-login-btn').classList.toggle('hidden', loggedIn);
         document.getElementById('logout-btn').classList.toggle('hidden', !loggedIn);
         document.getElementById('user-info').classList.toggle('hidden', !loggedIn);
         document.getElementById('auth-required').classList.toggle('hidden', loggedIn);
@@ -407,7 +453,8 @@ class WukkieApp {
 
         if (loggedIn && this.session) {
             document.getElementById('username').textContent = '@' + (this.session.handle || 'user');
-            document.getElementById('user-status').textContent = '🟢 Connected';
+            const statusText = this.session.isDemo ? '🎭 Demo Mode' : '🟢 Connected';
+            document.getElementById('user-status').textContent = statusText;
         } else {
             document.getElementById('user-status').textContent = '';
         }
