@@ -79,19 +79,45 @@ class BlueskyAuth {
   }
 
   /**
-   * Start OAuth login flow
+   * Start OAuth login flow with fallback to app password auth
    */
-  async login(handle: string): Promise<void> {
+  async login(handle: string, password?: string): Promise<void> {
     try {
-      console.log("🔐 Starting OAuth login for:", handle);
+      console.log("🔐 Starting login for:", handle);
+
+      // If password is provided, use app password auth directly
+      if (password) {
+        return await this.loginWithAppPassword(handle, password);
+      }
 
       // Step 1: Resolve handle to DID and get PDS
       const { did, pds } = await this.resolveHandle(handle);
       console.log("✅ Resolved handle:", { did, pds });
 
-      // Step 2: Get OAuth metadata from PDS
-      const metadata = await this.getOAuthMetadata(pds);
-      console.log("✅ Got OAuth metadata:", metadata);
+      // Step 2: Try OAuth endpoints in order of preference
+      let metadata, oauthPds;
+
+      // Try 1: bsky.app OAuth (most likely to work)
+      try {
+        console.log("🔄 Trying bsky.app OAuth...");
+        metadata = await this.getOAuthMetadata("https://bsky.social");
+        oauthPds = "https://bsky.social";
+        console.log("✅ Got OAuth metadata from bsky.app");
+      } catch (bskyError) {
+        console.log("⚠️ bsky.app OAuth not available, trying user's PDS...");
+
+        // Try 2: User's specific PDS OAuth
+        try {
+          metadata = await this.getOAuthMetadata(pds);
+          oauthPds = pds;
+          console.log("✅ Got OAuth metadata from user's PDS");
+        } catch (pdsError) {
+          console.log(
+            "⚠️ User's PDS OAuth not available, falling back to app password auth",
+          );
+          throw new Error("OAUTH_NOT_SUPPORTED");
+        }
+      }
 
       // Step 3: Generate PKCE and state
       const { verifier, challenge } = await generatePKCE();
@@ -105,7 +131,8 @@ class BlueskyAuth {
           verifier,
           handle,
           did,
-          pds,
+          pds: oauthPds, // Store which PDS we're using for OAuth
+          userPds: pds, // Store user's actual PDS
         }),
       );
 
@@ -123,10 +150,75 @@ class BlueskyAuth {
       authUrl.searchParams.set("login_hint", handle);
 
       // Step 5: Redirect to authorization server
-      console.log("🔗 Redirecting to authorization server...");
+      console.log(`🔗 Redirecting to ${oauthPds} authorization server...`);
       window.location.href = authUrl.toString();
     } catch (error) {
-      console.error("❌ OAuth login failed:", error);
+      console.error("❌ Login failed:", error);
+
+      if (error.message === "OAUTH_NOT_SUPPORTED") {
+        throw error; // Re-throw for handling in UI
+      }
+
+      throw new Error(
+        `Login failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * Login with app password (direct authentication)
+   */
+  async loginWithAppPassword(handle: string, password: string): Promise<void> {
+    try {
+      console.log("🔐 Logging in with app password for:", handle);
+
+      const response = await fetch(
+        "https://bsky.social/xrpc/com.atproto.server.createSession",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            identifier: handle,
+            password: password,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Login failed");
+      }
+
+      const data = await response.json();
+
+      // Create session
+      this.authState = {
+        isAuthenticated: true,
+        session: {
+          handle: data.handle,
+          did: data.did,
+          accessJwt: data.accessJwt,
+          refreshJwt: data.refreshJwt,
+          active: true,
+        },
+        agent: null,
+        xrpc: this,
+      };
+
+      // Store session
+      localStorage.setItem(
+        "wukkie_session",
+        JSON.stringify(this.authState.session),
+      );
+
+      // Notify listeners
+      this.notifyListeners();
+
+      console.log("✅ App password login successful");
+    } catch (error) {
+      console.error("❌ App password login failed:", error);
       throw new Error(
         `Login failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -240,16 +332,49 @@ class BlueskyAuth {
   }
 
   /**
-   * Get OAuth metadata from PDS
+   * Get OAuth metadata from PDS with improved error handling
    */
   private async getOAuthMetadata(pds: string): Promise<any> {
-    const response = await fetch(
+    // Try different OAuth metadata endpoints in order of preference
+    const endpoints = [
       `${pds}/.well-known/oauth-authorization-server`,
-    );
-    if (!response.ok) {
-      throw new Error(`Failed to get OAuth metadata: ${response.statusText}`);
+      `${pds}/.well-known/oauth-protected-resource`,
+    ];
+
+    let lastError: Error;
+
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`🔄 Trying OAuth metadata at: ${endpoint}`);
+
+        const response = await Promise.race([
+          fetch(endpoint),
+          new Promise<Response>((_, reject) =>
+            setTimeout(() => reject(new Error("OAuth metadata timeout")), 5000),
+          ),
+        ]);
+
+        if (response.ok) {
+          const metadata = await response.json();
+          console.log(`✅ Got OAuth metadata from: ${endpoint}`);
+          return metadata;
+        } else {
+          console.log(
+            `❌ OAuth metadata failed at ${endpoint}: ${response.status}`,
+          );
+          lastError = new Error(
+            `HTTP ${response.status}: ${response.statusText}`,
+          );
+        }
+      } catch (error) {
+        console.log(`❌ OAuth metadata error at ${endpoint}:`, error.message);
+        lastError = error instanceof Error ? error : new Error("Unknown error");
+      }
     }
-    return await response.json();
+
+    throw new Error(
+      `Failed to get OAuth metadata from ${pds}: ${lastError.message}`,
+    );
   }
 
   /**

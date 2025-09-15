@@ -294,26 +294,128 @@ export class LoginModal {
       return;
     }
 
-    this.setLoading(true);
+    // Check if we're in password mode (OAuth fallback)
+    const passwordInput = this.modal.querySelector(
+      "#login-password",
+    ) as HTMLInputElement;
+    const password = passwordInput?.value?.trim();
+
+    if (passwordInput && passwordInput.style.display !== "none") {
+      // We're in app password mode
+      if (!password) {
+        this.showError("Please enter your app password");
+        passwordInput.focus();
+        return;
+      }
+    }
+
     this.clearError();
+    this.setLoading(true);
 
     try {
-      await blueskyAuth.login(handle);
+      await blueskyAuth.login(handle, password);
       // OAuth flow should redirect to authorization server
-      // If we get here without redirect, something went wrong
-      this.showError(
-        "OAuth login flow did not start properly. Please try again.",
-      );
+      // If we get here without redirect, either app password worked or something went wrong
+      if (!password) {
+        this.showError(
+          "OAuth login flow did not start properly. Please try again.",
+        );
+      } else {
+        // App password login succeeded, close modal
+        this.hide();
+      }
     } catch (error) {
       console.error("Login error:", error);
-      this.showError(
-        error instanceof Error
-          ? error.message
-          : "Login failed. Please check your handle and try again.",
-      );
+
+      if (
+        error instanceof Error &&
+        error.message.includes("OAUTH_NOT_SUPPORTED")
+      ) {
+        // OAuth not supported, show app password option
+        this.showAppPasswordOption();
+      } else {
+        this.showError(
+          error instanceof Error
+            ? error.message.replace("Login failed: ", "")
+            : "Login failed. Please check your credentials and try again.",
+        );
+      }
     } finally {
       this.setLoading(false);
     }
+  }
+
+  private showAppPasswordOption(): void {
+    // Update modal content to show app password field
+    const form = this.modal.querySelector("form");
+    if (!form) return;
+
+    // Check if password field already exists
+    let passwordInput = this.modal.querySelector(
+      "#login-password",
+    ) as HTMLInputElement;
+
+    if (!passwordInput) {
+      // Create password field
+      const passwordGroup = document.createElement("div");
+      passwordGroup.style.cssText = "margin-bottom: 1rem;";
+      passwordGroup.innerHTML = `
+        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
+          App Password
+        </label>
+        <input
+          type="password"
+          id="login-password"
+          placeholder="xxxx-xxxx-xxxx-xxxx"
+          required
+          style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;"
+        >
+        <small style="color: #6b7280; margin-top: 0.25rem; display: block;">
+          🔒 OAuth not available. Create an app password at
+          <a href="https://bsky.app/settings/app-passwords" target="_blank" style="color: #2563eb;">
+            bsky.app/settings/app-passwords
+          </a>
+        </small>
+      `;
+
+      // Insert after handle field
+      const handleGroup = form.querySelector("div");
+      if (handleGroup?.nextSibling) {
+        form.insertBefore(passwordGroup, handleGroup.nextSibling);
+      } else {
+        form.appendChild(passwordGroup);
+      }
+
+      passwordInput = passwordGroup.querySelector(
+        "#login-password",
+      ) as HTMLInputElement;
+
+      // Add enter key handler for password field
+      passwordInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this.handleLogin();
+        }
+      });
+    }
+
+    // Show the password field and focus it
+    passwordInput.style.display = "block";
+    passwordInput.focus();
+
+    // Update button text
+    const btnText = this.loginButton.querySelector(
+      ".login-btn-text",
+    ) as HTMLElement;
+    if (btnText) {
+      btnText.textContent = "Login with App Password";
+    }
+
+    // Show helpful message
+    this.showError(
+      "OAuth not available for your server. Please use an app password instead.",
+      "info",
+    );
   }
 
   private isValidHandle(handle: string): boolean {
@@ -342,9 +444,20 @@ export class LoginModal {
     }
   }
 
-  private showError(message: string): void {
+  private showError(message: string, type: string = "error"): void {
     this.errorMessage.textContent = message;
     this.errorMessage.style.display = "block";
+
+    // Update styling based on type
+    if (type === "info") {
+      this.errorMessage.style.backgroundColor = "#dbeafe";
+      this.errorMessage.style.color = "#1e40af";
+      this.errorMessage.style.borderColor = "#93c5fd";
+    } else {
+      this.errorMessage.style.backgroundColor = "#fef2f2";
+      this.errorMessage.style.color = "#991b1b";
+      this.errorMessage.style.borderColor = "#fecaca";
+    }
   }
 
   private clearError(): void {
@@ -358,7 +471,24 @@ export class LoginModal {
     this.clearError();
     this.setLoading(false);
 
-    // Focus the input after a short delay
+    // Reset to OAuth mode (hide password field if it exists)
+    const passwordInput = this.modal.querySelector(
+      "#login-password",
+    ) as HTMLInputElement;
+    if (passwordInput) {
+      passwordInput.value = "";
+      passwordInput.style.display = "none";
+    }
+
+    // Reset button text
+    const btnText = this.loginButton.querySelector(
+      ".login-btn-text",
+    ) as HTMLElement;
+    if (btnText) {
+      btnText.textContent = "Login with Bluesky";
+    }
+
+    // Focus the handle input after a short delay
     setTimeout(() => {
       this.handleInput.focus();
     }, 100);
@@ -371,6 +501,15 @@ export class LoginModal {
     this.isVisible = false;
     this.overlay.style.display = "none";
     this.handleInput.value = "";
+
+    // Clear password field if it exists
+    const passwordInput = this.modal.querySelector(
+      "#login-password",
+    ) as HTMLInputElement;
+    if (passwordInput) {
+      passwordInput.value = "";
+    }
+
     this.clearError();
     this.setLoading(false);
 
