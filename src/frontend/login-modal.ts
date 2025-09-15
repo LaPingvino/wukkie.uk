@@ -1,3 +1,6 @@
+// Early debug logging
+console.log("🟢 [DEBUG] login-modal.ts: File loading started");
+
 /**
  * Login Modal Component
  * Provides a user-friendly OAuth login interface
@@ -15,11 +18,22 @@ export class LoginModal {
   private isVisible: boolean = false;
 
   constructor() {
-    this.createModal();
-    this.setupEventListeners();
+    console.log("🟢 [DEBUG] LoginModal constructor: Starting");
+    try {
+      console.log("🟢 [DEBUG] LoginModal constructor: About to create modal");
+      this.createModal();
+      console.log(
+        "🟢 [DEBUG] LoginModal constructor: About to setup event listeners",
+      );
+      this.setupEventListeners();
+      console.log("🟢 [DEBUG] LoginModal constructor: Complete");
+    } catch (error) {
+      console.error("❌ [DEBUG] Error in LoginModal constructor:", error);
+    }
   }
 
   private createModal(): void {
+    console.log("🟢 [DEBUG] LoginModal createModal: Starting");
     // Create overlay
     this.overlay = document.createElement("div");
     this.overlay.className = "login-modal-overlay";
@@ -262,6 +276,7 @@ export class LoginModal {
   }
 
   private async handleLogin(): Promise<void> {
+    console.log("🟢 [DEBUG] LoginModal handleLogin: Starting");
     const handle = this.handleInput.value.trim();
 
     if (!handle) {

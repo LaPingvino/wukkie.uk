@@ -1,3 +1,6 @@
+// Early debug logging
+console.log("🟢 [DEBUG] auth.ts: File loading started");
+
 /**
  * Simple OAuth Authentication for Bluesky/ATProto
  * Implements OAuth flow from scratch without external dependencies
@@ -70,7 +73,9 @@ class BlueskyAuth {
   private listeners: Array<(state: AuthState) => void> = [];
 
   constructor() {
+    console.log("🟢 [DEBUG] BlueskyAuth constructor: Starting");
     console.log("🔧 BlueskyAuth: Initializing OAuth from scratch...");
+    console.log("🟢 [DEBUG] BlueskyAuth constructor: Complete");
   }
 
   /**
@@ -597,5 +602,16 @@ class BlueskyAuth {
 }
 
 // Export singleton instance
-export const blueskyAuth = new BlueskyAuth();
+console.log("🟢 [DEBUG] auth.ts: About to create BlueskyAuth singleton");
+
+let blueskyAuthInstance: BlueskyAuth;
+try {
+  blueskyAuthInstance = new BlueskyAuth();
+  console.log("🟢 [DEBUG] auth.ts: BlueskyAuth singleton created successfully");
+} catch (error) {
+  console.error("❌ [DEBUG] Error creating BlueskyAuth singleton:", error);
+  throw error;
+}
+
+export const blueskyAuth = blueskyAuthInstance;
 export default blueskyAuth;

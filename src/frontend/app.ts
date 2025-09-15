@@ -1,3 +1,6 @@
+// Early debug logging
+console.log("🟢 [DEBUG] app.ts: File loading started");
+
 // Type definitions
 interface BlueskySession {
   accessJwt: string;
@@ -53,13 +56,29 @@ class WukkieApp {
   private isLoading: boolean = false;
 
   constructor() {
-    this.loginModal = new LoginModal();
-    this.init();
+    console.log("🟢 [DEBUG] WukkieApp constructor: Starting");
+    try {
+      console.log("🟢 [DEBUG] WukkieApp constructor: Creating LoginModal");
+      this.loginModal = new LoginModal();
+      console.log(
+        "🟢 [DEBUG] WukkieApp constructor: LoginModal created, calling init",
+      );
+      this.init();
+    } catch (error) {
+      console.error("❌ [DEBUG] Error in WukkieApp constructor:", error);
+    }
   }
 
   private async init(): Promise<void> {
+    console.log("🟢 [DEBUG] init(): Starting initialization");
     console.log("🚀 Initializing Wukkie app...");
-    this.showLoading("Initializing app...");
+
+    try {
+      console.log("🟢 [DEBUG] init(): About to show loading");
+      this.showLoading("Initializing app...");
+    } catch (error) {
+      console.error("❌ [DEBUG] Error in showLoading:", error);
+    }
 
     // Emergency timeout to prevent infinite loading
     const emergencyTimeout = setTimeout(() => {
@@ -72,21 +91,35 @@ class WukkieApp {
     }, 10000); // 10 second timeout
 
     try {
+      console.log("🟢 [DEBUG] init(): About to setup event listeners");
       this.setupEventListeners();
+
+      console.log("🟢 [DEBUG] init(): About to init map");
       this.initMap();
 
       // Set up authentication state listener
-      this.authUnsubscribe = blueskyAuth.onStateChange((authState) => {
-        this.handleAuthStateChange(authState);
-      });
+      console.log("🟢 [DEBUG] init(): About to setup auth state listener");
+      try {
+        this.authUnsubscribe = blueskyAuth.onStateChange((authState) => {
+          console.log("🟢 [DEBUG] Auth state changed:", authState);
+          this.handleAuthStateChange(authState);
+        });
+        console.log("🟢 [DEBUG] init(): Auth state listener setup complete");
+      } catch (error) {
+        console.error("❌ [DEBUG] Error setting up auth listener:", error);
+      }
 
       // Load issues and hide loading immediately
+      console.log("🟢 [DEBUG] init(): About to load issues");
       this.loadIssues();
+
+      console.log("🟢 [DEBUG] init(): About to clear timeout and hide loading");
       clearTimeout(emergencyTimeout);
       this.hideLoading();
       console.log("✅ Basic app initialization complete");
 
       // Handle auth operations in background (non-blocking)
+      console.log("🟢 [DEBUG] init(): About to handle auth in background");
       this.handleAuthInBackground();
     } catch (error) {
       console.error("💥 Critical app initialization error:", error);
@@ -163,7 +196,10 @@ class WukkieApp {
   }
 
   private setupEventListeners(): void {
+    console.log("🟢 [DEBUG] setupEventListeners(): Starting");
+
     // Auth buttons
+    console.log("🟢 [DEBUG] setupEventListeners(): Getting DOM elements");
     const loginBtn = document.getElementById("login-btn") as HTMLButtonElement;
     const demoLoginBtn = document.getElementById(
       "demo-login-btn",
@@ -793,8 +829,10 @@ class WukkieApp {
    * Show loading state
    */
   private showLoading(message: string = "Loading..."): void {
+    console.log("🟢 [DEBUG] showLoading(): Called with message:", message);
     this.isLoading = true;
     const statusEl = document.getElementById("status-message") as HTMLElement;
+    console.log("🟢 [DEBUG] showLoading(): Status element found:", !!statusEl);
     if (statusEl) {
       statusEl.innerHTML = `
         <div class="loading-indicator">
@@ -837,15 +875,35 @@ class WukkieApp {
 }
 
 // Initialize app when DOM is loaded
+console.log("🟢 [DEBUG] DOM readyState:", document.readyState);
 let wukkie: WukkieApp;
 
 if (document.readyState === "loading") {
+  console.log("🟢 [DEBUG] DOM still loading, waiting for DOMContentLoaded");
   document.addEventListener("DOMContentLoaded", () => {
-    wukkie = new WukkieApp();
+    console.log("🟢 [DEBUG] DOMContentLoaded event fired, creating WukkieApp");
+    try {
+      wukkie = new WukkieApp();
+      console.log("🟢 [DEBUG] WukkieApp created successfully");
+    } catch (error) {
+      console.error("❌ [DEBUG] Error creating WukkieApp:", error);
+    }
   });
 } else {
-  wukkie = new WukkieApp();
+  console.log("🟢 [DEBUG] DOM already loaded, creating WukkieApp immediately");
+  try {
+    wukkie = new WukkieApp();
+    console.log("🟢 [DEBUG] WukkieApp created successfully");
+  } catch (error) {
+    console.error("❌ [DEBUG] Error creating WukkieApp:", error);
+  }
 }
 
 // Make wukkie available globally for button handlers
-(window as any).wukkie = wukkie;
+console.log("🟢 [DEBUG] Making wukkie globally available");
+try {
+  (window as any).wukkie = wukkie;
+  console.log("🟢 [DEBUG] Global wukkie assignment complete");
+} catch (error) {
+  console.error("❌ [DEBUG] Error setting global wukkie:", error);
+}
