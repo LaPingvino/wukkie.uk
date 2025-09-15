@@ -2,11 +2,11 @@
 
 ** oopsie woopsie de trein is stukkie wukkie... **
 
-A personal proof-of-concept project built on Bluesky/ATProto
+A privacy-first proof-of-concept project built on Bluesky/ATProto
 
-Why do software projects have quality bug tracking and for world issues we are still dealing with slow and cumbersome political systems? While politicians have their place, I think we need a way to be able to take responsibility together for the problems we encounter around us. 
+Why do software projects have quality bug tracking and for world issues we are still dealing with slow and cumbersome political systems? While politicians have their place, I think we need a way to be able to take responsibility together for the problems we encounter around us.
 
-Wukkie.uk is a simple proof-of-concept platform that allows users to report and track real-world issues using Bluesky's decentralized social infrastructure. The goal is to demonstrate how location-based issue tracking could work in a federated environment, starting with basic functionality and improving over time based on actual usage.
+Wukkie.uk is a privacy-by-design platform that allows users to report and track real-world issues using Bluesky's decentralized social infrastructure. The core principle is **privacy-first location handling** - we use geo hashtags that show approximate areas (~1km) instead of precise GPS coordinates, protecting user privacy while enabling effective issue tracking and community coordination.
 
 ## Core Features
 
@@ -49,9 +49,9 @@ Wukkie.uk is a simple proof-of-concept platform that allows users to report and 
 - **Custom Lexicon**: Define issue, vote, and comment record types
 
 ### Data Storage
-- **Bluesky ATProto**: Issues stored as records in user's Bluesky data repository
-- **Browser Storage**: Basic caching and offline capability
-- **Simple indexing**: Basic hashtag and location filtering
+- **Bluesky ATProto**: Issues stored as records in user's Bluesky data repository using privacy-preserving location format
+- **Browser Storage**: Basic caching and offline capability with geo hashtag indexing
+- **Privacy-First Indexing**: Location filtering based on geo hashtag areas, never precise coordinates
 
 ### External Integrations
 - **OpenStreetMap + Leaflet**: Free mapping and display
@@ -60,13 +60,13 @@ Wukkie.uk is a simple proof-of-concept platform that allows users to report and 
 
 ## Local Hashtag System
 
-### Geographic Relevance Algorithm
-Building on the WhenWhere.uk Local Hashtag system, Wukkie.uk implements intelligent geographic filtering:
+### Geographic Relevance Algorithm (Privacy-Preserving)
+Building on the WhenWhere.uk Local Hashtag system, Wukkie.uk implements privacy-first geographic filtering:
 
-- **Proximity Scoring**: Issues are ranked by distance from user's location
-- **Administrative Boundaries**: City, county, state/province, country level filtering  
-- **Custom Radius**: User-configurable relevance radius (1km, 5km, 25km, etc.)
-- **Auto-tagging**: Automatic generation of location hashtags (#amsterdam, #noordholland, #netherlands)
+- **Geo Hashtag Proximity**: Issues ranked by geo hashtag area overlap, not precise distance calculation
+- **Administrative Boundaries**: Area-based filtering using geo hashtag hierarchies (city, region, country levels)
+- **Configurable Privacy Zones**: User-selectable precision levels (1km, 5km, 25km geo hashtag areas)
+- **Auto-tagging**: Automatic generation of geo hashtags from approximate location plus contextual hashtags
 
 ### Subject Classification
 - **Category Hashtags**: #infrastructure, #environment, #safety, #transport
@@ -83,13 +83,13 @@ Building on the WhenWhere.uk Local Hashtag system, Wukkie.uk implements intellig
 ## User Stories
 
 ### Basic User (MVP)
-"As someone who encounters a problem, I want to quickly post about it with location so others can see it and add their input."
+"As someone who encounters a problem, I want to quickly post about it with approximate location so others can see it and add their input, while keeping my exact location private."
 
 **Simple Requirements:**
-- Create issue with title, description, location
-- Browse nearby issues
+- Create issue with title, description, privacy-friendly geo hashtag location
+- Browse nearby issues using geo hashtag areas
 - Vote and comment on issues
-- Basic hashtag filtering
+- Geographic hashtag filtering for relevant local issues
 
 ### Future Users (Later iterations)
 - **Community Members**: Following local issues, getting notifications
@@ -204,26 +204,30 @@ The beauty is that users can help define what features are actually needed throu
 
 **Current Status**: Core privacy system is complete and ready for production. ATProto integration is implemented and ready for deployment testing.
 
-## Privacy & Moderation
+## Privacy-by-Design & Moderation
 
-Since we're using Bluesky's infrastructure:
+Core privacy principles integrated throughout:
 - **Data Ownership**: Users own their data via ATProto, can delete/edit their issues
-- **Privacy**: Location precision is user-controlled, can be approximate
+- **Location Privacy**: Only geo hashtags stored/transmitted - never precise GPS coordinates
+- **User-Controlled Precision**: Choose your privacy level (1km, 5km+ geo hashtag areas)
+- **No Location Tracking**: System cannot determine users' exact locations from geo hashtags
 - **Moderation**: Leverage Bluesky's existing moderation tools and community guidelines
 - **Blocking**: Users can block each other using standard Bluesky functionality
 
 ## Success Metrics (Keep It Simple)
 
 ### Proof of Concept Success
-- Can create and view issues ✓
-- Location-based filtering works ✓
+- Can create and view issues with privacy-protected locations ✓
+- Geo hashtag filtering enables local relevance without privacy compromise ✓
 - People actually use it ✓
+- Privacy-first approach doesn't hinder effectiveness ✓
 - Issues lead to real-world improvements (bonus!)
 
 ### Learning Goals
-- How well does ATProto work for non-social content?
-- Is location-based issue tracking useful?
-- What features do users actually want?
-- How can this complement existing civic engagement tools?
+- How well does ATProto work for non-social, privacy-first content?
+- Is geo hashtag-based issue tracking as effective as precise location tracking?
+- Can privacy-by-design actually improve user adoption and trust?
+- What features do users actually want when privacy is guaranteed?
+- How can this complement existing civic engagement tools while setting new privacy standards?
 
 The real success metric is: does this help people coordinate around fixing real problems?

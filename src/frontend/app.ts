@@ -1,9 +1,21 @@
 // Early debug logging
 console.log("🟢 [DEBUG] app.ts: File loading started");
 
-// Import ATProto integration
-import { ATProtoIssueManager, WukkieIssue } from "./atproto-integration";
-import { LocationPrivacySystem } from "./location-privacy";
+// Import privacy location system and ATProto integration
+import {
+  LocationPrivacySystem,
+  PrivacyLocation,
+  createPrivacyLocation,
+  extractGeoHashtags,
+  isValidGeoHashtag,
+} from "./location-privacy";
+
+import {
+  ATProtoIssueManager,
+  WukkieIssue,
+  BlueskyPostOptions,
+} from "./atproto-integration";
+
 import { BskyAgent } from "@atproto/api";
 
 // Type definitions
@@ -58,13 +70,13 @@ import { LoginModal } from "./login-modal.js";
 
 class WukkieApp {
   private map: L.Map | null = null;
-  private userLocation: Location | null = null;
+  private currentPrivacyLocation: PrivacyLocation | null = null;
   private session: BlueskySession | null = null;
   private geocodeTimeout?: number;
   private loginModal: LoginModal;
   private authUnsubscribe?: () => void;
   private isLoading: boolean = false;
-  private atprotoManager?: ATProtoIssueManager;
+  private atprotoManager: ATProtoIssueManager | null = null;
 
   private taglines: string[] = [
     "oopsie woopsie de trein is stukkie wukkie...",
@@ -129,6 +141,9 @@ class WukkieApp {
       // Set random tagline
       console.log("🟢 [DEBUG] init(): About to set random tagline");
       this.setRandomTagline();
+
+      // Setup privacy location UI
+      this.setupPrivacyLocationUI();
 
       // Set up authentication state listener
       console.log("🟢 [DEBUG] init(): About to setup auth state listener");
@@ -268,14 +283,11 @@ class WukkieApp {
     issueForm?.addEventListener("submit", (e) => this.submitIssue(e));
     getLocationBtn?.addEventListener("click", () => this.getCurrentLocation());
 
-    // Location input for manual entry
+    // Location input for manual entry and geo hashtag parsing
     const locationInput = document.getElementById(
       "location",
     ) as HTMLInputElement;
-    locationInput?.addEventListener("input", (e) => {
-      const target = e.target as HTMLInputElement;
-      this.geocodeLocation(target.value);
-    });
+    locationInput?.addEventListener("input", (e) => this.parseLocationInput(e));
 
     // Map click handler will be set up in initMap()
   }
@@ -309,7 +321,7 @@ class WukkieApp {
       // Add click handler for setting location
       console.log("🗺️ Setting up click handler...");
       this.map.on("click", (e: L.LeafletMouseEvent) => {
-        this.setLocation(e.latlng.lat, e.latlng.lng);
+        this.onMapClick(e);
       });
       console.log("✅ Click handler set up");
 
@@ -396,6 +408,36 @@ class WukkieApp {
     }
   }
 
+  private setupPrivacyLocationUI(): void {
+    // Update location display to show privacy info
+    const locationFeedback = document.getElementById("location-feedback");
+    if (locationFeedback) {
+      locationFeedback.innerHTML = `
+        <div class="privacy-info">
+          <h4>📍 Privacy-Friendly Location</h4>
+          <p>We use geo hashtags that only show your approximate area (~1km), not your exact location.</p>
+          <p>Example: <code>#geo9c3xgp</code> covers about 1km² area</p>
+        </div>
+      `;
+    }
+
+    // Add location label input
+    const locationInput = document.getElementById("location");
+    if (locationInput?.parentElement) {
+      const labelInput = document.createElement("input");
+      labelInput.type = "text";
+      labelInput.id = "location-label";
+      labelInput.placeholder =
+        "Optional location label (e.g., 'Near Central Station')";
+      labelInput.className = "location-label-input";
+
+      locationInput.parentElement.insertBefore(
+        labelInput,
+        locationInput.nextSibling,
+      );
+    }
+  }
+
   private async getCurrentLocation(): Promise<void> {
     const feedback = document.getElementById(
       "location-feedback",
@@ -416,25 +458,43 @@ class WukkieApp {
 
     if (feedback) {
       feedback.innerHTML =
-        '<div class="location-loading">📍 Getting your location...</div>';
+        '<div class="location-loading">📍 Getting your approximate area...</div>';
       feedback.className = "form-feedback loading";
     }
 
     try {
+      // Get location label if provided
+      const labelInput = document.getElementById(
+        "location-label",
+      ) as HTMLInputElement;
+      const label = labelInput?.value || undefined;
+
+      // Use the privacy system to get current location
+      const privacyLocation =
+        await LocationPrivacySystem.createFromCurrentLocation(label);
+
+      // Get precise coordinates for map centering (not stored)
       const position = await new Promise<GeolocationPosition>(
         (resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
+            enableHighAccuracy: false, // We don't need high accuracy
             timeout: 10000,
-            maximumAge: 60000,
+            maximumAge: 300000, // 5 minutes cache
           });
         },
       );
 
-      const { latitude, longitude, accuracy } = position.coords;
-      await this.setLocation(latitude, longitude, accuracy);
+      const { latitude, longitude } = position.coords;
+
+      // Set the privacy location
+      await this.setPrivacyLocation(privacyLocation, latitude, longitude);
+
+      this.showStatus(
+        "Privacy location set successfully! Your exact location is protected.",
+        "success",
+      );
     } catch (error) {
-      console.error("Geolocation error:", error);
+      console.error("Privacy location error:", error);
       let message = "Unable to get your location. ";
 
       if (error instanceof GeolocationPositionError) {
@@ -455,8 +515,10 @@ class WukkieApp {
         feedback.innerHTML = `<div class="location-error">${message}</div>`;
         feedback.className = "form-feedback error";
       }
+
+      this.showStatus(message, "error");
     } finally {
-      // Reset button state
+      // Restore button state
       getLocationBtn.textContent = originalText;
       getLocationBtn.disabled = false;
     }
@@ -607,7 +669,7 @@ class WukkieApp {
       title: title.trim(),
       description: description.trim(),
       category: category || "other",
-      location: this.userLocation || undefined,
+      location: this.currentPrivacyLocation?.label || undefined,
       hashtags: this.parseHashtags(hashtags),
       status: "open",
       createdAt: editingId
@@ -634,7 +696,7 @@ class WukkieApp {
       // Reset form
       form.reset();
       form.removeAttribute("data-editing-id");
-      this.userLocation = null;
+      this.currentPrivacyLocation = null;
 
       // Reset submit button text
       const submitBtn = document.getElementById(
@@ -687,12 +749,14 @@ class WukkieApp {
         return;
       }
 
-      // Convert to privacy location
-      const privacyLocation = LocationPrivacySystem.fromCoordinates(
-        issue.lat,
-        issue.lng,
-        issue.location || "Unknown location",
-      );
+      // Use the current privacy location or create one from coordinates
+      const privacyLocation =
+        this.currentPrivacyLocation ||
+        LocationPrivacySystem.fromCoordinates(
+          issue.lat || 0,
+          issue.lng || 0,
+          issue.location || "Unknown location",
+        );
 
       // Create WukkieIssue from the form data
       const wukkieIssue: Omit<WukkieIssue, "id" | "createdAt" | "blueskyUri"> =
@@ -813,10 +877,7 @@ class WukkieApp {
 
     issuesList.innerHTML = issues
       .map((issue) => {
-        const distance =
-          this.userLocation && issue.location
-            ? this.calculateDistance(this.userLocation, issue.location)
-            : null;
+        const distance = null; // Distance calculation disabled for privacy
 
         const timeAgo = this.formatTimeAgo(new Date(issue.createdAt));
 
@@ -1067,7 +1128,6 @@ class WukkieApp {
     }
     if (locationInput && issue.location) {
       locationInput.value = issue.location;
-      this.userLocation = issue.location;
       // Update hidden lat/lng fields if available
       const latInput = document.getElementById("lat") as HTMLInputElement;
       const lngInput = document.getElementById("lng") as HTMLInputElement;
@@ -1138,6 +1198,30 @@ class WukkieApp {
       button.disabled = true;
       button.classList.add("loading");
     });
+  }
+
+  /**
+   * Handle map click for privacy location setting
+   */
+  private async onMapClick(e: L.LeafletMouseEvent): Promise<void> {
+    const { lat, lng } = e.latlng;
+
+    // Get location label if provided
+    const labelInput = document.getElementById(
+      "location-label",
+    ) as HTMLInputElement;
+    const label = labelInput?.value || undefined;
+
+    // Create privacy location
+    const privacyLocation = createPrivacyLocation(lat, lng, label);
+
+    // Set reverse geocoding for context
+    try {
+      await this.setPrivacyLocation(privacyLocation, lat, lng);
+    } catch (error) {
+      console.error("Error setting privacy location:", error);
+      this.showStatus("Failed to set location", "error");
+    }
   }
 
   /**
@@ -1224,6 +1308,122 @@ class WukkieApp {
     } catch (error) {
       console.error("Error updating demo issues:", error);
     }
+  }
+
+  /**
+   * Set privacy location and update UI
+   */
+  private async setPrivacyLocation(
+    privacyLocation: PrivacyLocation,
+    originalLat: number,
+    originalLng: number,
+  ): Promise<void> {
+    this.currentPrivacyLocation = privacyLocation;
+
+    // Update map with privacy area instead of precise location
+    if (this.map) {
+      // Clear existing markers
+      this.map.eachLayer((layer) => {
+        if (
+          layer instanceof window.L.Marker ||
+          layer instanceof window.L.Rectangle
+        ) {
+          this.map!.removeLayer(layer);
+        }
+      });
+
+      // Get the area covered by this privacy location
+      const area = LocationPrivacySystem.parseGeoHashtag(
+        privacyLocation.geoHashtag,
+      );
+      if (area) {
+        // Draw rectangle showing privacy area
+        const bounds = window.L.latLngBounds(
+          [area.south, area.west],
+          [area.north, area.east],
+        );
+
+        window.L.rectangle(bounds, {
+          color: "#3b82f6",
+          weight: 2,
+          fillOpacity: 0.2,
+        }).addTo(this.map).bindPopup(`
+            <div class="privacy-popup">
+              <strong>Privacy Location</strong><br>
+              ${privacyLocation.geoHashtag}<br>
+              ${privacyLocation.label ? `"${privacyLocation.label}"<br>` : ""}
+              <small>~${privacyLocation.precision}km precision</small>
+            </div>
+          `);
+
+        // Center map on the privacy area
+        this.map.fitBounds(bounds);
+      }
+    }
+
+    // Update location input display
+    const locationInput = document.getElementById(
+      "location",
+    ) as HTMLInputElement;
+    if (locationInput) {
+      const displayText = privacyLocation.label
+        ? `${privacyLocation.geoHashtag} (${privacyLocation.label})`
+        : privacyLocation.geoHashtag;
+      locationInput.value = displayText;
+    }
+
+    // Update location feedback
+    const locationFeedback = document.getElementById("location-feedback");
+    if (locationFeedback) {
+      locationFeedback.innerHTML = `
+        <div class="location-set privacy-location">
+          <div class="location-icon">📍</div>
+          <div class="location-details">
+            <strong>Privacy Location Set</strong><br>
+            <code>${privacyLocation.geoHashtag}</code>
+            ${privacyLocation.label ? `<br>"${privacyLocation.label}"` : ""}
+            <br><small>Approximate area: ~${privacyLocation.precision}km radius</small>
+          </div>
+        </div>
+      `;
+      locationFeedback.className = "form-feedback success";
+    }
+
+    console.log("Privacy location set:", privacyLocation);
+  }
+
+  /**
+   * Parse location input for geo hashtags or regular addresses
+   */
+  private async parseLocationInput(e: Event): Promise<void> {
+    const input = e.target as HTMLInputElement;
+    const value = input.value.trim();
+
+    if (!value) return;
+
+    // Check if it's a geo hashtag
+    if (isValidGeoHashtag(value)) {
+      try {
+        const area = LocationPrivacySystem.parseGeoHashtag(value);
+        if (area) {
+          const privacyLocation: PrivacyLocation = {
+            geoHashtag: value,
+            precision: 1, // Default precision
+            label: undefined,
+          };
+
+          // Center coordinates of the area for map display
+          const centerLat = (area.north + area.south) / 2;
+          const centerLng = (area.east + area.west) / 2;
+
+          await this.setPrivacyLocation(privacyLocation, centerLat, centerLng);
+        }
+      } catch (error) {
+        console.error("Error parsing geo hashtag:", error);
+      }
+    }
+    // For regular addresses, we could add geocoding here in the future
+    // For now, users can click on the map or use GPS
   }
 
   private hideLoading(): void {
