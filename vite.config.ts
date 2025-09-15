@@ -1,25 +1,26 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  root: 'src/frontend',
+  root: "src/frontend",
+  publicDir: "../../static",
   build: {
-    outDir: '../../dist',
+    outDir: "../../dist",
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: 'src/frontend/index.html'
-      }
+        main: "src/frontend/index.html",
+      },
     },
-    target: 'es2022',
-    sourcemap: true
+    target: "es2022",
+    sourcemap: true,
   },
   server: {
     port: 3000,
-    open: true
+    open: true,
   },
   resolve: {
     alias: {
-      '@': '/src'
-    }
-  }
-})
+      "@": "/src",
+    },
+  },
+});

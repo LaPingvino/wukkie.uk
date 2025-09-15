@@ -7,9 +7,10 @@ A proof-of-concept bug tracker for the world, built on Bluesky/ATProto. Report a
 ## 🚧 Current Status
 
 This is an early proof-of-concept demonstrating:
-- ✅ Bluesky authentication
+- ✅ **Secure OAuth authentication** with Bluesky (no more app passwords!)
 - ✅ Issue creation with location data
 - ✅ Interactive maps with OpenStreetMap
+- ✅ Modern login modal with user-friendly interface
 - ✅ Local storage for demo purposes
 - 🚧 ATProto record storage (planned)
 - 🚧 Federated issue discovery (planned)
@@ -100,21 +101,23 @@ wukkie.uk/
 
 ## 📱 How to Use
 
-1. **Login with Bluesky**
-   - Click "Login with Bluesky"
-   - Enter your handle (e.g., `user.bsky.social`)
-   - Use an App Password (not your main password!)
+1. **🔐 Secure OAuth Login**
+   - Click "Login with Bluesky" to open the modern login modal
+   - Enter your Bluesky handle (e.g., `user.bsky.social`)
+   - Get redirected to Bluesky's secure OAuth page
+   - **No passwords stored on this site!** ✨
 
-2. **Report an Issue**
-   - Fill out the issue form
-   - Click "Get Location" or click on the map
-   - Add relevant hashtags
-   - Submit the issue
+2. **📍 Report an Issue**
+   - Fill out the issue form with title and description
+   - Click "Get Location" or click directly on the map
+   - Add relevant hashtags for better organization
+   - Submit the issue to help your community
 
-3. **Browse Issues**
+3. **🗺️ Browse Issues**
    - View reported issues in the right panel
-   - Issues show distance from your location
-   - Click on hashtags to filter (planned)
+   - Issues show distance from your current location
+   - Click "📍 View" to see issues on the map
+   - Vote and comment features coming soon!
 
 ## 🔧 Configuration
 
@@ -149,12 +152,14 @@ wukkie.uk/
 ## 🎨 Features
 
 ### Current Features
-- **Bluesky Authentication**: Secure login with your existing Bluesky account
-- **Location-based Issues**: GPS location capture and address geocoding
-- **Interactive Maps**: Click to set location, view issues geographically
-- **Issue Categories**: Infrastructure, Environment, Safety, Transport, etc.
-- **Hashtag System**: Tag issues for better organization
-- **Responsive Design**: Works on desktop and mobile
+- **🔒 OAuth Authentication**: Modern, secure login flow - no app passwords needed!
+- **🎨 Beautiful Login Modal**: User-friendly interface with helpful guidance
+- **📍 Location-based Issues**: GPS location capture and address geocoding
+- **🗺️ Interactive Maps**: Click to set location, view issues geographically
+- **📊 Issue Categories**: Infrastructure, Environment, Safety, Transport, etc.
+- **🏷️ Smart Hashtag System**: Tag issues for better organization
+- **📱 Responsive Design**: Works perfectly on desktop and mobile
+- **🎭 Demo Mode**: Try all features without creating an account
 
 ### Planned Features
 - **ATProto Storage**: Store issues as records in your Bluesky data repository
@@ -167,11 +172,12 @@ wukkie.uk/
 ## 🏗️ Architecture
 
 ### Frontend
-Simple vanilla JavaScript application with:
-- Leaflet for interactive maps
-- Fetch API for Bluesky integration
-- LocalStorage for demo data persistence
-- Responsive CSS Grid layout
+Modern TypeScript application featuring:
+- **OAuth Integration**: Secure authentication with @atcute/oauth-browser-client
+- **Interactive Maps**: Leaflet with location picking and issue visualization  
+- **Modern UI**: CSS Grid layout with beautiful animations and status messages
+- **Smart Storage**: LocalStorage for demo data with session management
+- **Responsive Design**: Mobile-first approach with progressive enhancement
 
 ### Backend
 Cloudflare Workers handling:

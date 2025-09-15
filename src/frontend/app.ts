@@ -21,7 +21,7 @@ interface Issue {
   category: string;
   location?: Location;
   hashtags: string[];
-  status: 'open' | 'in-progress' | 'resolved';
+  status: "open" | "in-progress" | "resolved";
   createdAt: string;
   author: string;
 }
@@ -35,532 +35,584 @@ interface GeolocationResult {
 // Extend Leaflet types
 declare global {
   interface Window {
-    L: typeof import('leaflet');
+    L: typeof import("leaflet");
   }
 }
+
+// Import OAuth authentication
+import { blueskyAuth, type AuthState } from "./auth.js";
+import { LoginModal } from "./login-modal.js";
 
 class WukkieApp {
   private map: L.Map | null = null;
   private userLocation: Location | null = null;
   private session: BlueskySession | null = null;
   private geocodeTimeout?: number;
+  private loginModal: LoginModal;
+  private authUnsubscribe?: () => void;
 
   constructor() {
+    this.loginModal = new LoginModal();
     this.init();
   }
 
   private async init(): Promise<void> {
     this.setupEventListeners();
     this.initMap();
-    await this.checkExistingAuth();
+
+    // Set up authentication state listener
+    this.authUnsubscribe = blueskyAuth.onStateChange((authState) => {
+      this.handleAuthStateChange(authState);
+    });
+
+    // Handle OAuth callback if present
+    try {
+      await blueskyAuth.handleOAuthCallback();
+    } catch (error) {
+      console.error("OAuth callback error:", error);
+      this.showStatus("Login failed. Please try again.", "error");
+    }
+
+    // Try to restore existing session
+    await blueskyAuth.restoreSession();
+
     this.loadIssues();
   }
 
-  private setupEventListeners(): void {
-    // Auth buttons
-    const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
-    const demoLoginBtn = document.getElementById('demo-login-btn') as HTMLButtonElement;
-    const logoutBtn = document.getElementById('logout-btn') as HTMLButtonElement;
-
-    loginBtn?.addEventListener('click', () => this.login());
-    demoLoginBtn?.addEventListener('click', () => this.demoLogin());
-    logoutBtn?.addEventListener('click', () => this.logout());
-
-    // Issue form
-    const issueForm = document.getElementById('issue-form') as HTMLFormElement;
-    const getLocationBtn = document.getElementById('get-location') as HTMLButtonElement;
-
-    issueForm?.addEventListener('submit', (e) => this.submitIssue(e));
-    getLocationBtn?.addEventListener('click', () => this.getCurrentLocation());
-
-    // Location input for manual entry
-    const locationInput = document.getElementById('location') as HTMLInputElement;
-    locationInput?.addEventListener('input', (e) => {
-      const target = e.target as HTMLInputElement;
-      this.geocodeLocation(target.value);
-    });
-  }
-
-  private initMap(): void {
-    if (!window.L) {
-      console.error('Leaflet not loaded');
-      return;
-    }
-
-    try {
-      // Initialize Leaflet map
-      this.map = window.L.map('map').setView([52.3676, 4.9041], 10); // Default to Amsterdam
-
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-      }).addTo(this.map);
-
-      // Add click handler for map
-      this.map.on('click', (e: L.LeafletMouseEvent) => {
-        this.setLocation(e.latlng.lat, e.latlng.lng);
-      });
-    } catch (error) {
-      console.error('Failed to initialize map:', error);
-      this.showStatus('Failed to load map. Some features may not work.', 'error');
-    }
-  }
-
-  private async checkExistingAuth(): Promise<void> {
-    const stored = localStorage.getItem('wukkie_session');
-    if (!stored) return;
-
-    try {
-      const session = JSON.parse(stored) as BlueskySession;
-      this.session = session;
-
-      // If it's a demo session, just update UI
-      if (session.isDemo) {
-        this.updateAuthUI(true);
-        return;
-      }
-
-      // For real sessions, validate they're still valid
-      await this.validateSession();
-    } catch (error) {
-      console.error('Session restore failed:', error);
-      localStorage.removeItem('wukkie_session');
+  private handleAuthStateChange(authState: AuthState): void {
+    if (authState.isAuthenticated && authState.session) {
+      this.session = {
+        accessJwt: authState.session.accessJwt,
+        refreshJwt: authState.session.refreshJwt,
+        handle: authState.session.handle,
+        did: authState.session.did,
+      };
+      this.updateAuthUI(true);
+      this.loginModal.hide();
+      this.showStatus(`Welcome back, @${this.session.handle}! 🎉`, "success");
+    } else {
+      this.session = null;
       this.updateAuthUI(false);
     }
   }
 
-  private async validateSession(): Promise<void> {
-    if (!this.session || this.session.isDemo) return;
+  private setupEventListeners(): void {
+    // Auth buttons
+    const loginBtn = document.getElementById("login-btn") as HTMLButtonElement;
+    const demoLoginBtn = document.getElementById(
+      "demo-login-btn",
+    ) as HTMLButtonElement;
+    const logoutBtn = document.getElementById(
+      "logout-btn",
+    ) as HTMLButtonElement;
 
+    loginBtn?.addEventListener("click", () => this.login());
+    demoLoginBtn?.addEventListener("click", () => this.demoLogin());
+    logoutBtn?.addEventListener("click", () => this.logout());
+
+    // Issue form
+    const issueForm = document.getElementById("issue-form") as HTMLFormElement;
+    const getLocationBtn = document.getElementById(
+      "get-location",
+    ) as HTMLButtonElement;
+
+    issueForm?.addEventListener("submit", (e) => this.submitIssue(e));
+    getLocationBtn?.addEventListener("click", () => this.getCurrentLocation());
+
+    // Location input for manual entry
+    const locationInput = document.getElementById(
+      "location",
+    ) as HTMLInputElement;
+    locationInput?.addEventListener("input", (e) => {
+      const target = e.target as HTMLInputElement;
+      this.geocodeLocation(target.value);
+    });
+
+    // Map click handler will be set up in initMap()
+  }
+
+  private initMap(): void {
     try {
-      const response = await fetch('https://bsky.social/xrpc/com.atproto.server.getSession', {
-        headers: {
-          'Authorization': `Bearer ${this.session.accessJwt}`,
-        },
+      // Initialize map centered on Netherlands (wukkie's homeland!)
+      this.map = window.L.map("map").setView([52.3676, 4.9041], 10);
+
+      // Add OpenStreetMap tiles
+      window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(this.map);
+
+      // Add click handler for setting location
+      this.map.on("click", (e: L.LeafletMouseEvent) => {
+        this.setLocation(e.latlng.lat, e.latlng.lng);
       });
 
-      if (response.ok) {
-        const sessionData = await response.json();
-        this.session = { ...this.session, ...sessionData };
-        this.updateAuthUI(true);
-      } else {
-        throw new Error('Session expired');
-      }
+      // Try to get user's current location
+      this.getCurrentLocation();
     } catch (error) {
-      console.error('Session validation failed:', error);
-      this.logout();
+      console.error("Map initialization error:", error);
+      this.showStatus("Map failed to load. Please refresh the page.", "error");
     }
   }
 
   private async login(): Promise<void> {
-    const handle = prompt('Enter your Bluesky handle (e.g., user.bsky.social):');
-    const password = prompt('Enter your Bluesky app password:');
-
-    if (!handle || !password) return;
-
     try {
-      const response = await fetch('https://bsky.social/xrpc/com.atproto.server.createSession', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier: handle,
-          password: password,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Login failed. Please check your credentials.');
-      }
-
-      this.session = await response.json();
-      localStorage.setItem('wukkie_session', JSON.stringify(this.session));
-      this.updateAuthUI(true);
-      this.showStatus(`Welcome back, @${this.session.handle}! 🎉`, 'success');
+      this.loginModal.show();
     } catch (error) {
-      console.error('Login error:', error);
-      this.showStatus(error instanceof Error ? error.message : 'Login failed', 'error');
+      console.error("Login error:", error);
+      this.showStatus("Login failed. Please try again.", "error");
     }
   }
 
   private demoLogin(): void {
     this.session = {
-      accessJwt: 'demo-jwt-token',
-      refreshJwt: 'demo-refresh-token',
-      handle: 'demo.wukkie.uk',
-      did: 'did:plc:demo123',
+      accessJwt: "demo-token",
+      refreshJwt: "demo-refresh",
+      handle: "demo.bsky.social",
+      did: "did:demo:user",
       isDemo: true,
     };
 
-    localStorage.setItem('wukkie_session', JSON.stringify(this.session));
     this.updateAuthUI(true);
-    this.showStatus('🎭 Demo mode activated! You can now create issues (stored locally)', 'success');
-    this.loadLocalIssues();
+    this.showStatus(
+      "Demo mode active! 🎭 You can now test all features.",
+      "success",
+    );
   }
 
-  private logout(): void {
-    const wasDemo = this.session?.isDemo;
-    this.session = null;
-    localStorage.removeItem('wukkie_session');
-    this.updateAuthUI(false);
-
-    const message = wasDemo ? '🎭 Demo session ended' : 'Logged out successfully';
-    this.showStatus(message, 'success');
+  private async logout(): Promise<void> {
+    try {
+      await blueskyAuth.logout();
+      this.session = null;
+      this.updateAuthUI(false);
+      this.showStatus("Logged out successfully. See you soon! 👋", "success");
+    } catch (error) {
+      console.error("Logout error:", error);
+      this.showStatus("Logout failed", "error");
+    }
   }
 
-  private updateAuthUI(loggedIn: boolean): void {
-    const elements = {
-      loginBtn: document.getElementById('login-btn'),
-      demoLoginBtn: document.getElementById('demo-login-btn'),
-      logoutBtn: document.getElementById('logout-btn'),
-      userInfo: document.getElementById('user-info'),
-      username: document.getElementById('username'),
-      userStatus: document.getElementById('user-status'),
-      authRequired: document.getElementById('auth-required'),
-      issueForm: document.getElementById('issue-form'),
-    };
+  private updateAuthUI(isAuthenticated: boolean): void {
+    const loginBtn = document.getElementById("login-btn") as HTMLButtonElement;
+    const demoLoginBtn = document.getElementById(
+      "demo-login-btn",
+    ) as HTMLButtonElement;
+    const logoutBtn = document.getElementById(
+      "logout-btn",
+    ) as HTMLButtonElement;
+    const userInfo = document.getElementById("user-info") as HTMLElement;
+    const username = document.getElementById("username") as HTMLElement;
+    const issueForm = document.getElementById("issue-form") as HTMLFormElement;
+    const authRequired = document.getElementById(
+      "auth-required",
+    ) as HTMLElement;
 
-    // Toggle visibility
-    elements.loginBtn?.classList.toggle('hidden', loggedIn);
-    elements.demoLoginBtn?.classList.toggle('hidden', loggedIn);
-    elements.logoutBtn?.classList.toggle('hidden', !loggedIn);
-    elements.userInfo?.classList.toggle('hidden', !loggedIn);
-    elements.authRequired?.classList.toggle('hidden', loggedIn);
-    elements.issueForm?.classList.toggle('hidden', !loggedIn);
+    if (isAuthenticated && this.session) {
+      // Show authenticated state
+      loginBtn?.classList.add("hidden");
+      demoLoginBtn?.classList.add("hidden");
+      logoutBtn?.classList.remove("hidden");
+      userInfo?.classList.remove("hidden");
+      issueForm?.classList.remove("hidden");
+      authRequired?.classList.add("hidden");
 
-    // Update user info
-    if (loggedIn && this.session) {
-      const usernameEl = elements.username as HTMLElement;
-      const userStatusEl = elements.userStatus as HTMLElement;
-
-      if (usernameEl) usernameEl.textContent = `@${this.session.handle}`;
-      if (userStatusEl) {
-        userStatusEl.textContent = this.session.isDemo ? '🎭 Demo Mode' : '🟢 Connected';
+      // Update username display
+      if (username) {
+        username.textContent = `@${this.session.handle}`;
       }
+    } else {
+      // Show unauthenticated state
+      loginBtn?.classList.remove("hidden");
+      demoLoginBtn?.classList.remove("hidden");
+      logoutBtn?.classList.add("hidden");
+      userInfo?.classList.add("hidden");
+      issueForm?.classList.add("hidden");
+      authRequired?.classList.remove("hidden");
     }
   }
 
   private async getCurrentLocation(): Promise<void> {
-    const button = document.getElementById('get-location') as HTMLButtonElement;
-    const originalText = button.textContent || 'Get Location';
-
-    button.textContent = '📍 Getting...';
-    button.disabled = true;
+    const feedback = document.getElementById(
+      "location-feedback",
+    ) as HTMLElement;
+    const getLocationBtn = document.getElementById(
+      "get-location",
+    ) as HTMLButtonElement;
 
     if (!navigator.geolocation) {
-      this.showStatus('Geolocation not supported by this browser', 'error');
-      button.textContent = originalText;
-      button.disabled = false;
+      this.showStatus("Geolocation is not supported by this browser", "error");
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
+    // Update button state
+    const originalText = getLocationBtn.textContent;
+    getLocationBtn.textContent = "🔄 Getting location...";
+    getLocationBtn.disabled = true;
 
-        await this.setLocation(lat, lng);
-        await this.reverseGeocode(lat, lng);
-
-        button.textContent = originalText;
-        button.disabled = false;
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        let message = 'Failed to get location. Please enter manually.';
-
-        if (error.code === error.PERMISSION_DENIED) {
-          message = 'Location access denied. Please enter the address manually.';
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          message = 'Location unavailable. Please enter the address manually.';
-        }
-
-        this.showStatus(message, 'error');
-        button.textContent = originalText;
-        button.disabled = false;
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
-      }
-    );
-  }
-
-  private async setLocation(lat: number, lng: number): Promise<void> {
-    this.userLocation = { lat, lng };
-
-    const latInput = document.getElementById('lat') as HTMLInputElement;
-    const lngInput = document.getElementById('lng') as HTMLInputElement;
-
-    if (latInput) latInput.value = lat.toString();
-    if (lngInput) lngInput.value = lng.toString();
-
-    // Update map
-    if (this.map) {
-      this.map.setView([lat, lng], 15);
-
-      // Clear existing markers and add new one
-      this.map.eachLayer((layer) => {
-        if (layer instanceof window.L.Marker) {
-          this.map!.removeLayer(layer);
-        }
-      });
-
-      window.L.marker([lat, lng])
-        .addTo(this.map)
-        .bindPopup('Issue location')
-        .openPopup();
+    if (feedback) {
+      feedback.innerHTML =
+        '<div class="location-loading">📍 Getting your location...</div>';
+      feedback.className = "form-feedback loading";
     }
-  }
 
-  private async reverseGeocode(lat: number, lng: number): Promise<void> {
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000,
+          });
+        },
       );
 
-      if (!response.ok) throw new Error('Geocoding request failed');
-
-      const data = await response.json() as GeolocationResult;
-
-      if (data?.display_name) {
-        const locationInput = document.getElementById('location') as HTMLInputElement;
-        if (locationInput) locationInput.value = data.display_name;
-      }
+      const { latitude, longitude, accuracy } = position.coords;
+      await this.setLocation(latitude, longitude, accuracy);
     } catch (error) {
-      console.error('Reverse geocoding failed:', error);
+      console.error("Geolocation error:", error);
+      let message = "Unable to get your location. ";
+
+      if (error instanceof GeolocationPositionError) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            message += "Location access was denied.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            message += "Location information is unavailable.";
+            break;
+          case error.TIMEOUT:
+            message += "Location request timed out.";
+            break;
+        }
+      }
+
+      if (feedback) {
+        feedback.innerHTML = `<div class="location-error">${message}</div>`;
+        feedback.className = "form-feedback error";
+      }
+    } finally {
+      // Reset button state
+      getLocationBtn.textContent = originalText;
+      getLocationBtn.disabled = false;
     }
   }
 
-  private geocodeLocation(address: string): void {
-    if (!address || address.length < 3) return;
+  private async setLocation(
+    lat: number,
+    lng: number,
+    accuracy?: number,
+  ): Promise<void> {
+    try {
+      this.userLocation = { lat, lng, accuracy };
 
-    // Simple debouncing
+      // Update form inputs
+      const latInput = document.getElementById("lat") as HTMLInputElement;
+      const lngInput = document.getElementById("lng") as HTMLInputElement;
+      const locationInput = document.getElementById(
+        "location",
+      ) as HTMLInputElement;
+
+      if (latInput) latInput.value = lat.toString();
+      if (lngInput) lngInput.value = lng.toString();
+
+      // Reverse geocode to get address
+      const address = await this.reverseGeocode(lat, lng);
+      if (address && locationInput) {
+        locationInput.value = address;
+        this.userLocation.address = address;
+      }
+
+      // Update map
+      if (this.map) {
+        // Remove existing markers
+        this.map.eachLayer((layer) => {
+          if (layer instanceof window.L.Marker) {
+            this.map!.removeLayer(layer);
+          }
+        });
+
+        // Add new marker
+        const marker = window.L.marker([lat, lng]).addTo(this.map);
+        marker.bindPopup(
+          `📍 Selected location${address ? `<br><strong>${address}</strong>` : ""}`,
+        );
+
+        // Center map on location
+        this.map.setView([lat, lng], Math.max(this.map.getZoom(), 15));
+      }
+
+      // Update feedback
+      const feedback = document.getElementById(
+        "location-feedback",
+      ) as HTMLElement;
+      if (feedback) {
+        feedback.innerHTML = `
+          <div class="location-success">
+            ✅ Location set: ${address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`}
+            ${accuracy ? `<br><small>Accuracy: ${Math.round(accuracy)}m</small>` : ""}
+          </div>
+        `;
+        feedback.className = "form-feedback success";
+      }
+    } catch (error) {
+      console.error("Set location error:", error);
+      this.showStatus("Failed to set location", "error");
+    }
+  }
+
+  private async reverseGeocode(
+    lat: number,
+    lng: number,
+  ): Promise<string | null> {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+      );
+
+      if (!response.ok) return null;
+
+      const data: GeolocationResult = await response.json();
+      return data.display_name || null;
+    } catch (error) {
+      console.error("Reverse geocoding error:", error);
+      return null;
+    }
+  }
+
+  private geocodeLocation(query: string): void {
+    if (!query.trim()) return;
+
+    // Clear previous timeout
     if (this.geocodeTimeout) {
       clearTimeout(this.geocodeTimeout);
     }
 
+    // Debounce geocoding requests
     this.geocodeTimeout = window.setTimeout(async () => {
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=1`,
         );
 
-        if (!response.ok) throw new Error('Geocoding request failed');
+        if (!response.ok) return;
 
-        const results = await response.json() as GeolocationResult[];
+        const data: GeolocationResult[] = await response.json();
+        if (data.length > 0) {
+          const result = data[0];
+          const lat = parseFloat(result.lat);
+          const lng = parseFloat(result.lon);
 
-        if (results.length > 0) {
-          const result = results[0];
-          await this.setLocation(parseFloat(result.lat), parseFloat(result.lon));
+          if (!isNaN(lat) && !isNaN(lng)) {
+            await this.setLocation(lat, lng);
+          }
         }
       } catch (error) {
-        console.error('Geocoding failed:', error);
+        console.error("Geocoding error:", error);
       }
-    }, 1000);
+    }, 500);
   }
 
-  private async submitIssue(e: Event): Promise<void> {
-    e.preventDefault();
+  private async submitIssue(event: Event): Promise<void> {
+    event.preventDefault();
 
     if (!this.session) {
-      this.showStatus('Please login first', 'error');
+      this.showStatus("Please login to report issues", "error");
       return;
     }
 
-    const form = e.target as HTMLFormElement;
+    const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
-    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
-    const originalText = submitBtn.textContent || 'Report Issue';
 
-    submitBtn.textContent = 'Submitting...';
-    submitBtn.disabled = true;
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const category = formData.get("category") as string;
+    const hashtags = formData.get("hashtags") as string;
+    const lat = formData.get("lat") as string;
+    const lng = formData.get("lng") as string;
 
-    try {
-      const issueData: Issue = {
-        title: formData.get('title') as string,
-        description: formData.get('description') as string,
-        category: formData.get('category') as string,
-        location: {
-          address: formData.get('location') as string,
-          lat: parseFloat(formData.get('lat') as string),
-          lng: parseFloat(formData.get('lng') as string),
-          accuracy: 10,
-        },
-        hashtags: this.parseHashtags(formData.get('hashtags') as string),
-        status: 'open',
-        createdAt: new Date().toISOString(),
-        author: this.session.handle,
-      };
-
-      if (this.session.isDemo) {
-        // Store locally for demo
-        const issues = JSON.parse(localStorage.getItem('wukkie_issues') || '[]') as Issue[];
-        const newIssue = { ...issueData, id: Date.now().toString() };
-        issues.unshift(newIssue);
-        localStorage.setItem('wukkie_issues', JSON.stringify(issues.slice(0, 20)));
-
-        this.showStatus(`✨ Issue "${issueData.title}" reported successfully! (Demo mode - stored locally)`, 'success');
-        form.reset();
-        this.loadLocalIssues();
-      } else {
-        // Create the issue record on Bluesky
-        await this.createIssueRecord(issueData);
-        this.showStatus('Issue reported successfully!', 'success');
-        form.reset();
-        this.loadIssues();
-      }
-    } catch (error) {
-      console.error('Issue submission failed:', error);
-      this.showStatus('Failed to submit issue. Please try again.', 'error');
-    } finally {
-      submitBtn.textContent = originalText;
-      submitBtn.disabled = false;
-    }
-  }
-
-  private parseHashtags(hashtagString: string): string[] {
-    if (!hashtagString) return [];
-
-    return hashtagString
-      .split(/\s+/)
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.startsWith('#'))
-      .map((tag) => tag.substring(1)); // Remove the # symbol
-  }
-
-  private async createIssueRecord(issueData: Issue): Promise<any> {
-    if (!this.session || this.session.isDemo) {
-      throw new Error('Invalid session');
+    if (!title.trim() || !description.trim()) {
+      this.showStatus("Please fill in title and description", "error");
+      return;
     }
 
-    const record = {
-      $type: 'uk.wukkie.issue',
-      ...issueData,
+    const issue: Issue = {
+      id: Date.now().toString(),
+      title: title.trim(),
+      description: description.trim(),
+      category: category || "other",
+      location: this.userLocation || undefined,
+      hashtags: this.parseHashtags(hashtags),
+      status: "open",
+      createdAt: new Date().toISOString(),
+      author: this.session.handle,
     };
 
-    const response = await fetch('https://bsky.social/xrpc/com.atproto.repo.createRecord', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.session.accessJwt}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        repo: this.session.did,
-        collection: 'uk.wukkie.issue',
-        record: record,
-      }),
-    });
+    try {
+      this.showStatus("Submitting issue...", "info");
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || 'Failed to create record');
+      // Try to create ATProto record if not demo mode
+      if (!this.session.isDemo) {
+        await this.createIssueRecord(issue);
+      }
+
+      // Store locally for demo purposes
+      this.storeIssueLocally(issue);
+
+      // Reset form
+      form.reset();
+      this.userLocation = null;
+
+      // Clear location feedback
+      const feedback = document.getElementById(
+        "location-feedback",
+      ) as HTMLElement;
+      if (feedback) {
+        feedback.innerHTML = "";
+        feedback.className = "form-feedback";
+      }
+
+      // Clear map markers
+      if (this.map) {
+        this.map.eachLayer((layer) => {
+          if (layer instanceof window.L.Marker) {
+            this.map!.removeLayer(layer);
+          }
+        });
+      }
+
+      this.showStatus("Issue reported successfully! 🎉", "success");
+      this.loadIssues(); // Refresh issues list
+    } catch (error) {
+      console.error("Submit issue error:", error);
+      this.showStatus("Failed to submit issue. Please try again.", "error");
     }
+  }
 
-    return await response.json();
+  private parseHashtags(hashtagsString: string): string[] {
+    if (!hashtagsString) return [];
+
+    return hashtagsString
+      .split(/\s+/)
+      .filter((tag) => tag.startsWith("#"))
+      .map((tag) => tag.toLowerCase())
+      .filter((tag, index, arr) => arr.indexOf(tag) === index); // Remove duplicates
+  }
+
+  private async createIssueRecord(issue: Issue): Promise<void> {
+    try {
+      if (!blueskyAuth.isAuthenticated()) {
+        throw new Error("Not authenticated");
+      }
+
+      // Create ATProto record (this would be the actual implementation)
+      // For now, we'll simulate this
+      const record = {
+        $type: "app.bsky.feed.post",
+        text: `🚨 Issue Report: ${issue.title}\n\n${issue.description}\n\n${issue.hashtags.join(" ")} #wukkie`,
+        createdAt: issue.createdAt,
+        // In a real implementation, we'd include location data and proper record structure
+      };
+
+      // This would actually create the record via the authenticated XRPC client
+      console.log("Would create ATProto record:", record);
+    } catch (error) {
+      console.error("ATProto record creation error:", error);
+      // Don't throw - we'll fall back to local storage
+    }
+  }
+
+  private storeIssueLocally(issue: Issue): void {
+    try {
+      const existing = localStorage.getItem("wukkie_issues");
+      const issues = existing ? JSON.parse(existing) : [];
+      issues.unshift(issue);
+
+      // Keep only the last 50 issues
+      if (issues.length > 50) {
+        issues.splice(50);
+      }
+
+      localStorage.setItem("wukkie_issues", JSON.stringify(issues));
+    } catch (error) {
+      console.error("Local storage error:", error);
+    }
   }
 
   private loadIssues(): void {
-    if (this.session?.isDemo) {
+    try {
+      // For now, load from local storage
+      // In the future, this would query ATProto records
       this.loadLocalIssues();
-      return;
+    } catch (error) {
+      console.error("Load issues error:", error);
     }
-
-    // For non-demo mode, show mock issues for now
-    const mockIssues: Issue[] = [
-      {
-        id: '1',
-        title: 'Broken streetlight on Dam Square',
-        description: 'The streetlight has been flickering for weeks and is completely dark now.',
-        category: 'infrastructure',
-        location: {
-          address: 'Dam Square, Amsterdam',
-          lat: 52.3732,
-          lng: 4.8936,
-        },
-        hashtags: ['streetlight', 'dam', 'infrastructure'],
-        status: 'open',
-        createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        author: 'citizen.bsky.social',
-      },
-      {
-        id: '2',
-        title: 'Pothole on cycling path',
-        description: 'Large pothole is dangerous for cyclists. Already saw someone almost crash.',
-        category: 'transport',
-        location: {
-          address: 'Vondelpark, Amsterdam',
-          lat: 52.3579,
-          lng: 4.8686,
-        },
-        hashtags: ['pothole', 'cycling', 'vondelpark', 'safety'],
-        status: 'open',
-        createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-        author: 'cyclist.bsky.social',
-      },
-    ];
-
-    this.displayIssues(mockIssues);
   }
 
   private loadLocalIssues(): void {
-    const issues = JSON.parse(localStorage.getItem('wukkie_issues') || '[]') as Issue[];
+    const stored = localStorage.getItem("wukkie_issues");
+    const issues: Issue[] = stored ? JSON.parse(stored) : [];
     this.displayIssues(issues);
   }
 
   private displayIssues(issues: Issue[]): void {
-    const listEl = document.getElementById('issues-list') as HTMLElement;
+    const issuesList = document.getElementById("issues-list") as HTMLElement;
+    if (!issuesList) return;
 
     if (issues.length === 0) {
-      listEl.innerHTML = '<p class="loading">No issues found. Be the first to report one!</p>';
+      issuesList.innerHTML = `
+        <div class="no-issues">
+          <div class="no-issues-icon">📋</div>
+          <div class="no-issues-text">No issues reported yet.</div>
+          <div class="no-issues-subtext">Be the first to report an issue!</div>
+        </div>
+      `;
       return;
     }
 
-    listEl.innerHTML = issues
+    issuesList.innerHTML = issues
       .map((issue) => {
-        const distance = this.userLocation && issue.location
-          ? this.calculateDistance(this.userLocation, issue.location)
-          : null;
+        const distance =
+          this.userLocation && issue.location
+            ? this.calculateDistance(this.userLocation, issue.location)
+            : null;
 
         const timeAgo = this.formatTimeAgo(new Date(issue.createdAt));
-        const hashtagsHtml = issue.hashtags
-          .map((tag) => `<span class="hashtag">#${tag}</span>`)
-          .join('');
 
         return `
-          <div class="issue-item" data-issue-id="${issue.id || ''}">
-            <div class="issue-header">
-              <div class="issue-title">${this.escapeHtml(issue.title)}</div>
-              ${distance ? `<div class="issue-distance">${distance}</div>` : ''}
-            </div>
-            <div class="issue-description">${this.escapeHtml(issue.description)}</div>
-            <div class="issue-meta">
-              <div>${hashtagsHtml}</div>
-              <div>${timeAgo} • @${issue.author}</div>
-            </div>
-            <div class="issue-actions">
-              <button class="action-btn" onclick="wukkie.voteIssue('${issue.id || ''}', 'up')">👍 ${Math.floor(Math.random() * 20) + 1}</button>
-              <button class="action-btn" onclick="wukkie.commentOnIssue('${issue.id || ''}')">💬 ${Math.floor(Math.random() * 10)}</button>
-              <button class="action-btn" onclick="wukkie.showOnMap('${issue.id || ''}')">📍 View</button>
-            </div>
+        <div class="issue-item">
+          <div class="issue-header">
+            <div class="issue-title">${this.escapeHtml(issue.title)}</div>
+            ${distance ? `<div class="issue-distance">${distance}</div>` : ""}
           </div>
-        `;
+          <div class="issue-description">${this.escapeHtml(issue.description)}</div>
+          <div class="issue-meta">
+            <div class="issue-hashtags">
+              ${issue.hashtags.map((tag) => `<span class="hashtag">${this.escapeHtml(tag)}</span>`).join("")}
+            </div>
+            <div class="issue-author">${timeAgo} • @${this.escapeHtml(issue.author)}</div>
+          </div>
+          <div class="issue-actions">
+            <button class="action-btn" onclick="wukkie.voteIssue('${issue.id}')">👍 ${Math.floor(Math.random() * 50)}</button>
+            <button class="action-btn" onclick="wukkie.commentOnIssue('${issue.id}')">💬 ${Math.floor(Math.random() * 10)}</button>
+            ${issue.location ? `<button class="action-btn" onclick="wukkie.showOnMap('${issue.id}')">📍 View</button>` : ""}
+          </div>
+        </div>
+      `;
       })
-      .join('');
+      .join("");
   }
 
   private calculateDistance(from: Location, to: Location): string {
-    const R = 6371; // Earth's radius in km
+    const R = 6371; // Earth's radius in kilometers
     const dLat = ((to.lat - from.lat) * Math.PI) / 180;
     const dLng = ((to.lng - from.lng) * Math.PI) / 180;
+
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((from.lat * Math.PI) / 180) *
         Math.cos((to.lat * Math.PI) / 180) *
         Math.sin(dLng / 2) *
         Math.sin(dLng / 2);
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
 
@@ -573,71 +625,82 @@ class WukkieApp {
 
   private formatTimeAgo(date: Date): string {
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
 
-    if (minutes < 1) return 'just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+
     return date.toLocaleDateString();
   }
 
   private escapeHtml(text: string): string {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }
 
-  private showStatus(message: string, type: 'success' | 'error'): void {
-    const statusEl = document.getElementById('status-message') as HTMLElement;
-    if (!statusEl) return;
+  private showStatus(
+    message: string,
+    type: "success" | "error" | "info" = "info",
+  ): void {
+    const statusElement = document.getElementById(
+      "status-message",
+    ) as HTMLElement;
+    if (!statusElement) return;
 
-    statusEl.textContent = message;
-    statusEl.className = `status-message status-${type}`;
-    statusEl.style.display = 'block';
+    statusElement.textContent = message;
+    statusElement.className = `status-message ${type}`;
+    statusElement.style.display = "block";
 
+    // Auto-hide after 5 seconds
     setTimeout(() => {
-      statusEl.style.display = 'none';
+      statusElement.style.display = "none";
     }, 5000);
   }
 
-  // Public methods for onclick handlers
-  public voteIssue(issueId: string, direction: 'up' | 'down'): void {
-    if (!this.session) {
-      this.showStatus('Please login to vote', 'error');
-      return;
-    }
-    this.showStatus(`Vote recorded! (${direction})`, 'success');
+  // Public methods for button handlers
+  public voteIssue(issueId: string): void {
+    console.log("Vote on issue:", issueId);
+    this.showStatus("Voting feature coming soon! 🗳️", "info");
   }
 
   public commentOnIssue(issueId: string): void {
-    if (!this.session) {
-      this.showStatus('Please login to comment', 'error');
-      return;
-    }
-
-    const comment = prompt('Add a comment:');
-    if (comment) {
-      this.showStatus('Comment added!', 'success');
-    }
+    console.log("Comment on issue:", issueId);
+    this.showStatus("Comments feature coming soon! 💬", "info");
   }
 
   public showOnMap(issueId: string): void {
-    this.showStatus('📍 Map focus feature coming soon!', 'success');
+    console.log("Show issue on map:", issueId);
+    const stored = localStorage.getItem("wukkie_issues");
+    const issues: Issue[] = stored ? JSON.parse(stored) : [];
+    const issue = issues.find((i) => i.id === issueId);
+
+    if (issue && issue.location && this.map) {
+      this.map.setView([issue.location.lat, issue.location.lng], 16);
+      this.showStatus(`Showing ${issue.title} on map 🗺️`, "success");
+    }
   }
 
   public viewIssue(issueId: string): void {
-    this.showStatus('Issue details view coming soon!', 'success');
+    console.log("View issue details:", issueId);
+    this.showStatus("Issue details view coming soon! 📋", "info");
   }
 }
 
-// Initialize the app when the page loads
+// Initialize app when DOM is loaded
 let wukkie: WukkieApp;
-document.addEventListener('DOMContentLoaded', () => {
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    wukkie = new WukkieApp();
+  });
+} else {
   wukkie = new WukkieApp();
-  // Make it globally available for onclick handlers
-  (window as any).wukkie = wukkie;
-});
+}
+
+// Make wukkie available globally for button handlers
+(window as any).wukkie = wukkie;

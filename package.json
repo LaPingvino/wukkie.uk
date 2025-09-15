@@ -22,13 +22,17 @@
   ],
   "author": "Joop Kiefte",
   "license": "MIT",
+  "dependencies": {
+    "@atcute/client": "^4.0.3",
+    "@atcute/oauth-browser-client": "^1.0.26"
+  },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20241011.0",
+    "@cloudflare/workers-types": "^4.20250115.0",
     "@types/leaflet": "^1.9.8",
-    "concurrently": "^8.2.2",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.10",
-    "wrangler": "^3.22.1"
+    "concurrently": "^9.2.1",
+    "typescript": "^5.7.2",
+    "vite": "^7.1.5",
+    "wrangler": "^4.37.0"
   },
   "engines": {
     "node": ">=18.0.0"
