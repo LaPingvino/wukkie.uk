@@ -139,6 +139,44 @@ The `wrangler.toml` file contains deployment settings:
 - Add your custom domains under `routes`
 - Configure KV namespaces if needed
 
+## 🧪 Testing
+
+**⚠️ CRITICAL**: All code changes MUST include tests and pass the full test suite before committing.
+
+### Quick Test Commands
+```bash
+# Run all tests (REQUIRED before every commit)
+node test.js                     # 58 tests across 3 files
+
+# Run with verbose output  
+node test.js -v
+
+# Run specific test file
+node --test --experimental-strip-types src/frontend/location-privacy.test.ts
+```
+
+### Test Requirements
+- ✅ **58/58 tests must pass** before any commit
+- ✅ **Add tests for new features** (required)
+- ✅ **Update tests when modifying existing code**
+- ✅ **Test case-insensitive geo hashtags**: `#geo9c3xgp`, `#GEO9C3XGP`, `#Geo9C3XGP`
+- ✅ **Use only valid Plus Code characters**: `23456789CFGHJMPQRVWX`
+
+### Test Coverage
+- **Location Privacy** (29 tests): Core geo hashtag functionality, case sensitivity, validation
+- **Issue Management** (14 tests): CRUD operations, location integration, form validation  
+- **Multiple Locations** (15 tests): Multi-location parsing, validation, edge cases
+
+### Expected Output
+```
+🧪 Wukkie.uk Test Runner
+PASS
+ok      src     894.0ms
+Tests run: 58, Passed: 58, Failed: 0 ✅
+```
+
+📚 **Detailed Documentation**: See [TESTING.md](TESTING.md) for comprehensive testing guidelines, best practices, and troubleshooting.
+
 ## 🗺️ Project Structure
 
 ```

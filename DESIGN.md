@@ -48,6 +48,46 @@ Wukkie.uk is a privacy-by-design platform that allows users to report and track 
 - **Cloudflare Workers**: Simple API endpoints for location processing
 - **Custom Lexicon**: Define issue, vote, and comment record types
 
+## 🧪 Testing Architecture & Privacy Validation
+
+### Privacy-First Testing Approach
+The testing system ensures our privacy-first location system works correctly while maintaining user anonymity and data protection.
+
+**Core Testing Principles:**
+- **58 comprehensive test cases** across location privacy, issue management, and multi-location functionality
+- **Case-insensitive geo hashtag validation** - supports `#geo9c3xgp`, `#GEO9C3XGP`, `#Geo9C3XGP` 
+- **Plus Code character validation** - only allows valid characters (`23456789CFGHJMPQRVWX`)
+- **Privacy boundary testing** - ensures ~1km precision is maintained without GPS leakage
+- **Edge case coverage** - malformed input, invalid characters, geographical boundaries
+
+### Test-Driven Development Workflow
+```bash
+# MANDATORY: All 58 tests must pass before any commit
+node test.js                     # Full test suite
+node test.js -v                 # Verbose output
+
+# Test Coverage Areas:
+# - location-privacy.test.ts (29 tests): Core geo hashtag functionality
+# - issue-management.test.ts (14 tests): CRUD operations, location integration  
+# - multiple-locations.test.ts (15 tests): Multi-location parsing, validation
+```
+
+**Development Requirements:**
+- 🚨 **Zero failing tests** before commits (58/58 must pass)
+- 📝 **Add tests for new features** (required, not optional)
+- 🔒 **Privacy validation testing** - ensure no GPS coordinates leak
+- 🌍 **Geographic boundary testing** - poles, date line, equator edge cases
+- 📱 **Case-insensitive support** - comprehensive mixed-case validation
+
+### Privacy Testing Validation
+- **Location obfuscation** - verify Plus Codes provide ~1km precision, not exact coordinates
+- **Geo hashtag consistency** - same location produces same hashtag across sessions
+- **Character validation** - prevent invalid Plus Code characters from breaking privacy
+- **Area boundary testing** - ensure location areas have valid geographic bounds
+- **Nearby discovery testing** - verify location-based search without exact coordinates
+
+See [TESTING.md](TESTING.md) for complete testing guidelines and best practices.
+
 ### Data Storage
 - **Bluesky ATProto**: Issues stored as records in user's Bluesky data repository using privacy-preserving location format
 - **Browser Storage**: Basic caching and offline capability with geo hashtag indexing

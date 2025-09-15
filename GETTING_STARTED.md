@@ -75,6 +75,64 @@ You should see output like:
 3. Click "Report Issue"
 4. Your issue should appear in the "Recent Issues" section
 
+## 🧪 Mandatory Testing Requirements
+
+**⚠️ CRITICAL**: Before making ANY code changes, you MUST understand and follow our testing approach.
+
+### 🚨 Pre-Development Setup
+
+```bash
+# Run the test suite (REQUIRED before any development)
+node test.js
+
+# Expected output:
+# 🧪 Wukkie.uk Test Runner
+# PASS
+# ok      src     894.0ms
+# Tests run: 58, Passed: 58, Failed: 0 ✅
+```
+
+### Mandatory Testing Workflow
+
+1. **Before ANY code changes**: Run `node test.js` - all 58 tests MUST pass ✅
+2. **During development**: Add tests for new functionality (required, not optional)
+3. **After changes**: Run `node test.js` again - maintain 100% pass rate
+4. **Before committing**: Final test run - ZERO failing tests allowed
+5. **For bug fixes**: Write a test that reproduces the bug first
+
+### Test Coverage Areas
+- **Location Privacy System** (29 tests): Geo hashtag validation, case-insensitive support
+- **Issue Management Integration** (14 tests): CRUD operations, form validation
+- **Multiple Locations Handling** (15 tests): Multi-location parsing, edge cases
+
+### Key Testing Requirements
+- ✅ **Case-insensitive geo hashtags**: Test `#geo9c3xgp`, `#GEO9C3XGP`, `#Geo9C3XGP`
+- ✅ **Valid Plus Code characters only**: Use `23456789CFGHJMPQRVWX` (case insensitive)
+- ✅ **Edge case testing**: Empty input, malformed hashtags, boundary conditions
+- ✅ **Comprehensive assertions**: Descriptive error messages in all tests
+
+### Quick Test Commands
+```bash
+node test.js                     # Run all tests (58 tests)
+node test.js -v                 # Verbose output with details
+node test.js src/frontend/       # Run tests in specific directory
+
+# Run individual test files
+node --test --experimental-strip-types src/frontend/location-privacy.test.ts
+node --test --experimental-strip-types src/frontend/issue-management.test.ts
+node --test --experimental-strip-types src/frontend/multiple-locations.test.ts
+```
+
+### Development Rules
+- 🔒 **No commits without passing tests** - CI will reject failing test suites
+- 📝 **New features require tests** - No exceptions, tests are specifications
+- 🐛 **Bug fixes need reproduction tests** - Prove the bug exists, then fix it
+- 🔄 **Refactoring preserves test coverage** - All existing tests must continue passing
+
+**📚 Complete Documentation**: See [TESTING.md](TESTING.md) for comprehensive guidelines, best practices, test-driven development workflow, and troubleshooting.
+
+**🎯 Remember**: Tests aren't just validation—they're living documentation and safety nets. Our privacy-first location system depends on reliable, well-tested code.
+
 ## 🎯 What Works Right Now
 
 - ✅ Secure OAuth authentication with Bluesky
