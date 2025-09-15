@@ -1,6 +1,6 @@
 # Getting Started with Wukkie.uk
 
-This guide will get you up and running with the Wukkie.uk proof-of-concept in under 10 minutes.
+This guide will get you up and running with the **privacy-first** Wukkie.uk platform in under 10 minutes. Our system uses geo hashtags instead of exact GPS coordinates to protect your privacy while enabling effective community issue reporting.
 
 ## 📋 Prerequisites
 
@@ -16,6 +16,14 @@ Before you begin, make sure you have:
 1. Go to [bsky.app](https://bsky.app) and make sure you have an account
 2. Note your handle (e.g., `yourname.bsky.social`)
 3. **No app passwords needed!** The app uses secure OAuth authentication
+
+## 🛡️ Privacy-First Features
+
+**New in this version:**
+- **Geo Hashtags**: Your location is converted to privacy-friendly codes like `#geo9c3xgp` (~1km precision)
+- **No GPS Tracking**: We never store or transmit your exact coordinates
+- **Optional Labels**: Add human-readable context like "Near Central Station" without compromising privacy
+- **ATProto Integration**: Issues can be posted to Bluesky with privacy protection built-in
 
 ## 🚀 Quick Setup
 
@@ -60,8 +68,10 @@ You should see output like:
    - **Title**: "Test streetlight issue"
    - **Description**: "Testing the issue reporting system"
    - **Category**: Infrastructure
-   - **Location**: Click "📍 Get Location" or type an address
+   - **Privacy Location**: Click "📍 Get My Area" to set your approximate location
+   - **Location Label**: (Optional) "Near Main Street Station" 
    - **Hashtags**: `#test #streetlight`
+   - **Post to Bluesky**: (Optional) Check to share with broader community
 3. Click "Report Issue"
 4. Your issue should appear in the "Recent Issues" section
 
@@ -70,10 +80,11 @@ You should see output like:
 - ✅ Secure OAuth authentication with Bluesky
 - ✅ Modern login modal with user guidance
 - ✅ Issue creation form
-- ✅ GPS location capture
-- ✅ Interactive maps (click to set location)
-- ✅ Address geocoding
-- ✅ Local storage (issues persist in browser)
+- ✅ Privacy-protected location capture (geo hashtags, ~1km precision)
+- ✅ Interactive maps showing privacy areas instead of exact points
+- ✅ Address to geo hashtag conversion
+- ✅ Local storage with privacy protection (no GPS coordinates saved)
+- ✅ Bluesky integration with threading support
 - ✅ Responsive design
 
 ## 🚧 What's Coming
@@ -135,7 +146,8 @@ npm run deploy
 
 - **Browser permissions**: Allow location access when prompted
 - **HTTPS required**: Geolocation only works on HTTPS (works on localhost)
-- **Manual entry**: You can type addresses if GPS fails
+- **Manual entry**: You can type addresses or geo hashtags (e.g., #geo9c3xgp)
+- **Privacy protection**: Only approximate areas are captured, never exact coordinates
 
 ### Issues Not Saving
 
@@ -180,6 +192,7 @@ The app is designed to work on mobile devices:
 1. **Deploy to Cloudflare** (required for HTTPS)
 2. **Access via HTTPS URL** (geolocation needs HTTPS)
 3. **Test on actual devices** (mobile behavior differs from desktop)
+4. **Try the privacy demo** by running `node demo-privacy-system.js`
 
 ## 🤝 Contributing
 
@@ -195,8 +208,10 @@ Ready to contribute? Here's how:
 
 - **ATProto integration**: Real record storage instead of localStorage
 - **Better UX**: Improved mobile experience and loading states
-- **Geographic algorithms**: Smarter location relevance
+- **Advanced privacy features**: Enhanced geo hashtag algorithms  
+- **Government integration**: Official response channels via ATProto
 - **Content moderation**: Community guidelines and reporting
+- **Mobile PWA**: Enhanced offline capabilities
 
 ## ❓ Need Help?
 

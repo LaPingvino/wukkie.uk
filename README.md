@@ -2,37 +2,41 @@
 
 **oopsie woopsie de trein is stukkie wukkie...**
 
-A proof-of-concept bug tracker for the world, built on Bluesky/ATProto. Report and track real-world issues using decentralized social infrastructure.
+A **privacy-first** issue tracking platform built on Bluesky/ATProto. Report and track real-world issues using decentralized social infrastructure with location privacy protection via geo hashtags.
 
 ## 🚧 Current Status
 
-This is an early proof-of-concept demonstrating:
+This privacy-first platform demonstrates:
+- ✅ **Privacy-Protected Location System** using geo hashtags (~1km precision, no GPS tracking)
 - ✅ **Secure OAuth authentication** with Bluesky (no more app passwords!)
-- ✅ Issue creation with location data
-- ✅ Interactive maps with OpenStreetMap
-- ✅ Modern login modal with user-friendly interface
-- ✅ Local storage for demo purposes
-- 🚧 ATProto record storage (planned)
-- 🚧 Federated issue discovery (planned)
-- 🚧 Voting and commenting system (planned)
+- ✅ **ATProto Integration** with custom lexicon for structured issue data
+- ✅ **Bluesky Social Features** with threading and community engagement
+- ✅ Issue creation with privacy-friendly location data
+- ✅ Interactive maps showing privacy areas instead of exact coordinates
+- ✅ Modern UI with privacy indicators and controls
+- ✅ Local storage with privacy protection (no GPS coordinates saved)
+- 🚧 Custom lexicon deployment to ATProto network
+- 🚧 Enhanced community discovery and search features
 
 ## 🎯 Vision
 
-Why do software projects have quality bug tracking while world issues are stuck in slow political systems? This project explores how decentralized social protocols could enable better civic engagement and issue coordination.
+Why do software projects have quality bug tracking while world issues are stuck in slow political systems? This project explores how decentralized social protocols could enable better civic engagement and issue coordination **while protecting user privacy**.
+
+**🛡️ Privacy-First Approach**: Unlike traditional civic platforms that collect precise GPS coordinates, Wukkie.uk uses geo hashtags (like `#geo9c3xgp`) that represent ~1km² areas. This prevents location tracking while maintaining effective community issue discovery and resolution.
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Vanilla JavaScript with Leaflet maps
-- **Backend**: Cloudflare Workers
-- **Auth**: Bluesky/ATProto
-- **Maps**: OpenStreetMap + Leaflet
-- **Storage**: ATProto (planned), localStorage (demo)
-- **Frontend**: TypeScript, Vite, Leaflet
-- **Backend**: Cloudflare Workers
+- **Frontend**: TypeScript with privacy-first location system
+- **Location**: Plus Codes converted to geo hashtags for privacy protection
+- **Social**: ATProto/Bluesky with custom lexicon (`uk.wukkie.issue`)
+- **Maps**: OpenStreetMap + Leaflet with privacy area visualization
+- **Auth**: Bluesky OAuth 2.0 (secure, no passwords)
+- **Storage**: Local-first with optional ATProto sync
+- **Backend**: Cloudflare Workers (future)
 
 ## 🏗️ Architecture
 
-The project now uses a modern TypeScript-based architecture:
+The project uses a privacy-first TypeScript architecture:
 
 ```
 wukkie.uk/
@@ -152,14 +156,18 @@ wukkie.uk/
 ## 🎨 Features
 
 ### Current Features
+- **🛡️ Privacy-First Locations**: Geo hashtags (~1km precision) instead of exact GPS coordinates
 - **🔒 OAuth Authentication**: Modern, secure login flow - no app passwords needed!
+- **🦋 Bluesky Integration**: Post issues to Bluesky with threading support
 - **🎨 Beautiful Login Modal**: User-friendly interface with helpful guidance
-- **📍 Location-based Issues**: GPS location capture and address geocoding
-- **🗺️ Interactive Maps**: Click to set location, view issues geographically
+- **📍 Location-based Issues**: Privacy-protected area capture with optional labels
+- **🗺️ Interactive Maps**: Click to set privacy areas, visualize ~1km coverage zones
+- **🔍 Smart Discovery**: Find nearby issues using geo hashtag search
 - **📊 Issue Categories**: Infrastructure, Environment, Safety, Transport, etc.
-- **🏷️ Smart Hashtag System**: Tag issues for better organization
+- **🏷️ Smart Hashtag System**: Geographic and subject hashtags for organization
 - **📱 Responsive Design**: Works perfectly on desktop and mobile
 - **🎭 Demo Mode**: Try all features without creating an account
+- **🔌 Offline Capable**: Works without internet using Plus Code navigation
 
 ### Planned Features
 - **ATProto Storage**: Store issues as records in your Bluesky data repository

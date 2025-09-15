@@ -18,8 +18,9 @@ Wukkie.uk is a simple proof-of-concept platform that allows users to report and 
 - **Media Support**: Photos, videos, and documents as evidence
 
 ### Location & Context
-- **Geolocation**: GPS coordinates for precise issue location
-- **Address Integration**: Human-readable addresses with map integration
+- **Privacy-First Geolocation**: Geo hashtags using Plus Codes for ~1km precision (e.g., #geo9c3xgp)
+- **Optional Labels**: Human-readable location descriptions without compromising privacy
+- **Area-Based Discovery**: Find issues in nearby areas without exact coordinate tracking
 - **Local Hashtag System**: Automatic relevance scoring based on geographic proximity
 - **Subject Hashtags**: Categorization by topic (#potholes, #streetlights, #noise, etc.)
 
@@ -113,11 +114,11 @@ The beauty is that users can help define what features are actually needed throu
       "description": {"type": "string", "maxLength": 2000},
       "location": {
         "type": "object",
+        "required": ["geoHashtag"],
         "properties": {
-          "lat": {"type": "number"},
-          "lng": {"type": "number"},
-          "address": {"type": "string"},
-          "accuracy": {"type": "number"}
+          "geoHashtag": {"type": "string", "pattern": "^#geo[23456789cfghjmpqrvwx]{6}$"},
+          "label": {"type": "string", "maxLength": 100},
+          "precision": {"type": "number"}
         }
       },
       "category": {"type": "string"},
@@ -170,32 +171,38 @@ The beauty is that users can help define what features are actually needed throu
 
 ## Implementation Plan
 
-### Week 1-2: Basic Functionality
-- [ ] Bluesky authentication integration
-- [ ] Simple issue creation form (title, description, location)
-- [ ] Custom Lexicon schema for issues
-- [ ] Basic issue list view
+### Phase 1: Privacy-First Core System ✅ COMPLETED
+- [x] Plus Code geo hashtag generation system
+- [x] Privacy location interface (`LocationPrivacySystem`)
+- [x] Local issue storage with privacy protection
+- [x] Enhanced UI with privacy indicators and map integration
+- [x] Geo hashtag validation and area parsing
 
-### Week 3-4: Location & Display
-- [ ] Browser geolocation capture
-- [ ] Simple map display with Leaflet
-- [ ] Manual hashtag entry
-- [ ] Basic location-based filtering
+### Phase 2: ATProto Integration 🚧 IN PROGRESS
+- [x] Custom lexicon design (`uk.wukkie.issue`)
+- [x] Bluesky OAuth authentication flow
+- [x] ATProto issue posting with geo hashtags
+- [x] Thread management system architecture
+- [ ] Deploy custom lexicon to ATProto network
+- [ ] Complete Bluesky posting integration
+- [ ] Issue follow-up and status update system
 
-### Week 5-6: Community Features
-- [ ] Voting on issues (up/down)
-- [ ] Comment system
-- [ ] Deploy to Cloudflare Workers/Pages
-- [ ] Share with friends for testing
+### Phase 3: Community Discovery & Engagement 📋 NEXT
+- [ ] Enhanced geo hashtag search and filtering
+- [ ] Nearby issue discovery within radius
+- [ ] Bluesky cross-platform search integration
+- [ ] Community voting and validation system
+- [ ] Issue status tracking and notifications
 
-### Future Improvements (Based on Usage)
-- [ ] Better location relevance algorithm
-- [ ] Photo uploads
-- [ ] Government contact integration (when relevant)
-- [ ] Mobile app improvements
-- [ ] Whatever users actually ask for
+### Phase 4: Advanced Features 🔮 FUTURE
+- [ ] Government API integration for official responses  
+- [ ] Photo/media attachment support
+- [ ] Mobile PWA optimization
+- [ ] Multi-language support
+- [ ] Advanced privacy controls and encryption
+- [ ] Federated server network for institutions
 
-The key is getting something working quickly and iterating based on real usage.
+**Current Status**: Core privacy system is complete and ready for production. ATProto integration is implemented and ready for deployment testing.
 
 ## Privacy & Moderation
 
