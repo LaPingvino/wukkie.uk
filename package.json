@@ -4,11 +4,9 @@
   "description": "A proof-of-concept bug tracker for the world, built on Bluesky/ATProto",
   "main": "dist/worker.js",
   "scripts": {
-    "dev": "concurrently \"npm run build:frontend:watch\" \"wrangler dev\"",
-    "build": "npm run build:frontend && npm run build:worker",
+    "dev": "concurrently \"vite build --watch\" \"wrangler dev\"",
+    "build": "node build.js",
     "build:frontend": "vite build",
-    "build:frontend:watch": "vite build --watch",
-    "build:worker": "tsc src/worker/index.ts --outDir dist --target ES2022 --module ESNext --moduleResolution bundler",
     "deploy": "npm run build && wrangler deploy",
     "deploy:dev": "npm run build && wrangler deploy --env dev",
     "start": "wrangler dev --local",
