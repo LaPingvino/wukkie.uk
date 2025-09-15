@@ -1,6 +1,11 @@
 // Early debug logging
 console.log("🟢 [DEBUG] app.ts: File loading started");
 
+// Import ATProto integration
+import { ATProtoIssueManager, WukkieIssue } from "./atproto-integration";
+import { LocationPrivacySystem } from "./location-privacy";
+import { BskyAgent } from "@atproto/api";
+
 // Type definitions
 interface BlueskySession {
   accessJwt: string;
@@ -27,6 +32,11 @@ interface Issue {
   status: "open" | "in-progress" | "resolved";
   createdAt: string;
   author: string;
+  blueskyUri?: string; // URI of the Bluesky post if posted
+  blueskyStatus?: "pending" | "posted" | "failed" | "local-only"; // Bluesky posting status
+  lastEditedAt?: string; // Timestamp of last edit
+  lat?: number; // Latitude for editing support
+  lng?: number; // Longitude for editing support
 }
 
 interface GeolocationResult {
@@ -54,6 +64,7 @@ class WukkieApp {
   private loginModal: LoginModal;
   private authUnsubscribe?: () => void;
   private isLoading: boolean = false;
+  private atprotoManager?: ATProtoIssueManager;
 
   private taglines: string[] = [
     "oopsie woopsie de trein is stukkie wukkie...",
@@ -211,11 +222,19 @@ class WukkieApp {
         handle: authState.session.handle,
         did: authState.session.did,
       };
+
+      // Initialize ATProto manager when authenticated
+      const agent = new BskyAgent({ service: "https://bsky.social" });
+      agent.session = authState.session;
+      this.atprotoManager = new ATProtoIssueManager(agent);
+      console.log("🟢 ATProto manager initialized");
+
       this.updateAuthUI(true);
       this.loginModal.hide();
       this.showStatus(`Welcome back, @${this.session.handle}! 🎉`, "success");
     } else {
       this.session = null;
+      this.atprotoManager = undefined;
       this.updateAuthUI(false);
     }
   }
@@ -572,22 +591,30 @@ class WukkieApp {
     const hashtags = formData.get("hashtags") as string;
     const lat = formData.get("lat") as string;
     const lng = formData.get("lng") as string;
+    const postToBluesky = formData.get("postToBluesky") === "on";
+    const editingId = form.dataset.editingId;
 
     if (!title.trim() || !description.trim()) {
       this.showStatus("Please fill in title and description", "error");
       return;
     }
 
-    const issue: Issue = {
-      id: Date.now().toString(),
+    const issue: Issue & { postToBluesky: boolean } = {
+      id: editingId || Date.now().toString(),
       title: title.trim(),
       description: description.trim(),
       category: category || "other",
       location: this.userLocation || undefined,
       hashtags: this.parseHashtags(hashtags),
       status: "open",
-      createdAt: new Date().toISOString(),
+      createdAt: editingId
+        ? this.getIssueById(editingId)?.createdAt || new Date().toISOString()
+        : new Date().toISOString(),
       author: this.session.handle,
+      postToBluesky: postToBluesky,
+      blueskyStatus: postToBluesky ? "pending" : "local-only",
+      lat: lat ? parseFloat(lat) : undefined,
+      lng: lng ? parseFloat(lng) : undefined,
     };
 
     try {
@@ -603,7 +630,14 @@ class WukkieApp {
 
       // Reset form
       form.reset();
+      form.removeAttribute("data-editing-id");
       this.userLocation = null;
+
+      // Reset submit button text
+      const submitBtn = document.getElementById(
+        "submit-btn",
+      ) as HTMLButtonElement;
+      if (submitBtn) submitBtn.textContent = "Report Issue";
 
       // Clear location feedback
       const feedback = document.getElementById(
@@ -641,25 +675,77 @@ class WukkieApp {
       .filter((tag, index, arr) => arr.indexOf(tag) === index); // Remove duplicates
   }
 
-  private async createIssueRecord(issue: Issue): Promise<void> {
+  private async createIssueRecord(
+    issue: Issue & { postToBluesky?: boolean },
+  ): Promise<void> {
     try {
-      if (!blueskyAuth.isAuthenticated()) {
-        throw new Error("Not authenticated");
+      if (!blueskyAuth.isAuthenticated() || !this.atprotoManager) {
+        console.warn("Not authenticated or ATProto manager not initialized");
+        return;
       }
 
-      // Create ATProto record (this would be the actual implementation)
-      // For now, we'll simulate this
-      const record = {
-        $type: "app.bsky.feed.post",
-        text: `🚨 Issue Report: ${issue.title}\n\n${issue.description}\n\n${issue.hashtags.join(" ")} #wukkie`,
-        createdAt: issue.createdAt,
-        // In a real implementation, we'd include location data and proper record structure
-      };
+      // Convert to privacy location
+      const privacyLocation = LocationPrivacySystem.fromCoordinates(
+        issue.lat,
+        issue.lng,
+        issue.location || "Unknown location",
+      );
 
-      // This would actually create the record via the authenticated XRPC client
-      console.log("Would create ATProto record:", record);
+      // Create WukkieIssue from the form data
+      const wukkieIssue: Omit<WukkieIssue, "id" | "createdAt" | "blueskyUri"> =
+        {
+          title: issue.title,
+          description: issue.description,
+          category: issue.category,
+          priority: "medium", // Default priority
+          status: "open",
+          location: privacyLocation,
+          hashtags: issue.hashtags,
+        };
+
+      if (issue.postToBluesky) {
+        // Create the issue with Bluesky posting
+        const createdIssue = await this.atprotoManager.createIssue(
+          wukkieIssue,
+          true,
+          {
+            includeLocation: true,
+            linkToIssue: true,
+          },
+        );
+
+        console.log("✅ Successfully created ATProto issue:", createdIssue);
+
+        if (createdIssue.blueskyUri) {
+          issue.blueskyUri = createdIssue.blueskyUri;
+          issue.blueskyStatus = "posted";
+          this.showStatus(
+            "Issue posted to Bluesky successfully! 📢",
+            "success",
+          );
+        } else {
+          issue.blueskyStatus = "failed";
+          this.showStatus(
+            "Issue created locally (Bluesky post failed)",
+            "error",
+          );
+        }
+      } else {
+        // Store locally only
+        console.log("📝 Storing issue locally only (user choice)");
+        issue.blueskyStatus = "local-only";
+        this.showStatus(
+          "Issue saved locally only (not shared on Bluesky)",
+          "info",
+        );
+      }
     } catch (error) {
       console.error("ATProto record creation error:", error);
+      issue.blueskyStatus = "failed";
+      this.showStatus(
+        "Failed to post to Bluesky, but issue saved locally",
+        "error",
+      );
       // Don't throw - we'll fall back to local storage
     }
   }
@@ -668,11 +754,21 @@ class WukkieApp {
     try {
       const existing = localStorage.getItem("wukkie_issues");
       const issues = existing ? JSON.parse(existing) : [];
-      issues.unshift(issue);
 
-      // Keep only the last 50 issues
-      if (issues.length > 50) {
-        issues.splice(50);
+      // Check if this is an update (editing existing issue)
+      const existingIndex = issues.findIndex((i: Issue) => i.id === issue.id);
+
+      if (existingIndex !== -1) {
+        // Update existing issue
+        issues[existingIndex] = issue;
+      } else {
+        // Add new issue to the beginning
+        issues.unshift(issue);
+
+        // Keep only the last 50 issues
+        if (issues.length > 50) {
+          issues.splice(50);
+        }
       }
 
       localStorage.setItem("wukkie_issues", JSON.stringify(issues));
@@ -721,6 +817,28 @@ class WukkieApp {
 
         const timeAgo = this.formatTimeAgo(new Date(issue.createdAt));
 
+        // Determine Bluesky status display
+        let blueskyStatus = "";
+        let retryButtons = "";
+
+        if (issue.blueskyStatus === "posted" && issue.blueskyUri) {
+          blueskyStatus =
+            '<span class="bluesky-status posted">📢 On Bluesky</span>';
+        } else if (issue.blueskyStatus === "failed") {
+          blueskyStatus =
+            '<span class="bluesky-status failed">❌ Bluesky post failed</span>';
+          retryButtons = `<button class="action-btn retry-btn" onclick="wukkie.retryBlueskyPost('${issue.id}')">🔄 Retry Bluesky</button>`;
+        } else if (issue.blueskyStatus === "pending") {
+          blueskyStatus =
+            '<span class="bluesky-status pending">⏳ Posting to Bluesky...</span>';
+        } else {
+          blueskyStatus =
+            '<span class="bluesky-status local-only">📝 Local only</span>';
+          if (this.session && !this.session.isDemo) {
+            retryButtons = `<button class="action-btn post-btn" onclick="wukkie.postToBluesky('${issue.id}')">📢 Post to Bluesky</button>`;
+          }
+        }
+
         return `
         <div class="issue-item">
           <div class="issue-header">
@@ -732,12 +850,14 @@ class WukkieApp {
             <div class="issue-hashtags">
               ${issue.hashtags.map((tag) => `<span class="hashtag">${this.escapeHtml(tag)}</span>`).join("")}
             </div>
-            <div class="issue-author">${timeAgo} • @${this.escapeHtml(issue.author)}</div>
+            <div class="issue-author">${timeAgo} • @${this.escapeHtml(issue.author)} ${blueskyStatus}</div>
           </div>
           <div class="issue-actions">
             <button class="action-btn" onclick="wukkie.voteIssue('${issue.id}')">👍 ${Math.floor(Math.random() * 50)}</button>
             <button class="action-btn" onclick="wukkie.commentOnIssue('${issue.id}')">💬 ${Math.floor(Math.random() * 10)}</button>
             ${issue.location ? `<button class="action-btn" onclick="wukkie.showOnMap('${issue.id}')">📍 View</button>` : ""}
+            <button class="action-btn edit-btn" onclick="wukkie.editIssue('${issue.id}')">✏️ Edit</button>
+            ${retryButtons}
           </div>
         </div>
       `;
@@ -834,6 +954,140 @@ class WukkieApp {
     this.showStatus("Issue details view coming soon! 📋", "info");
   }
 
+  public async retryBlueskyPost(issueId: string): Promise<void> {
+    console.log("Retry Bluesky post for issue:", issueId);
+
+    if (!this.session || this.session.isDemo) {
+      this.showStatus("Please login to post to Bluesky", "error");
+      return;
+    }
+
+    if (!this.atprotoManager) {
+      this.showStatus("Bluesky connection not available", "error");
+      return;
+    }
+
+    const issue = this.getIssueById(issueId);
+    if (!issue) {
+      this.showStatus("Issue not found", "error");
+      return;
+    }
+
+    try {
+      this.showStatus("Retrying Bluesky post...", "info");
+      issue.blueskyStatus = "pending";
+      this.updateIssueInStorage(issue);
+      this.loadIssues(); // Refresh display
+
+      await this.createIssueRecord({ ...issue, postToBluesky: true });
+    } catch (error) {
+      console.error("Retry Bluesky post error:", error);
+      issue.blueskyStatus = "failed";
+      this.updateIssueInStorage(issue);
+      this.loadIssues();
+    }
+  }
+
+  public async postToBluesky(issueId: string): Promise<void> {
+    console.log("Post to Bluesky for issue:", issueId);
+
+    if (!this.session || this.session.isDemo) {
+      this.showStatus("Please login to post to Bluesky", "error");
+      return;
+    }
+
+    const issue = this.getIssueById(issueId);
+    if (!issue) {
+      this.showStatus("Issue not found", "error");
+      return;
+    }
+
+    if (issue.blueskyStatus === "posted") {
+      this.showStatus("Issue already posted to Bluesky", "info");
+      return;
+    }
+
+    try {
+      this.showStatus("Posting to Bluesky...", "info");
+      issue.blueskyStatus = "pending";
+      this.updateIssueInStorage(issue);
+      this.loadIssues(); // Refresh display
+
+      await this.createIssueRecord({ ...issue, postToBluesky: true });
+    } catch (error) {
+      console.error("Post to Bluesky error:", error);
+      issue.blueskyStatus = "failed";
+      this.updateIssueInStorage(issue);
+      this.loadIssues();
+    }
+  }
+
+  public editIssue(issueId: string): void {
+    console.log("Edit issue:", issueId);
+
+    const issue = this.getIssueById(issueId);
+    if (!issue) {
+      this.showStatus("Issue not found", "error");
+      return;
+    }
+
+    // Populate form with existing issue data
+    const titleInput = document.getElementById("title") as HTMLInputElement;
+    const descriptionTextarea = document.getElementById(
+      "description",
+    ) as HTMLTextAreaElement;
+    const categorySelect = document.getElementById(
+      "category",
+    ) as HTMLSelectElement;
+    const hashtagsInput = document.getElementById(
+      "hashtags",
+    ) as HTMLInputElement;
+    const postToBlueskyCheckbox = document.getElementById(
+      "post-to-bluesky",
+    ) as HTMLInputElement;
+    const locationInput = document.getElementById(
+      "location",
+    ) as HTMLInputElement;
+
+    if (titleInput) titleInput.value = issue.title;
+    if (descriptionTextarea) descriptionTextarea.value = issue.description;
+    if (categorySelect) categorySelect.value = issue.category;
+    if (hashtagsInput) hashtagsInput.value = issue.hashtags.join(" ");
+    if (postToBlueskyCheckbox) {
+      postToBlueskyCheckbox.checked = issue.blueskyStatus !== "local-only";
+    }
+    if (locationInput && issue.location) {
+      locationInput.value = issue.location;
+      this.userLocation = issue.location;
+      // Update hidden lat/lng fields if available
+      const latInput = document.getElementById("lat") as HTMLInputElement;
+      const lngInput = document.getElementById("lng") as HTMLInputElement;
+      if (latInput && issue.lat) latInput.value = issue.lat.toString();
+      if (lngInput && issue.lng) lngInput.value = issue.lng.toString();
+    }
+
+    // Store the issue ID for update instead of create
+    (
+      document.getElementById("issue-form") as HTMLFormElement
+    ).dataset.editingId = issueId;
+
+    // Update submit button text
+    const submitBtn = document.getElementById(
+      "submit-btn",
+    ) as HTMLButtonElement;
+    if (submitBtn) submitBtn.textContent = "Update Issue";
+
+    // Scroll to form
+    document
+      .getElementById("issue-form")
+      ?.scrollIntoView({ behavior: "smooth" });
+
+    this.showStatus(
+      "Loaded issue for editing. Make your changes and submit.",
+      "info",
+    );
+  }
+
   /**
    * Helper method to add timeout to promises
    */
@@ -878,7 +1132,7 @@ class WukkieApp {
   }
 
   /**
-   * Set a random tagline from the available options
+   * Hide loading state
    */
   private setRandomTagline(): void {
     try {
@@ -897,8 +1151,37 @@ class WukkieApp {
   }
 
   /**
-   * Hide loading state
+   * Get issue by ID from local storage
    */
+  private getIssueById(issueId: string): Issue | null {
+    try {
+      const stored = localStorage.getItem("wukkie_issues");
+      const issues: Issue[] = stored ? JSON.parse(stored) : [];
+      return issues.find((issue) => issue.id === issueId) || null;
+    } catch (error) {
+      console.error("Error getting issue by ID:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Update issue in local storage
+   */
+  private updateIssueInStorage(updatedIssue: Issue): void {
+    try {
+      const existing = localStorage.getItem("wukkie_issues");
+      const issues: Issue[] = existing ? JSON.parse(existing) : [];
+
+      const index = issues.findIndex((issue) => issue.id === updatedIssue.id);
+      if (index !== -1) {
+        issues[index] = updatedIssue;
+        localStorage.setItem("wukkie_issues", JSON.stringify(issues));
+      }
+    } catch (error) {
+      console.error("Error updating issue in storage:", error);
+    }
+  }
+
   private hideLoading(): void {
     this.isLoading = false;
     const statusEl = document.getElementById("status-message") as HTMLElement;

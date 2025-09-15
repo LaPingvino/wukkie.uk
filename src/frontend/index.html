@@ -46,8 +46,8 @@
                 ATProto.
                 <strong>Quick start:</strong> Use "🎭 Demo Login" to try it
                 instantly, or securely login with your Bluesky account using
-                <strong>modern OAuth</strong> - no app passwords needed! All
-                issues are currently stored locally for testing.
+                <strong>modern OAuth</strong> - no app passwords needed! Choose
+                to store issues locally only or share them on Bluesky.
             </div>
 
             <div class="main-grid">
@@ -139,6 +139,25 @@
                                 name="hashtags"
                                 placeholder="#pothole #mainstreet #infrastructure"
                             />
+                        </div>
+
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input
+                                    type="checkbox"
+                                    id="post-to-bluesky"
+                                    name="postToBluesky"
+                                    checked
+                                />
+                                <label for="post-to-bluesky">
+                                    📢 Share on Bluesky (helps others discover
+                                    this issue)
+                                </label>
+                            </div>
+                            <small class="form-hint">
+                                Unchecked = Local storage only. Checked = Post
+                                to Bluesky for community visibility.
+                            </small>
                         </div>
 
                         <button type="submit" id="submit-btn">

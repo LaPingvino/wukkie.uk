@@ -158,6 +158,25 @@ body {
     resize: vertical;
 }
 
+.checkbox-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin: 0;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+}
+
+.checkbox-group label {
+    margin: 0;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
 .form-hint {
     display: block;
     color: #6b7280;
@@ -379,6 +398,39 @@ button[type="submit"]:disabled {
 .action-btn:hover {
     background: #e5e7eb;
     transform: translateY(-1px);
+}
+
+.retry-btn {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.retry-btn:hover {
+    background: #fcd34d;
+    border-color: #d97706;
+}
+
+.edit-btn {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+}
+
+.edit-btn:hover {
+    background: #bfdbfe;
+    border-color: #2563eb;
+}
+
+.post-btn {
+    background: #dcfce7;
+    border-color: #10b981;
+    color: #065f46;
+}
+
+.post-btn:hover {
+    background: #bbf7d0;
+    border-color: #059669;
 }
 
 /* Demo notice */
@@ -647,6 +699,41 @@ button.loading::after {
 
 .issue-author {
     margin-top: 0.25rem;
+}
+
+/* Bluesky status indicators */
+.bluesky-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+}
+
+.bluesky-status.posted {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.bluesky-status.failed {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.bluesky-status.pending {
+    background: #fef3c7;
+    color: #d97706;
+    border: 1px solid #fed7aa;
+}
+
+.bluesky-status.local-only {
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
 }
 
 /* Loading states */
