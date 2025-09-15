@@ -404,6 +404,7 @@ class WukkieApp {
   }
 
   private async getCurrentLocation(): Promise<void> {
+    console.log("🟢 [DEBUG] getCurrentLocation: Starting location retrieval");
     const feedback = document.getElementById(
       "location-feedback",
     ) as HTMLElement;
@@ -433,12 +434,12 @@ class WukkieApp {
         "location-label",
       ) as HTMLInputElement;
       const label = labelInput?.value || undefined;
+      console.log("🟢 [DEBUG] getCurrentLocation: Label:", label);
 
-      // Use the privacy system to get current location
-      const privacyLocation =
-        await LocationPrivacySystem.createFromCurrentLocation(label);
-
-      // Get precise coordinates for map centering (not stored)
+      // Get precise coordinates first
+      console.log(
+        "🟢 [DEBUG] getCurrentLocation: Getting position from browser",
+      );
       const position = await new Promise<GeolocationPosition>(
         (resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -450,8 +451,37 @@ class WukkieApp {
       );
 
       const { latitude, longitude } = position.coords;
+      console.log(
+        "🟢 [DEBUG] getCurrentLocation: Got coordinates:",
+        latitude,
+        longitude,
+      );
+
+      if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
+        throw new Error(
+          `Invalid coordinates received: lat=${latitude}, lng=${longitude}`,
+        );
+      }
+
+      // Use the privacy system to get current location
+      console.log("🟢 [DEBUG] getCurrentLocation: Creating privacy location");
+      const privacyLocation =
+        await LocationPrivacySystem.createFromCurrentLocation(label);
+      console.log(
+        "🟢 [DEBUG] getCurrentLocation: Privacy location created:",
+        privacyLocation,
+      );
+
+      if (!privacyLocation || !privacyLocation.geoHashtag) {
+        throw new Error("Failed to create privacy location");
+      }
 
       // Set the privacy location
+      console.log(
+        "🟢 [DEBUG] getCurrentLocation: Setting privacy location with coords:",
+        latitude,
+        longitude,
+      );
       await this.setPrivacyLocation(privacyLocation, latitude, longitude);
 
       this.showStatus(
@@ -465,15 +495,20 @@ class WukkieApp {
       if (error instanceof GeolocationPositionError) {
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            message += "Location access was denied.";
+            message +=
+              "Location access was denied. Please allow location access and try again.";
             break;
           case error.POSITION_UNAVAILABLE:
-            message += "Location information is unavailable.";
+            message +=
+              "Location information is unavailable. Please try again later.";
             break;
           case error.TIMEOUT:
-            message += "Location request timed out.";
+            message += "Location request timed out. Please try again.";
             break;
         }
+      } else {
+        message +=
+          error instanceof Error ? error.message : "Unknown error occurred.";
       }
 
       if (feedback) {
@@ -636,7 +671,7 @@ class WukkieApp {
     if (locationInput?.value) {
       const inputGeoHashtags = locationInput.value
         .split(/\s+/)
-        .filter((tag) => isValidGeoHashtag(tag))
+        .filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag))
         .filter((tag) => !parsedHashtags.includes(tag));
       parsedHashtags.unshift(...inputGeoHashtags);
     }
@@ -725,7 +760,7 @@ class WukkieApp {
 
       // Extract all geo hashtags from hashtags array or use current privacy location
       const geoHashtags = issue.hashtags.filter((tag) =>
-        isValidGeoHashtag(tag),
+        LocationPrivacySystem.isValidGeoHashtag(tag),
       );
       let privacyLocation = this.currentPrivacyLocation;
 
@@ -907,7 +942,7 @@ class WukkieApp {
           <div class="issue-actions">
             <button class="action-btn" onclick="wukkie.voteIssue('${issue.id}')">👍 ${Math.floor(Math.random() * 50)}</button>
             <button class="action-btn" onclick="wukkie.commentOnIssue('${issue.id}')">💬 ${Math.floor(Math.random() * 10)}</button>
-            ${issue.hashtags.filter((tag) => isValidGeoHashtag(tag)).length > 0 ? `<button class="action-btn" onclick="wukkie.showOnMap('${issue.id}')">📍 ${issue.hashtags.filter((tag) => isValidGeoHashtag(tag)).length > 1 ? `View ${issue.hashtags.filter((tag) => isValidGeoHashtag(tag)).length} Locations` : "View Location"}</button>` : ""}
+            ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length > 0 ? `<button class="action-btn" onclick="wukkie.showOnMap('${issue.id}')">📍 ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length > 1 ? `View ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length} Locations` : "View Location"}</button>` : ""}
             <button class="action-btn edit-btn" onclick="wukkie.editIssue('${issue.id}')">✏️ Edit</button>
             ${retryButtons}
           </div>
@@ -978,7 +1013,9 @@ class WukkieApp {
 
     // Extract all geo hashtags from hashtags to show on map
     const geoHashtags =
-      issue?.hashtags.filter((tag) => isValidGeoHashtag(tag)) || [];
+      issue?.hashtags.filter((tag) =>
+        LocationPrivacySystem.isValidGeoHashtag(tag),
+      ) || [];
     if (geoHashtags.length > 0 && this.map) {
       try {
         // Clear existing markers and areas
@@ -1170,7 +1207,9 @@ class WukkieApp {
       postToBlueskyCheckbox.checked = issue.blueskyStatus !== "local-only";
     }
     // Extract all geo hashtags from hashtags for editing
-    const geoHashtags = issue.hashtags.filter((tag) => isValidGeoHashtag(tag));
+    const geoHashtags = issue.hashtags.filter((tag) =>
+      LocationPrivacySystem.isValidGeoHashtag(tag),
+    );
     if (locationInput && geoHashtags.length > 0) {
       // Show all geo hashtags in the input, space-separated
       locationInput.value = geoHashtags.join(" ");
@@ -1275,7 +1314,9 @@ class WukkieApp {
       "location-input",
     ) as HTMLInputElement;
     const existingLocations = locationInput?.value
-      ? locationInput.value.split(/\s+/).filter((tag) => isValidGeoHashtag(tag))
+      ? locationInput.value
+          .split(/\s+/)
+          .filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag))
       : [];
 
     // Check if this location already exists (avoid duplicates)
@@ -1399,6 +1440,28 @@ class WukkieApp {
     originalLat: number,
     originalLng: number,
   ): Promise<void> {
+    console.log(
+      "🟢 [DEBUG] setPrivacyLocation: Starting with:",
+      privacyLocation,
+      originalLat,
+      originalLng,
+    );
+
+    if (!privacyLocation || !privacyLocation.geoHashtag) {
+      throw new Error("Invalid privacy location provided");
+    }
+
+    if (
+      !originalLat ||
+      !originalLng ||
+      isNaN(originalLat) ||
+      isNaN(originalLng)
+    ) {
+      throw new Error(
+        `Invalid coordinates provided: lat=${originalLat}, lng=${originalLng}`,
+      );
+    }
+
     this.currentPrivacyLocation = privacyLocation;
 
     // Update map with privacy area instead of precise location
@@ -1414,10 +1477,24 @@ class WukkieApp {
       });
 
       // Get the area covered by this privacy location
+      console.log(
+        "🟢 [DEBUG] setPrivacyLocation: Parsing geo hashtag:",
+        privacyLocation.geoHashtag,
+      );
       const area = LocationPrivacySystem.parseGeoHashtag(
         privacyLocation.geoHashtag,
       );
-      if (area) {
+      console.log("🟢 [DEBUG] setPrivacyLocation: Parsed area:", area);
+
+      if (
+        area &&
+        area.southWest &&
+        area.northEast &&
+        typeof area.southWest.lat === "number" &&
+        typeof area.southWest.lng === "number" &&
+        typeof area.northEast.lat === "number" &&
+        typeof area.northEast.lng === "number"
+      ) {
         // Draw rectangle showing privacy area
         const bounds = window.L.latLngBounds(
           [area.southWest.lat, area.southWest.lng],
@@ -1439,6 +1516,22 @@ class WukkieApp {
 
         // Center map on the privacy area
         this.map.fitBounds(bounds);
+      } else {
+        console.warn(
+          "🟡 [WARN] setPrivacyLocation: Could not parse area or invalid area data, centering on original coordinates",
+        );
+        // Fallback: center map on original coordinates
+        this.map.setView([originalLat, originalLng], 15);
+
+        // Add a simple marker
+        window.L.marker([originalLat, originalLng]).addTo(this.map).bindPopup(`
+            <div class="privacy-popup">
+              <strong>Privacy Location</strong><br>
+              ${privacyLocation.geoHashtag}<br>
+              ${privacyLocation.label ? `"${privacyLocation.label}"<br>` : ""}
+              <small>Approximate area</small>
+            </div>
+          `);
       }
     }
 
@@ -1484,7 +1577,9 @@ class WukkieApp {
 
     // Split input by spaces and filter for valid geo hashtags
     const tokens = value.split(/\s+/);
-    const geoHashtags = tokens.filter((token) => isValidGeoHashtag(token));
+    const geoHashtags = tokens.filter((token) =>
+      LocationPrivacySystem.isValidGeoHashtag(token),
+    );
 
     if (geoHashtags.length > 0) {
       try {
