@@ -40,5 +40,9 @@
   "homepage": "https://wukkie.uk",
   "bugs": {
     "url": "https://github.com/LaVLaS/wukkie.uk/issues"
+  },
+  "dependencies": {
+    "@atproto/api": "^0.16.9",
+    "pluscodes": "^2.6.0"
   }
 }
