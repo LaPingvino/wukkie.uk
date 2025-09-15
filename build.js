@@ -61,11 +61,11 @@ const workerTemplate = `/**
  * Generated with embedded frontend assets
  */
 
-const HTML_CONTENT = \`${indexHtml.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`;
+const HTML_CONTENT = ${JSON.stringify(indexHtml)};
 
-const APP_JS = \`${appJs.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`;
+const APP_JS = ${JSON.stringify(appJs)};
 
-const APP_CSS = \`${appCss.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`;
+const APP_CSS = ${JSON.stringify(appCss)};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
