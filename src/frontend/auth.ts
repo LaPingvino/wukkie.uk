@@ -129,62 +129,71 @@ class BlueskyAuth {
   }
 
   /**
-   * Handle OAuth callback
+   * Handle OAuth callback (simplified and non-blocking)
    */
   async handleOAuthCallback(): Promise<boolean> {
-    console.log("🔍 Checking for OAuth callback...");
-
     try {
-      // Check if we have OAuth callback parameters
+      // Quick check for OAuth parameters
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get("code");
       const state = urlParams.get("state");
       const error = urlParams.get("error");
 
+      // Return immediately if no OAuth parameters
       if (!code && !error) {
-        console.log("🔍 No OAuth callback parameters found");
         return false;
       }
 
       console.log("🔍 OAuth callback detected");
 
-      // Clean up URL
+      // Clean up URL immediately
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState(null, "", cleanUrl);
 
+      // Handle error case
       if (error) {
-        throw new Error(`OAuth error: ${error}`);
+        console.error("OAuth error:", error);
+        return false;
       }
 
+      // Validate required parameters
       if (!code || !state) {
-        throw new Error("Missing required OAuth parameters");
+        console.error("Missing OAuth parameters");
+        return false;
       }
 
-      // Get stored OAuth state
+      // Get and validate stored state (with fallback)
       const storedStateData = localStorage.getItem("oauth_state");
       if (!storedStateData) {
-        throw new Error("Missing OAuth state data");
+        console.error("Missing OAuth state data");
+        return false;
       }
 
-      const stateData = JSON.parse(storedStateData);
-      localStorage.removeItem("oauth_state");
+      let stateData;
+      try {
+        stateData = JSON.parse(storedStateData);
+        localStorage.removeItem("oauth_state");
+      } catch (e) {
+        console.error("Invalid OAuth state data");
+        return false;
+      }
 
       if (stateData.state !== state) {
-        throw new Error("OAuth state mismatch");
+        console.error("OAuth state mismatch");
+        return false;
       }
 
       console.log("✅ OAuth state verified");
 
-      // Exchange code for tokens
-      await this.exchangeCodeForTokens(code, stateData);
+      // Exchange code for tokens (non-blocking)
+      this.exchangeCodeForTokens(code, stateData).catch((error) => {
+        console.error("Token exchange failed:", error);
+      });
 
-      console.log("✅ OAuth callback completed successfully");
       return true;
     } catch (error) {
-      console.error("❌ OAuth callback failed:", error);
-      throw new Error(
-        `OAuth callback failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      console.error("OAuth callback error:", error);
+      return false;
     }
   }
 
@@ -239,58 +248,78 @@ class BlueskyAuth {
   }
 
   /**
-   * Exchange authorization code for tokens
+   * Exchange authorization code for tokens (with timeout)
    */
   private async exchangeCodeForTokens(
     code: string,
     stateData: any,
   ): Promise<void> {
-    const metadata = await this.getOAuthMetadata(stateData.pds);
-    const clientId = window.location.origin + "/client-metadata.json";
+    try {
+      console.log("🔄 Exchanging code for tokens...");
 
-    const tokenResponse = await fetch(metadata.token_endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        client_id: clientId,
-        code: code,
-        redirect_uri: window.location.origin,
-        code_verifier: stateData.verifier,
-      }),
-    });
+      const metadata = await Promise.race([
+        this.getOAuthMetadata(stateData.pds),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Metadata timeout")), 5000),
+        ),
+      ]);
 
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      throw new Error(`Token exchange failed: ${errorText}`);
+      const clientId = window.location.origin + "/client-metadata.json";
+
+      const tokenResponse = await Promise.race([
+        fetch(metadata.token_endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            grant_type: "authorization_code",
+            client_id: clientId,
+            code: code,
+            redirect_uri: window.location.origin,
+            code_verifier: stateData.verifier,
+          }),
+        }),
+        new Promise<Response>((_, reject) =>
+          setTimeout(() => reject(new Error("Token request timeout")), 10000),
+        ),
+      ]);
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        throw new Error(`Token exchange failed: ${errorText}`);
+      }
+
+      const tokens = await tokenResponse.json();
+
+      // Create session
+      this.authState = {
+        isAuthenticated: true,
+        session: {
+          handle: stateData.handle,
+          did: stateData.did,
+          accessJwt: tokens.access_token,
+          refreshJwt: tokens.refresh_token || "",
+          active: true,
+        },
+        agent: null,
+        xrpc: this,
+      };
+
+      // Store session
+      localStorage.setItem(
+        "wukkie_session",
+        JSON.stringify(this.authState.session),
+      );
+
+      // Notify listeners
+      this.notifyListeners();
+
+      console.log("✅ Token exchange successful");
+    } catch (error) {
+      console.error("❌ Token exchange failed:", error);
+      throw error;
     }
-
-    const tokens = await tokenResponse.json();
-
-    // Create session
-    this.authState = {
-      isAuthenticated: true,
-      session: {
-        handle: stateData.handle,
-        did: stateData.did,
-        accessJwt: tokens.access_token,
-        refreshJwt: tokens.refresh_token || "",
-        active: true,
-      },
-      agent: null,
-      xrpc: this,
-    };
-
-    // Store session
-    localStorage.setItem(
-      "wukkie_session",
-      JSON.stringify(this.authState.session),
-    );
-
-    // Notify listeners
-    this.notifyListeners();
   }
 
   /**
@@ -328,44 +357,59 @@ class BlueskyAuth {
     console.log("🔑 Attempting to restore session...");
 
     try {
-      const stored = localStorage.getItem("wukkie_session");
-      if (!stored) {
-        console.log("🔑 No stored session found");
-        return false;
-      }
+      // Add timeout protection
+      return await Promise.race([
+        this.doRestoreSession(),
+        new Promise<boolean>((resolve) =>
+          setTimeout(() => {
+            console.log(
+              "🔑 Session restore timeout, continuing without session",
+            );
+            resolve(false);
+          }, 2000),
+        ),
+      ]);
+    } catch (error) {
+      console.error("❌ Session restore failed:", error);
+      localStorage.removeItem("wukkie_session");
+      return false;
+    }
+  }
 
-      const session: BlueskySession = JSON.parse(stored);
+  private async doRestoreSession(): Promise<boolean> {
+    const stored = localStorage.getItem("wukkie_session");
+    if (!stored) {
+      console.log("🔑 No stored session found");
+      return false;
+    }
 
-      // Demo sessions can be restored directly
-      if (session.isDemo) {
-        this.authState = {
-          isAuthenticated: true,
-          session: session,
-          agent: null,
-          xrpc: this,
-        };
-        this.notifyListeners();
-        console.log("✅ Demo session restored");
-        return true;
-      }
+    const session: BlueskySession = JSON.parse(stored);
 
-      // For real sessions, we'd need to validate tokens
-      // For now, assume they're valid
+    // Demo sessions can be restored directly
+    if (session.isDemo) {
       this.authState = {
         isAuthenticated: true,
         session: session,
         agent: null,
         xrpc: this,
       };
-
       this.notifyListeners();
-      console.log("✅ Session restored successfully");
+      console.log("✅ Demo session restored");
       return true;
-    } catch (error) {
-      console.error("❌ Session restore failed:", error);
-      localStorage.removeItem("wukkie_session");
-      return false;
     }
+
+    // For real sessions, we'd need to validate tokens
+    // For now, assume they're valid
+    this.authState = {
+      isAuthenticated: true,
+      session: session,
+      agent: null,
+      xrpc: this,
+    };
+
+    this.notifyListeners();
+    console.log("✅ Session restored successfully");
+    return true;
   }
 
   /**

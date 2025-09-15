@@ -80,38 +80,14 @@ class WukkieApp {
         this.handleAuthStateChange(authState);
       });
 
-      // Handle OAuth callback if present (with timeout)
-      try {
-        console.log("🔍 Checking for OAuth callback...");
-        await this.withTimeout(
-          blueskyAuth.handleOAuthCallback(),
-          5000,
-          "OAuth callback timeout",
-        );
-      } catch (error) {
-        console.error("OAuth callback error:", error);
-        if (!error.message.includes("timeout")) {
-          this.showStatus("Login failed. Please try again.", "error");
-        }
-      }
-
-      // Try to restore existing session (with timeout)
-      try {
-        console.log("🔑 Attempting to restore session...");
-        await this.withTimeout(
-          blueskyAuth.restoreSession(),
-          3000,
-          "Session restore timeout",
-        );
-      } catch (error) {
-        console.error("Session restore error:", error);
-        // Don't show error to user - this is expected when no session exists
-      }
-
+      // Load issues and hide loading immediately
       this.loadIssues();
       clearTimeout(emergencyTimeout);
       this.hideLoading();
-      console.log("✅ App initialization complete");
+      console.log("✅ Basic app initialization complete");
+
+      // Handle auth operations in background (non-blocking)
+      this.handleAuthInBackground();
     } catch (error) {
       console.error("💥 Critical app initialization error:", error);
       clearTimeout(emergencyTimeout);
@@ -121,6 +97,52 @@ class WukkieApp {
         "error",
       );
     }
+  }
+
+  /**
+   * Handle authentication operations in background (non-blocking)
+   */
+  private async handleAuthInBackground(): Promise<void> {
+    // Handle OAuth callback if present (non-blocking)
+    setTimeout(async () => {
+      try {
+        console.log("🔍 Checking for OAuth callback...");
+        const callbackHandled = await Promise.race([
+          blueskyAuth.handleOAuthCallback(),
+          new Promise<boolean>((_, reject) =>
+            setTimeout(() => reject(new Error("OAuth callback timeout")), 5000),
+          ),
+        ]);
+
+        if (callbackHandled) {
+          console.log("✅ OAuth callback handled successfully");
+        }
+      } catch (error) {
+        console.error("OAuth callback error:", error);
+        if (!error.message.includes("timeout")) {
+          this.showStatus("Login failed. Please try again.", "error");
+        }
+      }
+    }, 100);
+
+    // Try to restore existing session (non-blocking)
+    setTimeout(async () => {
+      try {
+        console.log("🔑 Attempting to restore session...");
+        await Promise.race([
+          blueskyAuth.restoreSession(),
+          new Promise<boolean>((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Session restore timeout")),
+              3000,
+            ),
+          ),
+        ]);
+      } catch (error) {
+        console.error("Session restore error:", error);
+        // Don't show error to user - this is expected when no session exists
+      }
+    }, 200);
   }
 
   private handleAuthStateChange(authState: AuthState): void {
