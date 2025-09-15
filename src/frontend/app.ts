@@ -50,6 +50,7 @@ class WukkieApp {
   private geocodeTimeout?: number;
   private loginModal: LoginModal;
   private authUnsubscribe?: () => void;
+  private isLoading: boolean = false;
 
   constructor() {
     this.loginModal = new LoginModal();
@@ -57,26 +58,69 @@ class WukkieApp {
   }
 
   private async init(): Promise<void> {
-    this.setupEventListeners();
-    this.initMap();
+    console.log("🚀 Initializing Wukkie app...");
+    this.showLoading("Initializing app...");
 
-    // Set up authentication state listener
-    this.authUnsubscribe = blueskyAuth.onStateChange((authState) => {
-      this.handleAuthStateChange(authState);
-    });
+    // Emergency timeout to prevent infinite loading
+    const emergencyTimeout = setTimeout(() => {
+      console.warn("⚠️ App initialization timeout reached, forcing completion");
+      this.hideLoading();
+      this.showStatus(
+        "App loaded with limited functionality. Please refresh if issues persist.",
+        "error",
+      );
+    }, 10000); // 10 second timeout
 
-    // Handle OAuth callback if present
     try {
-      await blueskyAuth.handleOAuthCallback();
+      this.setupEventListeners();
+      this.initMap();
+
+      // Set up authentication state listener
+      this.authUnsubscribe = blueskyAuth.onStateChange((authState) => {
+        this.handleAuthStateChange(authState);
+      });
+
+      // Handle OAuth callback if present (with timeout)
+      try {
+        console.log("🔍 Checking for OAuth callback...");
+        await this.withTimeout(
+          blueskyAuth.handleOAuthCallback(),
+          5000,
+          "OAuth callback timeout",
+        );
+      } catch (error) {
+        console.error("OAuth callback error:", error);
+        if (!error.message.includes("timeout")) {
+          this.showStatus("Login failed. Please try again.", "error");
+        }
+      }
+
+      // Try to restore existing session (with timeout)
+      try {
+        console.log("🔑 Attempting to restore session...");
+        await this.withTimeout(
+          blueskyAuth.restoreSession(),
+          3000,
+          "Session restore timeout",
+        );
+      } catch (error) {
+        console.error("Session restore error:", error);
+        // Don't show error to user - this is expected when no session exists
+      }
+
+      this.loadIssues();
+      clearTimeout(emergencyTimeout);
+      this.hideLoading();
+      console.log("✅ App initialization complete");
     } catch (error) {
-      console.error("OAuth callback error:", error);
-      this.showStatus("Login failed. Please try again.", "error");
+      console.error("💥 Critical app initialization error:", error);
+      clearTimeout(emergencyTimeout);
+      this.hideLoading();
+      this.showStatus(
+        "App failed to initialize properly. Please refresh the page.",
+        "error",
+      );
     }
-
-    // Try to restore existing session
-    await blueskyAuth.restoreSession();
-
-    this.loadIssues();
   }
 
   private handleAuthStateChange(authState: AuthState): void {
@@ -132,24 +176,41 @@ class WukkieApp {
   }
 
   private initMap(): void {
+    console.log("🗺️ Initializing map...");
     try {
+      // Check if Leaflet is loaded
+      if (!window.L) {
+        console.error("❌ Leaflet not loaded");
+        this.showStatus(
+          "Map library not loaded. Please refresh the page.",
+          "error",
+        );
+        return;
+      }
+      console.log("✅ Leaflet loaded successfully");
+
       // Initialize map centered on Netherlands (wukkie's homeland!)
+      console.log("🗺️ Creating map instance...");
       this.map = window.L.map("map").setView([52.3676, 4.9041], 10);
+      console.log("✅ Map instance created");
 
       // Add OpenStreetMap tiles
+      console.log("🗺️ Adding tile layer...");
       window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap contributors",
       }).addTo(this.map);
+      console.log("✅ Tile layer added");
 
       // Add click handler for setting location
+      console.log("🗺️ Setting up click handler...");
       this.map.on("click", (e: L.LeafletMouseEvent) => {
         this.setLocation(e.latlng.lat, e.latlng.lng);
       });
+      console.log("✅ Click handler set up");
 
-      // Try to get user's current location
-      this.getCurrentLocation();
+      console.log("✅ Map initialization complete");
     } catch (error) {
-      console.error("Map initialization error:", error);
+      console.error("❌ Map initialization error:", error);
       this.showStatus("Map failed to load. Please refresh the page.", "error");
     }
   }
@@ -688,6 +749,68 @@ class WukkieApp {
   public viewIssue(issueId: string): void {
     console.log("View issue details:", issueId);
     this.showStatus("Issue details view coming soon! 📋", "info");
+  }
+
+  /**
+   * Helper method to add timeout to promises
+   */
+  private withTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number,
+    errorMessage: string,
+  ): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(errorMessage)), timeoutMs),
+      ),
+    ]);
+  }
+
+  /**
+   * Show loading state
+   */
+  private showLoading(message: string = "Loading..."): void {
+    this.isLoading = true;
+    const statusEl = document.getElementById("status-message") as HTMLElement;
+    if (statusEl) {
+      statusEl.innerHTML = `
+        <div class="loading-indicator">
+          <div class="loading-spinner"></div>
+          <span>${message}</span>
+        </div>
+      `;
+      statusEl.className = "status-message info";
+      statusEl.style.display = "block";
+    }
+
+    // Disable all buttons during loading
+    const buttons = document.querySelectorAll("button");
+    buttons.forEach((button) => {
+      button.disabled = true;
+      button.classList.add("loading");
+    });
+  }
+
+  /**
+   * Hide loading state
+   */
+  private hideLoading(): void {
+    this.isLoading = false;
+    const statusEl = document.getElementById("status-message") as HTMLElement;
+    if (statusEl) {
+      statusEl.style.display = "none";
+    }
+
+    // Re-enable buttons
+    const buttons = document.querySelectorAll("button");
+    buttons.forEach((button) => {
+      button.disabled = false;
+      button.classList.remove("loading");
+    });
+
+    // Update auth UI to ensure correct button states
+    this.updateAuthUI(this.session !== null);
   }
 }
 

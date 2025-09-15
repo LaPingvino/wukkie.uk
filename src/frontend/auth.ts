@@ -112,14 +112,19 @@ class BlueskyAuth {
    * Handle OAuth callback after redirect
    */
   async handleOAuthCallback(): Promise<boolean> {
+    console.log("🔍 handleOAuthCallback: Starting...");
     try {
       // Check if this is an OAuth callback
       if (
         !window.location.href.includes("state") &&
         !window.location.href.includes("code")
       ) {
+        console.log("🔍 handleOAuthCallback: No OAuth params found, skipping");
         return false;
       }
+      console.log(
+        "🔍 handleOAuthCallback: OAuth params detected, processing...",
+      );
 
       // Extract parameters from URL fragment or search params
       const urlParams = new URLSearchParams(window.location.search);
@@ -131,13 +136,18 @@ class BlueskyAuth {
       fragmentParams.forEach((value, key) => params.set(key, value));
 
       if (!params.has("state") && !params.has("code")) {
+        console.log(
+          "🔍 handleOAuthCallback: No valid OAuth params after parsing",
+        );
         return false;
       }
 
+      console.log("🔍 handleOAuthCallback: Cleaning up URL...");
       // Clean up URL
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState(null, "", cleanUrl);
 
+      console.log("🔍 handleOAuthCallback: Finalizing authorization...");
       // Finalize authorization
       const session = await finalizeAuthorization(params);
       const agent = new OAuthUserAgent(session);
@@ -164,9 +174,10 @@ class BlueskyAuth {
       // Notify listeners
       this.notifyListeners();
 
+      console.log("✅ handleOAuthCallback: Success!");
       return true;
     } catch (error) {
-      console.error("OAuth callback error:", error);
+      console.error("❌ handleOAuthCallback: Error:", error);
       throw new Error(
         `OAuth callback failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -177,27 +188,37 @@ class BlueskyAuth {
    * Restore existing session from storage
    */
   async restoreSession(): Promise<boolean> {
+    console.log("🔑 restoreSession: Starting...");
     try {
       const sessions = localStorage.getItem("atcute-oauth:sessions");
       if (!sessions) {
+        console.log("🔑 restoreSession: No sessions in localStorage");
         return false;
       }
+      console.log("🔑 restoreSession: Found sessions, parsing...");
 
       const sessionData = JSON.parse(sessions);
       const dids = Object.keys(sessionData);
 
       if (dids.length === 0) {
+        console.log("🔑 restoreSession: No DIDs found in sessions");
         return false;
       }
 
+      console.log(
+        `🔑 restoreSession: Found ${dids.length} session(s), using first one`,
+      );
       // Use the first (most recent) session
       const did = dids[0];
+      console.log("🔑 restoreSession: Getting session for DID:", did);
       const session = await getSession(did, { allowStale: true });
 
       if (!session) {
+        console.log("🔑 restoreSession: Session not found or invalid");
         return false;
       }
 
+      console.log("🔑 restoreSession: Creating OAuth agent and client...");
       const agent = new OAuthUserAgent(session);
       const xrpc = new Client({ handler: agent });
 
@@ -218,9 +239,10 @@ class BlueskyAuth {
       // Notify listeners
       this.notifyListeners();
 
+      console.log("✅ restoreSession: Success!");
       return true;
     } catch (error) {
-      console.error("Session restore error:", error);
+      console.error("❌ restoreSession: Error:", error);
       return false;
     }
   }

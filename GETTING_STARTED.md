@@ -11,12 +11,11 @@ Before you begin, make sure you have:
 - **A Cloudflare account** - [Sign up free](https://cloudflare.com/)
 - **A Bluesky account** - [Join here](https://bsky.app/)
 
-### Generate a Bluesky App Password
+### Prepare Your Bluesky Account
 
-1. Go to [bsky.app](https://bsky.app) and log in
-2. Navigate to Settings → App Passwords
-3. Create a new app password (save this - you'll need it for testing)
-4. **Never use your main Bluesky password in the app!**
+1. Go to [bsky.app](https://bsky.app) and make sure you have an account
+2. Note your handle (e.g., `yourname.bsky.social`)
+3. **No app passwords needed!** The app uses secure OAuth authentication
 
 ## 🚀 Quick Setup
 
@@ -48,10 +47,11 @@ You should see output like:
 
 1. Open your browser to `http://localhost:8787`
 2. You should see the Wukkie.uk interface
-3. Click "Login with Bluesky"
+3. Click "Login with Bluesky" to open the secure login modal
 4. Enter your Bluesky handle (e.g., `yourname.bsky.social`)
-5. Enter your **app password** (not your main password!)
-6. You should see "Successfully logged in!"
+5. You'll be redirected to Bluesky's secure OAuth page
+6. Login with your regular Bluesky credentials
+7. You'll be redirected back and see "Welcome back!" message
 
 ### 4. Test Issue Creation
 
@@ -67,7 +67,8 @@ You should see output like:
 
 ## 🎯 What Works Right Now
 
-- ✅ Bluesky authentication
+- ✅ Secure OAuth authentication with Bluesky
+- ✅ Modern login modal with user guidance
 - ✅ Issue creation form
 - ✅ GPS location capture
 - ✅ Interactive maps (click to set location)
@@ -119,9 +120,10 @@ npm run deploy
 
 ### "Login failed" Error
 
-- **Check your app password**: Make sure you're using an app password, not your main password
 - **Check your handle**: Should be in format `username.bsky.social`
 - **Network issues**: Try again in a few seconds
+- **Browser compatibility**: Make sure you're using a modern browser
+- **Clear browser cache**: Try refreshing or clearing browser data
 
 ### Map Not Loading
 
