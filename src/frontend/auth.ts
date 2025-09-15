@@ -23,9 +23,18 @@ export interface AuthState {
 }
 
 // Simple base64url encoding/decoding
-function base64UrlEncode(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  const base64 = btoa(String.fromCharCode(...bytes));
+function base64UrlEncode(input: ArrayBuffer | Uint8Array | string): string {
+  let base64: string;
+
+  if (typeof input === "string") {
+    // Handle string input
+    base64 = btoa(input);
+  } else {
+    // Handle ArrayBuffer or Uint8Array input
+    const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
+    base64 = btoa(String.fromCharCode(...bytes));
+  }
+
   return base64.split("+").join("-").split("/").join("_").split("=").join("");
 }
 
@@ -71,11 +80,127 @@ class BlueskyAuth {
   };
 
   private listeners: Array<(state: AuthState) => void> = [];
+  private dpopKeyPair: CryptoKeyPair | null = null;
+  private dpopJwk: JsonWebKey | null = null;
+  private dpopEnabled: boolean = false;
 
   constructor() {
     console.log("🟢 [DEBUG] BlueskyAuth constructor: Starting");
     console.log("🔧 BlueskyAuth: Initializing OAuth from scratch...");
+    this.initializeDPoP();
     console.log("🟢 [DEBUG] BlueskyAuth constructor: Complete");
+  }
+
+  /**
+   * Initialize DPoP key pair for proof generation
+   */
+  private async initializeDPoP(): Promise<void> {
+    try {
+      // Check if Web Crypto API is available
+      if (!window.crypto || !window.crypto.subtle) {
+        console.warn("⚠️ Web Crypto API not available, DPoP disabled");
+        return;
+      }
+
+      // Generate EC P-256 key pair for DPoP
+      this.dpopKeyPair = await window.crypto.subtle.generateKey(
+        {
+          name: "ECDSA",
+          namedCurve: "P-256",
+        },
+        true, // extractable
+        ["sign", "verify"],
+      );
+
+      // Export public key as JWK for DPoP proofs
+      this.dpopJwk = await window.crypto.subtle.exportKey(
+        "jwk",
+        this.dpopKeyPair.publicKey,
+      );
+
+      this.dpopEnabled = true;
+      console.log("🔑 DPoP key pair initialized successfully");
+    } catch (error) {
+      console.error("❌ Failed to initialize DPoP:", error);
+      console.warn("⚠️ Continuing without DPoP support");
+      this.dpopKeyPair = null;
+      this.dpopJwk = null;
+      this.dpopEnabled = false;
+    }
+  }
+
+  /**
+   * Create a DPoP proof JWT
+   */
+  private async createDPoPProof(
+    method: string,
+    url: string,
+  ): Promise<string | null> {
+    if (!this.dpopEnabled || !this.dpopKeyPair || !this.dpopJwk) {
+      if (!this.dpopEnabled) {
+        console.debug("🔄 DPoP not available, skipping proof creation");
+      }
+      return null;
+    }
+
+    try {
+      const now = Math.floor(Date.now() / 1000);
+      const jti = this.generateJti();
+
+      // Create JWT header
+      const header = {
+        typ: "dpop+jwt",
+        alg: "ES256",
+        jwk: {
+          kty: this.dpopJwk.kty,
+          crv: this.dpopJwk.crv,
+          x: this.dpopJwk.x,
+          y: this.dpopJwk.y,
+        },
+      };
+
+      // Create JWT payload
+      const payload = {
+        jti: jti,
+        htm: method,
+        htu: url,
+        iat: now,
+      };
+
+      // Create and sign JWT
+      const headerB64 = base64UrlEncode(JSON.stringify(header));
+      const payloadB64 = base64UrlEncode(JSON.stringify(payload));
+      const signatureInput = `${headerB64}.${payloadB64}`;
+
+      const signature = await window.crypto.subtle.sign(
+        {
+          name: "ECDSA",
+          hash: "SHA-256",
+        },
+        this.dpopKeyPair.privateKey,
+        new TextEncoder().encode(signatureInput),
+      );
+
+      const signatureB64 = base64UrlEncode(new Uint8Array(signature));
+      const dpopProof = `${signatureInput}.${signatureB64}`;
+
+      console.log("🔑 DPoP proof created successfully");
+      return dpopProof;
+    } catch (error) {
+      console.error("❌ Failed to create DPoP proof:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Generate a unique JWT ID for DPoP proof
+   */
+  private generateJti(): string {
+    const array = new Uint8Array(16);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
+      "",
+    );
   }
 
   /**
@@ -341,7 +466,7 @@ class BlueskyAuth {
       `${pds}/.well-known/oauth-protected-resource`,
     ];
 
-    let lastError: Error;
+    let lastError: Error = new Error("No OAuth metadata endpoints available");
 
     for (const endpoint of endpoints) {
       try {
@@ -396,12 +521,24 @@ class BlueskyAuth {
 
       const clientId = window.location.origin + "/client-metadata.json";
 
+      // Create DPoP proof for token endpoint
+      const dpopProof = await this.createDPoPProof(
+        "POST",
+        metadata.token_endpoint,
+      );
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/x-www-form-urlencoded",
+      };
+
+      if (dpopProof) {
+        headers["DPoP"] = dpopProof;
+      }
+
       const tokenResponse = await Promise.race([
         fetch(metadata.token_endpoint, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
+          headers,
           body: new URLSearchParams({
             grant_type: "authorization_code",
             client_id: clientId,
@@ -657,12 +794,21 @@ class BlueskyAuth {
       const url = `https://bsky.social/xrpc/${options.nsid}`;
       const method = options.type.toUpperCase();
 
+      // Create DPoP proof for API request
+      const dpopProof = await this.createDPoPProof(method, url);
+
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${this.authState.session.accessJwt}`,
+        "Content-Type": "application/json",
+      };
+
+      if (dpopProof) {
+        headers["DPoP"] = dpopProof;
+      }
+
       const requestInit: RequestInit = {
         method,
-        headers: {
-          Authorization: `Bearer ${this.authState.session.accessJwt}`,
-          "Content-Type": "application/json",
-        },
+        headers,
       };
 
       if (method === "POST" && options.data) {
