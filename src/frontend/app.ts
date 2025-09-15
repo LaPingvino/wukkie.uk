@@ -610,8 +610,8 @@ class WukkieApp {
     if (!hashtagsString) return [];
 
     return hashtagsString
-      .split(/\s+/)
-      .filter((tag) => tag.startsWith("#"))
+      .split(" ")
+      .filter((tag) => tag.trim() && tag.startsWith("#"))
       .map((tag) => tag.toLowerCase())
       .filter((tag, index, arr) => arr.indexOf(tag) === index); // Remove duplicates
   }

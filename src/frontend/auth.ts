@@ -26,11 +26,11 @@ export interface AuthState {
 function base64UrlEncode(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   const base64 = btoa(String.fromCharCode(...bytes));
-  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return base64.split("+").join("-").split("/").join("_").split("=").join("");
 }
 
 function base64UrlDecode(str: string): ArrayBuffer {
-  str = str.replace(/-/g, "+").replace(/_/g, "/");
+  str = str.split("-").join("+").split("_").join("/");
   while (str.length % 4) str += "=";
   const decoded = atob(str);
   const bytes = new Uint8Array(decoded.length);
