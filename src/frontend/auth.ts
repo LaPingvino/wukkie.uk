@@ -135,6 +135,7 @@ class BlueskyAuth {
   private async createDPoPProof(
     method: string,
     url: string,
+    nonce?: string,
   ): Promise<string | null> {
     if (!this.dpopEnabled || !this.dpopKeyPair || !this.dpopJwk) {
       if (!this.dpopEnabled) {
@@ -160,12 +161,17 @@ class BlueskyAuth {
       };
 
       // Create JWT payload
-      const payload = {
+      const payload: any = {
         jti: jti,
         htm: method,
         htu: url,
         iat: now,
       };
+
+      // Add nonce if provided
+      if (nonce) {
+        payload.nonce = nonce;
+      }
 
       // Create and sign JWT
       const headerB64 = base64UrlEncode(JSON.stringify(header));
@@ -521,36 +527,17 @@ class BlueskyAuth {
 
       const clientId = window.location.origin + "/client-metadata.json";
 
-      // Create DPoP proof for token endpoint
-      const dpopProof = await this.createDPoPProof(
-        "POST",
+      // Try token exchange with DPoP (with nonce retry if needed)
+      const tokenResponse = await this.performTokenExchange(
         metadata.token_endpoint,
+        {
+          grant_type: "authorization_code",
+          client_id: clientId,
+          code: code,
+          redirect_uri: window.location.origin,
+          code_verifier: stateData.verifier,
+        },
       );
-
-      const headers: Record<string, string> = {
-        "Content-Type": "application/x-www-form-urlencoded",
-      };
-
-      if (dpopProof) {
-        headers["DPoP"] = dpopProof;
-      }
-
-      const tokenResponse = await Promise.race([
-        fetch(metadata.token_endpoint, {
-          method: "POST",
-          headers,
-          body: new URLSearchParams({
-            grant_type: "authorization_code",
-            client_id: clientId,
-            code: code,
-            redirect_uri: window.location.origin,
-            code_verifier: stateData.verifier,
-          }),
-        }),
-        new Promise<Response>((_, reject) =>
-          setTimeout(() => reject(new Error("Token request timeout")), 10000),
-        ),
-      ]);
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
@@ -587,6 +574,85 @@ class BlueskyAuth {
       console.error("❌ Token exchange failed:", error);
       throw error;
     }
+  }
+
+  /**
+   * Perform token exchange with DPoP nonce retry logic
+   */
+  private async performTokenExchange(
+    tokenEndpoint: string,
+    params: Record<string, string>,
+  ): Promise<Response> {
+    // First attempt without nonce
+    let dpopProof = await this.createDPoPProof("POST", tokenEndpoint);
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/x-www-form-urlencoded",
+    };
+
+    if (dpopProof) {
+      headers["DPoP"] = dpopProof;
+    }
+
+    let response = await Promise.race([
+      fetch(tokenEndpoint, {
+        method: "POST",
+        headers,
+        body: new URLSearchParams(params),
+      }),
+      new Promise<Response>((_, reject) =>
+        setTimeout(() => reject(new Error("Token request timeout")), 10000),
+      ),
+    ]);
+
+    // If server requires nonce, retry with nonce
+    if (response.status === 400) {
+      try {
+        const errorText = await response.text();
+        const errorData = JSON.parse(errorText);
+
+        if (errorData.error === "use_dpop_nonce") {
+          console.log("🔄 Server requires DPoP nonce, retrying...");
+
+          // Extract nonce from DPoP-Nonce header
+          const nonce = response.headers.get("DPoP-Nonce");
+          if (nonce) {
+            console.log("🔑 Using DPoP nonce for retry");
+
+            // Create new DPoP proof with nonce
+            dpopProof = await this.createDPoPProof(
+              "POST",
+              tokenEndpoint,
+              nonce,
+            );
+
+            if (dpopProof) {
+              headers["DPoP"] = dpopProof;
+
+              // Retry the request with nonce
+              response = await Promise.race([
+                fetch(tokenEndpoint, {
+                  method: "POST",
+                  headers,
+                  body: new URLSearchParams(params),
+                }),
+                new Promise<Response>((_, reject) =>
+                  setTimeout(
+                    () => reject(new Error("Token request timeout")),
+                    10000,
+                  ),
+                ),
+              ]);
+            }
+          }
+        }
+      } catch (parseError) {
+        // If we can't parse error response, return original response
+        console.warn("⚠️ Could not parse error response for nonce extraction");
+      }
+    }
+
+    return response;
   }
 
   /**
