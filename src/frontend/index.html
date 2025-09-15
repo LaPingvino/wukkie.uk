@@ -106,13 +106,15 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="location">Location</label>
+                            <label for="location-input"
+                                >Privacy Location *</label
+                            >
                             <div class="location-group">
                                 <input
                                     type="text"
-                                    id="location"
+                                    id="location-input"
                                     name="location"
-                                    placeholder="Address or description"
+                                    placeholder="Enter geo hashtags separated by spaces (#geo123456 #geo789abc) or click map"
                                     class="location-input"
                                 />
                                 <button
@@ -120,15 +122,45 @@
                                     class="get-location-btn"
                                     id="get-location"
                                 >
-                                    📍 Get Location
+                                    📍 Get My Area
                                 </button>
                             </div>
-                            <div
-                                class="form-feedback"
-                                id="location-feedback"
-                            ></div>
-                            <input type="hidden" id="lat" name="lat" />
-                            <input type="hidden" id="lng" name="lng" />
+                            <input
+                                type="text"
+                                id="location-label"
+                                placeholder="Optional location label (e.g., 'Near Central Station')"
+                                class="location-label-input"
+                            />
+                            <div class="form-feedback" id="location-feedback">
+                                <div class="privacy-info">
+                                    <h4>📍 Privacy-Friendly Location(s)</h4>
+                                    <p>
+                                        We use geo hashtags that only show your
+                                        approximate area (~1km), not your exact
+                                        location.
+                                        <strong
+                                            >Multiple locations
+                                            supported!</strong
+                                        >
+                                    </p>
+                                    <p>
+                                        Examples: <code>#geo9c3xgp</code> or
+                                        <code>#geo9c3xgp #geo9c4abc</code>
+                                    </p>
+                                    <p>
+                                        💡 <strong>Tip:</strong> Click multiple
+                                        points on the map or enter
+                                        space-separated geo hashtags for issues
+                                        affecting multiple areas
+                                    </p>
+                                    <p>
+                                        <strong
+                                            >Your privacy is protected!</strong
+                                        >
+                                        🛡️
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="form-group">

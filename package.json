@@ -2,6 +2,7 @@
   "name": "wukkie.uk",
   "version": "0.1.0",
   "description": "A proof-of-concept bug tracker for the world, built on Bluesky/ATProto",
+  "type": "module",
   "main": "dist/worker.js",
   "scripts": {
     "dev": "concurrently \"vite build --watch\" \"wrangler dev\"",
@@ -11,7 +12,10 @@
     "deploy:dev": "npm run build && wrangler deploy --env dev",
     "start": "wrangler dev --local",
     "preview": "wrangler dev --remote",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "node test.js",
+    "test:verbose": "node test.js -v",
+    "test:watch": "node --test --watch src/**/*.test.ts --experimental-strip-types"
   },
   "keywords": [
     "atproto",

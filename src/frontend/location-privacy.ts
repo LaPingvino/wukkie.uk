@@ -1,4 +1,5 @@
-import { encode, decode } from 'pluscodes';
+import pkg from "pluscodes";
+const { encode, decode } = pkg;
 
 export interface PrivacyLocation {
   geoHashtag: string; // #geo + first 6 chars of plus code
@@ -16,7 +17,7 @@ export interface LocationArea {
 }
 
 export class LocationPrivacySystem {
-  private static readonly GEO_HASHTAG_PREFIX = '#geo';
+  private static readonly GEO_HASHTAG_PREFIX = "#geo";
   private static readonly PRIVACY_CODE_LENGTH = 6;
 
   /**
@@ -26,19 +27,22 @@ export class LocationPrivacySystem {
   static createPrivacyLocation(
     lat: number,
     lng: number,
-    label?: string
+    label?: string,
   ): PrivacyLocation {
     // Generate full plus code
     const fullPlusCode = encode({ latitude: lat, longitude: lng });
 
     // Extract first 6 characters for privacy (before the + sign)
-    const privacyCode = fullPlusCode.substring(0, this.PRIVACY_CODE_LENGTH);
+    const privacyCode = fullPlusCode.substring(
+      0,
+      LocationPrivacySystem.PRIVACY_CODE_LENGTH,
+    );
 
     // Create geo hashtag
-    const geoHashtag = `${this.GEO_HASHTAG_PREFIX}${privacyCode.toLowerCase()}`;
+    const geoHashtag = `${LocationPrivacySystem.GEO_HASHTAG_PREFIX}${privacyCode.toLowerCase()}`;
 
     // Get approximate area for the privacy code
-    const area = this.getLocationArea(privacyCode);
+    const area = LocationPrivacySystem.getLocationArea(privacyCode);
 
     return {
       geoHashtag,
@@ -46,7 +50,7 @@ export class LocationPrivacySystem {
       plusCode: fullPlusCode,
       centerLat: area.center.lat,
       centerLng: area.center.lng,
-      precision: this.calculatePrecision(privacyCode)
+      precision: LocationPrivacySystem.calculatePrecision(privacyCode),
     };
   }
 
@@ -54,16 +58,16 @@ export class LocationPrivacySystem {
    * Convert geo hashtag back to location area
    */
   static parseGeoHashtag(geoHashtag: string): LocationArea | null {
-    if (!this.isValidGeoHashtag(geoHashtag)) {
+    if (!LocationPrivacySystem.isValidGeoHashtag(geoHashtag)) {
       return null;
     }
 
-    // Extract the privacy code from hashtag
+    // Extract the privacy code from hashtag (case-insensitive)
     const privacyCode = geoHashtag
-      .replace(this.GEO_HASHTAG_PREFIX, '')
+      .substring(LocationPrivacySystem.GEO_HASHTAG_PREFIX.length)
       .toUpperCase();
 
-    return this.getLocationArea(privacyCode);
+    return LocationPrivacySystem.getLocationArea(privacyCode);
   }
 
   /**
@@ -72,7 +76,7 @@ export class LocationPrivacySystem {
   private static getLocationArea(privacyCode: string): LocationArea {
     // Pad the privacy code to make it a valid plus code for decoding
     // We add '00+' to make it decodable, which gives us the larger area
-    const paddedCode = privacyCode + '00+';
+    const paddedCode = privacyCode + "00+";
 
     try {
       const decoded = decode(paddedCode);
@@ -80,24 +84,24 @@ export class LocationPrivacySystem {
       return {
         southWest: {
           lat: decoded.latitude - decoded.resolution / 2,
-          lng: decoded.longitude - decoded.resolution / 2
+          lng: decoded.longitude - decoded.resolution / 2,
         },
         northEast: {
           lat: decoded.latitude + decoded.resolution / 2,
-          lng: decoded.longitude + decoded.resolution / 2
+          lng: decoded.longitude + decoded.resolution / 2,
         },
         center: {
           lat: decoded.latitude,
-          lng: decoded.longitude
-        }
+          lng: decoded.longitude,
+        },
       };
     } catch (error) {
-      console.error('Error decoding privacy code:', error);
+      console.error("Error decoding privacy code:", error);
       // Fallback to approximate center
       return {
         southWest: { lat: 0, lng: 0 },
         northEast: { lat: 0, lng: 0 },
-        center: { lat: 0, lng: 0 }
+        center: { lat: 0, lng: 0 },
       };
     }
   }
@@ -115,36 +119,53 @@ export class LocationPrivacySystem {
    * Validate that a string is a proper geo hashtag
    */
   static isValidGeoHashtag(hashtag: string): boolean {
-    if (!hashtag.startsWith(this.GEO_HASHTAG_PREFIX)) {
+    // Check prefix case-insensitively
+    const lowerHashtag = hashtag.toLowerCase();
+    if (!lowerHashtag.startsWith(LocationPrivacySystem.GEO_HASHTAG_PREFIX)) {
       return false;
     }
 
-    const code = hashtag.replace(this.GEO_HASHTAG_PREFIX, '');
+    const code = hashtag.substring(
+      LocationPrivacySystem.GEO_HASHTAG_PREFIX.length,
+    );
 
     // Check if it's exactly 6 characters and contains valid Plus Code characters
-    const validChars = /^[23456789CFGHJMPQRVWX]{6}$/i;
-    return code.length === this.PRIVACY_CODE_LENGTH && validChars.test(code);
+    // Valid Plus Code characters: 23456789CFGHJMPQRVWX (case insensitive)
+    const validChars = /^[23456789cfghjmpqrvwxCFGHJMPQRVWX]{6}$/i;
+    return (
+      code.length === LocationPrivacySystem.PRIVACY_CODE_LENGTH &&
+      validChars.test(code)
+    );
   }
 
   /**
    * Check if a location is within the area of a geo hashtag
    */
-  static isLocationInArea(lat: number, lng: number, geoHashtag: string): boolean {
-    const area = this.parseGeoHashtag(geoHashtag);
+  static isLocationInArea(
+    lat: number,
+    lng: number,
+    geoHashtag: string,
+  ): boolean {
+    const area = LocationPrivacySystem.parseGeoHashtag(geoHashtag);
     if (!area) return false;
 
-    return lat >= area.southWest.lat &&
-           lat <= area.northEast.lat &&
-           lng >= area.southWest.lng &&
-           lng <= area.northEast.lng;
+    return (
+      lat >= area.southWest.lat &&
+      lat <= area.northEast.lat &&
+      lng >= area.southWest.lng &&
+      lng <= area.northEast.lng
+    );
   }
 
   /**
    * Get nearby geo hashtags for broader discovery
    * Returns adjacent area codes for finding nearby issues
    */
-  static getNearbyGeoHashtags(geoHashtag: string, radius: number = 1): string[] {
-    const area = this.parseGeoHashtag(geoHashtag);
+  static getNearbyGeoHashtags(
+    geoHashtag: string,
+    radius: number = 1,
+  ): string[] {
+    const area = LocationPrivacySystem.parseGeoHashtag(geoHashtag);
     if (!area) return [];
 
     const nearby: string[] = [geoHashtag];
@@ -152,21 +173,22 @@ export class LocationPrivacySystem {
 
     // Generate plus codes for surrounding areas
     // This is a simplified approach - in production you'd want more sophisticated nearby calculation
+    // Use larger offsets (~2-3km) to ensure different Plus Code grid cells
     const offsets = [
-      { latOffset: 0.01, lngOffset: 0 },    // North
-      { latOffset: -0.01, lngOffset: 0 },   // South
-      { latOffset: 0, lngOffset: 0.01 },    // East
-      { latOffset: 0, lngOffset: -0.01 },   // West
-      { latOffset: 0.01, lngOffset: 0.01 }, // NE
-      { latOffset: 0.01, lngOffset: -0.01 }, // NW
-      { latOffset: -0.01, lngOffset: 0.01 }, // SE
-      { latOffset: -0.01, lngOffset: -0.01 } // SW
+      { latOffset: 0.025, lngOffset: 0 }, // North
+      { latOffset: -0.025, lngOffset: 0 }, // South
+      { latOffset: 0, lngOffset: 0.025 }, // East
+      { latOffset: 0, lngOffset: -0.025 }, // West
+      { latOffset: 0.025, lngOffset: 0.025 }, // NE
+      { latOffset: 0.025, lngOffset: -0.025 }, // NW
+      { latOffset: -0.025, lngOffset: 0.025 }, // SE
+      { latOffset: -0.025, lngOffset: -0.025 }, // SW
     ];
 
     for (const offset of offsets) {
-      const nearbyLocation = this.createPrivacyLocation(
+      const nearbyLocation = LocationPrivacySystem.createPrivacyLocation(
         center.lat + offset.latOffset * radius,
-        center.lng + offset.lngOffset * radius
+        center.lng + offset.lngOffset * radius,
       );
 
       if (!nearby.includes(nearbyLocation.geoHashtag)) {
@@ -181,12 +203,14 @@ export class LocationPrivacySystem {
    * Generate a human-readable description of the location area
    */
   static getLocationDescription(geoHashtag: string): string {
-    if (!this.isValidGeoHashtag(geoHashtag)) {
-      return 'Invalid location';
+    if (!LocationPrivacySystem.isValidGeoHashtag(geoHashtag)) {
+      return "Invalid location";
     }
 
-    const code = geoHashtag.replace(this.GEO_HASHTAG_PREFIX, '').toUpperCase();
-    const precision = this.calculatePrecision(code);
+    const code = geoHashtag
+      .replace(LocationPrivacySystem.GEO_HASHTAG_PREFIX, "")
+      .toUpperCase();
+    const precision = LocationPrivacySystem.calculatePrecision(code);
 
     return `Approximate area: ~${precision}km radius (${geoHashtag})`;
   }
@@ -194,25 +218,31 @@ export class LocationPrivacySystem {
   /**
    * Create a privacy location from current browser geolocation
    */
-  static async createFromCurrentLocation(label?: string): Promise<PrivacyLocation> {
+  static async createFromCurrentLocation(
+    label?: string,
+  ): Promise<PrivacyLocation> {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('Geolocation not supported'));
+        reject(new Error("Geolocation not supported"));
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          const privacyLocation = this.createPrivacyLocation(latitude, longitude, label);
+          const privacyLocation = LocationPrivacySystem.createPrivacyLocation(
+            latitude,
+            longitude,
+            label,
+          );
           resolve(privacyLocation);
         },
         (error) => reject(error),
         {
           enableHighAccuracy: false, // We don't need high accuracy for privacy codes
           timeout: 10000,
-          maximumAge: 300000 // 5 minutes cache is fine
-        }
+          maximumAge: 300000, // 5 minutes cache is fine
+        },
       );
     });
   }
@@ -221,9 +251,11 @@ export class LocationPrivacySystem {
    * Extract all geo hashtags from text (for parsing posts/issues)
    */
   static extractGeoHashtags(text: string): string[] {
-    const regex = new RegExp(`${this.GEO_HASHTAG_PREFIX}[23456789cfghjmpqrvwx]{6}`, 'gi');
+    // Match geo hashtags case-insensitively with valid Plus Code characters
+    // Use negative lookbehind to avoid matching hashtags preceded by #
+    const regex = /(?<!#)#geo[23456789cfghjmpqrvwxCFGHJMPQRVWX]{6}/gi;
     const matches = text.match(regex) || [];
-    return matches.map(match => match.toLowerCase());
+    return matches.map((match) => match.toLowerCase());
   }
 
   /**
@@ -238,12 +270,13 @@ export class LocationPrivacySystem {
 
     parts.push(`~${location.precision}km area`);
 
-    return parts.join(' ');
+    return parts.join(" ");
   }
 }
 
 // Export utility functions for easy use
-export const createPrivacyLocation = LocationPrivacySystem.createPrivacyLocation;
+export const createPrivacyLocation =
+  LocationPrivacySystem.createPrivacyLocation;
 export const parseGeoHashtag = LocationPrivacySystem.parseGeoHashtag;
 export const isValidGeoHashtag = LocationPrivacySystem.isValidGeoHashtag;
 export const extractGeoHashtags = LocationPrivacySystem.extractGeoHashtags;
