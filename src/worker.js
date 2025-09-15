@@ -537,7 +537,7 @@ class WukkieApp {
         if (issues.length === 0) return;
 
         const listEl = document.getElementById('issues-list');
-        listEl.innerHTML = issues.map(issue => {
+A        listEl.innerHTML = issues.map(issue => {
             let locationHtml = '';
             if (issue.location) {
                 let addressText = issue.location.address ? this.truncateAddress(issue.location.address) : 'Location set';
@@ -634,7 +634,9 @@ class WukkieApp {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => new WukkieApp());
+document.addEventListener('DOMContentLoaded', () => {
+    window.wukkie = new WukkieApp();
+});
 `;
 
 export default {
