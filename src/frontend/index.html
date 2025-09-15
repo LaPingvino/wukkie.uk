@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wukkie.uk - Bug Tracker for the World</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>Wukkie.uk</h1>
+                    <div class="tagline">oopsie woopsie de trein is stukkie wukkie...</div>
+                </div>
+                <div class="auth-section">
+                    <div id="user-info" class="user-info hidden">
+                        <span id="username">@user</span>
+                        <span id="user-status">🟢 Connected</span>
+                    </div>
+                    <button id="login-btn">Login with Bluesky</button>
+                    <button id="demo-login-btn" class="demo-btn" title="Try the app without a Bluesky account">🎭 Demo Login</button>
+                    <button id="logout-btn" class="hidden">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="demo-notice">
+            <strong>🚧 Proof of Concept Demo</strong><br>
+            This is an early proof of concept for world issue tracking on ATProto.
+            <strong>Quick start:</strong> Use "🎭 Demo Login" to try it instantly, or login with your Bluesky account (requires <a href="https://bsky.app/settings/app-passwords" target="_blank" style="color: #2563eb;">app password</a>). All issues are currently stored locally for testing.
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2>Report an Issue</h2>
+                <div id="auth-required">
+                    <p>Please login with Bluesky to report issues.</p>
+                </div>
+
+                <form id="issue-form" class="hidden">
+                    <div id="status-message" class="status-message"></div>
+
+                    <div class="form-group">
+                        <label for="title">Issue Title *</label>
+                        <input type="text" id="title" name="title" required placeholder="e.g. Broken streetlight on Main Street" maxlength="200">
+                        <small class="form-hint">Describe the issue clearly and concisely</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea id="description" name="description" required placeholder="Describe the issue in detail. What exactly is the problem? How does it affect people?" maxlength="2000"></textarea>
+                        <small class="form-hint">Be specific and include relevant details</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            <option value="infrastructure">Infrastructure</option>
+                            <option value="environment">Environment</option>
+                            <option value="safety">Safety</option>
+                            <option value="transport">Transport</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <div class="location-group">
+                            <input type="text" id="location" name="location" placeholder="Address or description" class="location-input">
+                            <button type="button" class="get-location-btn" id="get-location">📍 Get Location</button>
+                        </div>
+                        <div class="form-feedback" id="location-feedback"></div>
+                        <input type="hidden" id="lat" name="lat">
+                        <input type="hidden" id="lng" name="lng">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hashtags">Hashtags</label>
+                        <input type="text" id="hashtags" name="hashtags" placeholder="#pothole #mainstreet #infrastructure">
+                    </div>
+
+                    <button type="submit" id="submit-btn">Report Issue</button>
+                </form>
+
+                <div id="map"></div>
+            </div>
+
+            <div class="card">
+                <h2>Recent Issues</h2>
+                <div id="issues-list" class="issues-list">
+                    <div class="issue-item">
+                        <div class="issue-header">
+                            <div class="issue-title">Broken streetlight on Dam Square</div>
+                            <div class="issue-distance">1.2km away</div>
+                        </div>
+                        <div class="issue-description">The streetlight has been flickering for weeks and is completely dark now. Makes walking unsafe at night.</div>
+                        <div class="issue-meta">
+                            <div><span class="hashtag">#streetlight</span><span class="hashtag">#infrastructure</span><span class="hashtag">#safety</span></div>
+                            <div>1 day ago • @demo.bsky.social</div>
+                        </div>
+                        <div class="issue-actions">
+                            <button class="action-btn">👍 12</button>
+                            <button class="action-btn">💬 3</button>
+                            <button class="action-btn">📍 View</button>
+                        </div>
+                    </div>
+
+                    <div class="issue-item">
+                        <div class="issue-header">
+                            <div class="issue-title">Pothole on cycling path</div>
+                            <div class="issue-distance">850m away</div>
+                        </div>
+                        <div class="issue-description">Large pothole is dangerous for cyclists. Already saw someone almost crash this morning.</div>
+                        <div class="issue-meta">
+                            <div><span class="hashtag">#pothole</span><span class="hashtag">#cycling</span><span class="hashtag">#transport</span></div>
+                            <div>2 days ago • @cyclist.bsky.social</div>
+                        </div>
+                        <div class="issue-actions">
+                            <button class="action-btn">👍 28</button>
+                            <button class="action-btn">💬 7</button>
+                            <button class="action-btn">📍 View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module" src="./app.ts"></script>
+</body>
+</html>

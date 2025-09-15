@@ -26,6 +26,27 @@ Why do software projects have quality bug tracking while world issues are stuck 
 - **Auth**: Bluesky/ATProto
 - **Maps**: OpenStreetMap + Leaflet
 - **Storage**: ATProto (planned), localStorage (demo)
+- **Frontend**: TypeScript, Vite, Leaflet
+- **Backend**: Cloudflare Workers
+
+## 🏗️ Architecture
+
+The project now uses a modern TypeScript-based architecture:
+
+```
+wukkie.uk/
+├── src/
+│   ├── frontend/           # Frontend TypeScript app
+│   │   ├── app.ts         # Main application logic
+│   │   ├── index.html     # HTML template
+│   │   └── styles.css     # Styles
+│   └── worker/            # Cloudflare Worker
+│       └── index.ts       # Worker entry point
+├── dist/                  # Built files
+├── vite.config.ts         # Vite configuration
+├── tsconfig.json          # TypeScript configuration
+└── build.sh              # Build script
+```
 
 ## 🚀 Quick Start
 
