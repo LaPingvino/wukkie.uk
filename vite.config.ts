@@ -11,8 +11,14 @@ export default defineConfig({
         main: "src/frontend/index.html",
       },
     },
-    target: "es2022",
+    target: "es2018",
     sourcemap: true,
+    minify: "esbuild",
+  },
+  esbuild: {
+    target: "es2018",
+    format: "esm",
+    keepNames: true,
   },
   server: {
     port: 3000,

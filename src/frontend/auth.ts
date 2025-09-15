@@ -46,28 +46,33 @@ class BlueskyAuth {
    * Initialize OAuth configuration
    */
   private initialize(): void {
-    const baseUrl = window.location.origin;
+    try {
+      const baseUrl = window.location.origin;
 
-    // Determine if we're in development or production
-    const isDevelopment =
-      baseUrl.includes("localhost") ||
-      baseUrl.includes("127.0.0.1") ||
-      baseUrl.includes(".local");
+      // Determine if we're in development or production
+      const isDevelopment =
+        baseUrl.includes("localhost") ||
+        baseUrl.includes("127.0.0.1") ||
+        baseUrl.includes(".local");
 
-    configureOAuth({
-      metadata: {
-        client_id: `${baseUrl}/client-metadata.json`,
-        redirect_uri: baseUrl,
-      },
-    });
-
-    // Log configuration for debugging
-    if (isDevelopment) {
-      console.log("🔧 OAuth configured for development:", {
-        baseUrl,
-        client_id: `${baseUrl}/client-metadata.json`,
-        redirect_uri: baseUrl,
+      configureOAuth({
+        metadata: {
+          client_id: `${baseUrl}/client-metadata.json`,
+          redirect_uri: baseUrl,
+        },
       });
+
+      // Log configuration for debugging
+      if (isDevelopment) {
+        console.log("🔧 OAuth configured for development:", {
+          baseUrl,
+          client_id: `${baseUrl}/client-metadata.json`,
+          redirect_uri: baseUrl,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to initialize OAuth:", error);
+      // Fallback: continue without OAuth - demo mode will still work
     }
   }
 
