@@ -229,6 +229,9 @@ class WukkieApp {
       this.atprotoManager = new ATProtoIssueManager(agent);
       console.log("🟢 ATProto manager initialized");
 
+      // Update demo issues to current user if transitioning from demo
+      this.updateDemoIssuesOnLogin();
+
       this.updateAuthUI(true);
       this.loginModal.hide();
       this.showStatus(`Welcome back, @${this.session.handle}! 🎉`, "success");
@@ -330,7 +333,7 @@ class WukkieApp {
     this.session = {
       accessJwt: "demo-token",
       refreshJwt: "demo-refresh",
-      handle: "demo.bsky.social",
+      handle: "demo-user.invalid",
       did: "did:demo:user",
       isDemo: true,
     };
@@ -1010,6 +1013,12 @@ class WukkieApp {
     try {
       this.showStatus("Posting to Bluesky...", "info");
       issue.blueskyStatus = "pending";
+
+      // Update author if this was a demo issue
+      if (issue.author === "demo-user.invalid") {
+        issue.author = this.session.handle;
+      }
+
       this.updateIssueInStorage(issue);
       this.loadIssues(); // Refresh display
 
@@ -1179,6 +1188,41 @@ class WukkieApp {
       }
     } catch (error) {
       console.error("Error updating issue in storage:", error);
+    }
+  }
+
+  /**
+   * Update demo issues to current user when transitioning from demo to real login
+   */
+  private updateDemoIssuesOnLogin(): void {
+    if (!this.session || this.session.isDemo) return;
+
+    try {
+      const existing = localStorage.getItem("wukkie_issues");
+      const issues: Issue[] = existing ? JSON.parse(existing) : [];
+
+      let updated = false;
+      issues.forEach((issue) => {
+        if (issue.author === "demo-user.invalid") {
+          issue.author = this.session!.handle;
+          // Mark as local-only so user can choose to post to Bluesky
+          if (!issue.blueskyStatus || issue.blueskyStatus === "pending") {
+            issue.blueskyStatus = "local-only";
+          }
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        localStorage.setItem("wukkie_issues", JSON.stringify(issues));
+        this.loadIssues(); // Refresh display
+        console.log(
+          "🔄 Updated demo issues to current user:",
+          this.session.handle,
+        );
+      }
+    } catch (error) {
+      console.error("Error updating demo issues:", error);
     }
   }
 
