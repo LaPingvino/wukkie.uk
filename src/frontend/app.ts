@@ -55,6 +55,24 @@ class WukkieApp {
   private authUnsubscribe?: () => void;
   private isLoading: boolean = false;
 
+  private taglines: string[] = [
+    "oopsie woopsie de trein is stukkie wukkie...",
+    "it's barely a respectable world as it is",
+    "this is fine 🔥",
+    "another day, another issue to fix",
+    "The earth is but one country, and mankind its citizens.",
+    "So powerful is the light of unity that it can illuminate the whole earth.",
+    "The well-being of mankind, its peace and security, are unattainable unless and until its unity is firmly established.",
+    "Let your vision be world-embracing, rather than confined to your own self.",
+    "The diversity in the human family should be the cause of love and harmony.",
+    "when something's broken, let's fix it together! 🚂",
+    "bug tracker for the world (literally)",
+    "because even the world needs debugging",
+    "The betterment of the conditions of the people is the fundamental purpose of government.",
+    "Regard ye the world as a man's body.",
+    "All men have been created to carry forward an ever-advancing civilization.",
+  ];
+
   constructor() {
     console.log("🟢 [DEBUG] WukkieApp constructor: Starting");
     try {
@@ -96,6 +114,10 @@ class WukkieApp {
 
       console.log("🟢 [DEBUG] init(): About to init map");
       this.initMap();
+
+      // Set random tagline
+      console.log("🟢 [DEBUG] init(): About to set random tagline");
+      this.setRandomTagline();
 
       // Set up authentication state listener
       console.log("🟢 [DEBUG] init(): About to setup auth state listener");
@@ -853,6 +875,25 @@ class WukkieApp {
       button.disabled = true;
       button.classList.add("loading");
     });
+  }
+
+  /**
+   * Set a random tagline from the available options
+   */
+  private setRandomTagline(): void {
+    try {
+      const taglineElement = document.querySelector(".tagline") as HTMLElement;
+      if (taglineElement) {
+        const randomTagline =
+          this.taglines[Math.floor(Math.random() * this.taglines.length)];
+        taglineElement.textContent = randomTagline;
+        console.log("🟢 [DEBUG] Set random tagline:", randomTagline);
+      } else {
+        console.warn("⚠️ [DEBUG] Tagline element not found");
+      }
+    } catch (error) {
+      console.error("❌ [DEBUG] Error setting random tagline:", error);
+    }
   }
 
   /**
