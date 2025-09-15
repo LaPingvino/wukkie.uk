@@ -3,7 +3,7 @@
  * Provides a user-friendly OAuth login interface
  */
 
-import { blueskyAuth } from './auth.js';
+import { blueskyAuth } from "./auth.js";
 
 export class LoginModal {
   private modal: HTMLElement;
@@ -21,8 +21,8 @@ export class LoginModal {
 
   private createModal(): void {
     // Create overlay
-    this.overlay = document.createElement('div');
-    this.overlay.className = 'login-modal-overlay';
+    this.overlay = document.createElement("div");
+    this.overlay.className = "login-modal-overlay";
     this.overlay.style.cssText = `
       position: fixed;
       top: 0;
@@ -40,8 +40,8 @@ export class LoginModal {
     `;
 
     // Create modal
-    this.modal = document.createElement('div');
-    this.modal.className = 'login-modal';
+    this.modal = document.createElement("div");
+    this.modal.className = "login-modal";
     this.modal.style.cssText = `
       background: white;
       border-radius: 12px;
@@ -163,7 +163,7 @@ export class LoginModal {
     `;
 
     // Add keyframe animation
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
       @keyframes modalAppear {
         from {
@@ -203,10 +203,16 @@ export class LoginModal {
     document.head.appendChild(style);
 
     // Get references to elements
-    this.handleInput = this.modal.querySelector('#login-handle') as HTMLInputElement;
-    this.loginButton = this.modal.querySelector('.login-submit-btn') as HTMLButtonElement;
-    this.errorMessage = this.modal.querySelector('.login-error') as HTMLElement;
-    this.loadingSpinner = this.modal.querySelector('.login-loading') as HTMLElement;
+    this.handleInput = this.modal.querySelector(
+      "#login-handle",
+    ) as HTMLInputElement;
+    this.loginButton = this.modal.querySelector(
+      ".login-submit-btn",
+    ) as HTMLButtonElement;
+    this.errorMessage = this.modal.querySelector(".login-error") as HTMLElement;
+    this.loadingSpinner = this.modal.querySelector(
+      ".login-loading",
+    ) as HTMLElement;
 
     this.overlay.appendChild(this.modal);
     document.body.appendChild(this.overlay);
@@ -214,40 +220,42 @@ export class LoginModal {
 
   private setupEventListeners(): void {
     // Close modal when clicking overlay
-    this.overlay.addEventListener('click', (e) => {
+    this.overlay.addEventListener("click", (e) => {
       if (e.target === this.overlay) {
         this.hide();
       }
     });
 
     // Close modal when clicking close button
-    const closeButton = this.modal.querySelector('.login-modal-close') as HTMLButtonElement;
-    closeButton.addEventListener('click', () => {
+    const closeButton = this.modal.querySelector(
+      ".login-modal-close",
+    ) as HTMLButtonElement;
+    closeButton.addEventListener("click", () => {
       this.hide();
     });
 
     // Handle form submission
-    this.loginButton.addEventListener('click', (e) => {
+    this.loginButton.addEventListener("click", (e) => {
       e.preventDefault();
       this.handleLogin();
     });
 
     // Handle enter key
-    this.handleInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+    this.handleInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
         e.preventDefault();
         this.handleLogin();
       }
     });
 
     // Clear error when typing
-    this.handleInput.addEventListener('input', () => {
+    this.handleInput.addEventListener("input", () => {
       this.clearError();
     });
 
     // Handle escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isVisible) {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.isVisible) {
         this.hide();
       }
     });
@@ -257,14 +265,16 @@ export class LoginModal {
     const handle = this.handleInput.value.trim();
 
     if (!handle) {
-      this.showError('Please enter your Bluesky handle');
+      this.showError("Please enter your Bluesky handle");
       this.handleInput.focus();
       return;
     }
 
     // Basic handle validation
     if (!this.isValidHandle(handle)) {
-      this.showError('Please enter a valid Bluesky handle (e.g., user.bsky.social)');
+      this.showError(
+        "Please enter a valid Bluesky handle (e.g., user.bsky.social)",
+      );
       this.handleInput.focus();
       return;
     }
@@ -274,12 +284,17 @@ export class LoginModal {
 
     try {
       await blueskyAuth.login(handle);
+      // OAuth flow should redirect to authorization server
       // If we get here without redirect, something went wrong
-      this.showError('Login flow did not start properly. Please try again.');
-    } catch (error) {
-      console.error('Login error:', error);
       this.showError(
-        error instanceof Error ? error.message : 'Login failed. Please check your handle and try again.'
+        "OAuth login flow did not start properly. Please try again.",
+      );
+    } catch (error) {
+      console.error("Login error:", error);
+      this.showError(
+        error instanceof Error
+          ? error.message
+          : "Login failed. Please check your handle and try again.",
       );
     } finally {
       this.setLoading(false);
@@ -288,21 +303,25 @@ export class LoginModal {
 
   private isValidHandle(handle: string): boolean {
     // Basic validation - should contain at least one dot and no @ symbol
-    return handle.includes('.') && !handle.includes('@') && handle.length > 3;
+    return handle.includes(".") && !handle.includes("@") && handle.length > 3;
   }
 
   private setLoading(loading: boolean): void {
-    const btnText = this.loginButton.querySelector('.login-btn-text') as HTMLElement;
-    const spinner = this.loginButton.querySelector('.login-loading') as HTMLElement;
+    const btnText = this.loginButton.querySelector(
+      ".login-btn-text",
+    ) as HTMLElement;
+    const spinner = this.loginButton.querySelector(
+      ".login-loading",
+    ) as HTMLElement;
 
     if (loading) {
-      btnText.style.display = 'none';
-      spinner.style.display = 'block';
+      btnText.style.display = "none";
+      spinner.style.display = "block";
       this.loginButton.disabled = true;
       this.handleInput.disabled = true;
     } else {
-      btnText.style.display = 'block';
-      spinner.style.display = 'none';
+      btnText.style.display = "block";
+      spinner.style.display = "none";
       this.loginButton.disabled = false;
       this.handleInput.disabled = false;
     }
@@ -310,17 +329,17 @@ export class LoginModal {
 
   private showError(message: string): void {
     this.errorMessage.textContent = message;
-    this.errorMessage.style.display = 'block';
+    this.errorMessage.style.display = "block";
   }
 
   private clearError(): void {
-    this.errorMessage.style.display = 'none';
-    this.errorMessage.textContent = '';
+    this.errorMessage.style.display = "none";
+    this.errorMessage.textContent = "";
   }
 
   public show(): void {
     this.isVisible = true;
-    this.overlay.style.display = 'flex';
+    this.overlay.style.display = "flex";
     this.clearError();
     this.setLoading(false);
 
@@ -330,18 +349,18 @@ export class LoginModal {
     }, 100);
 
     // Prevent body scroll
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   }
 
   public hide(): void {
     this.isVisible = false;
-    this.overlay.style.display = 'none';
-    this.handleInput.value = '';
+    this.overlay.style.display = "none";
+    this.handleInput.value = "";
     this.clearError();
     this.setLoading(false);
 
     // Restore body scroll
-    document.body.style.overflow = '';
+    document.body.style.overflow = "";
   }
 
   public isOpen(): boolean {

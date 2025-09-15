@@ -1,71 +1,71 @@
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+const fs = require("fs");
+const path = require("path");
+const { execSync } = require("child_process");
 
-console.log('🚀 Building Wukkie.uk...');
+console.log("🚀 Building Wukkie.uk...");
 
 // Clean previous builds
-console.log('🧹 Cleaning previous builds...');
-if (fs.existsSync('dist')) {
-  fs.rmSync('dist', { recursive: true });
+console.log("🧹 Cleaning previous builds...");
+if (fs.existsSync("dist")) {
+  fs.rmSync("dist", { recursive: true });
 }
 
 // Build frontend with Vite
-console.log('🏗️  Building frontend...');
+console.log("🏗️  Building frontend...");
 try {
-  execSync('npx vite build', { stdio: 'inherit' });
+  execSync("npx vite build", { stdio: "inherit" });
 } catch (error) {
-  console.error('❌ Frontend build failed');
+  console.error("❌ Frontend build failed");
   process.exit(1);
 }
 
 // Read built files
-console.log('📖 Reading built assets...');
+console.log("📖 Reading built assets...");
 
-const distPath = path.join(__dirname, 'dist');
-const indexHtmlPath = path.join(distPath, 'index.html');
+const distPath = path.join(__dirname, "dist");
+const indexHtmlPath = path.join(distPath, "index.html");
 
 if (!fs.existsSync(indexHtmlPath)) {
-  console.error('❌ index.html not found in dist/');
+  console.error("❌ index.html not found in dist/");
   process.exit(1);
 }
 
-const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+const indexHtml = fs.readFileSync(indexHtmlPath, "utf8");
 
 // Find the generated assets
-const assetsDir = path.join(distPath, 'assets');
-let appJs = '';
-let appCss = '';
+const assetsDir = path.join(distPath, "assets");
+let appJs = "";
+let appCss = "";
 
 if (fs.existsSync(assetsDir)) {
   const assetFiles = fs.readdirSync(assetsDir);
 
   // Find the main JS file (usually has hash in name)
-  const jsFile = assetFiles.find(file => file.endsWith('.js'));
+  const jsFile = assetFiles.find((file) => file.endsWith(".js"));
   if (jsFile) {
-    appJs = fs.readFileSync(path.join(assetsDir, jsFile), 'utf8');
+    appJs = fs.readFileSync(path.join(assetsDir, jsFile), "utf8");
   }
 
   // Find the main CSS file (usually has hash in name)
-  const cssFile = assetFiles.find(file => file.endsWith('.css'));
+  const cssFile = assetFiles.find((file) => file.endsWith(".css"));
   if (cssFile) {
-    appCss = fs.readFileSync(path.join(assetsDir, cssFile), 'utf8');
+    appCss = fs.readFileSync(path.join(assetsDir, cssFile), "utf8");
   }
 }
 
 // Generate worker with embedded assets
-console.log('🔧 Generating worker...');
+console.log("🔧 Generating worker...");
 
 const workerTemplate = `/**
  * Cloudflare Worker for Wukkie.uk
  * Generated with embedded frontend assets
  */
 
-const HTML_CONTENT = \`${indexHtml.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`;
+const HTML_CONTENT = \`${indexHtml.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`;
 
-const APP_JS = \`${appJs.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`;
+const APP_JS = \`${appJs.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`;
 
-const APP_CSS = \`${appCss.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`;
+const APP_CSS = \`${appCss.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -117,6 +117,32 @@ export default {
         });
       }
 
+      // Serve OAuth client metadata (dynamically generated)
+      if (pathname === '/client-metadata.json') {
+        const baseUrl = url.origin;
+
+        const dynamicMetadata = {
+          client_id: \`\${baseUrl}/client-metadata.json\`,
+          client_uri: baseUrl,
+          redirect_uris: [baseUrl],
+          application_type: 'web',
+          client_name: 'Wukkie.uk - Bug Tracker for the World',
+          dpop_bound_access_tokens: true,
+          grant_types: ['authorization_code', 'refresh_token'],
+          response_types: ['code'],
+          scope: 'atproto transition:generic',
+          token_endpoint_auth_method: 'none',
+        };
+
+        return new Response(JSON.stringify(dynamicMetadata, null, 2), {
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'public, max-age=300',
+            ...corsHeaders,
+          },
+        });
+      }
+
       // Serve main HTML for all other routes (SPA routing)
       return new Response(HTML_CONTENT, {
         headers: {
@@ -136,15 +162,15 @@ export default {
 };`;
 
 // Write the worker file
-const workerPath = path.join(distPath, 'worker.js');
+const workerPath = path.join(distPath, "worker.js");
 fs.writeFileSync(workerPath, workerTemplate);
 
-console.log('✅ Build completed successfully!');
-console.log('');
-console.log('📁 Generated files:');
-console.log('  ✓ dist/worker.js (Cloudflare Worker with embedded assets)');
-console.log('  ✓ dist/index.html');
-if (appJs) console.log('  ✓ dist/assets/*.js');
-if (appCss) console.log('  ✓ dist/assets/*.css');
-console.log('');
-console.log('🚀 Ready to deploy with: npm run deploy');
+console.log("✅ Build completed successfully!");
+console.log("");
+console.log("📁 Generated files:");
+console.log("  ✓ dist/worker.js (Cloudflare Worker with embedded assets)");
+console.log("  ✓ dist/index.html");
+if (appJs) console.log("  ✓ dist/assets/*.js");
+if (appCss) console.log("  ✓ dist/assets/*.css");
+console.log("");
+console.log("🚀 Ready to deploy with: npm run deploy");
