@@ -237,7 +237,7 @@ class WukkieApp {
                 // For real Bluesky sessions, validate they're still valid
                 const response = await fetch('https://bsky.social/xrpc/com.atproto.server.getSession', {
                     headers: {
-                        'Authorization': `Bearer ${this.session.accessJwt}`
+                        'Authorization': 'Bearer ' + this.session.accessJwt
                     }
                 });
 
@@ -272,42 +272,9 @@ class WukkieApp {
 
     createLoginModal() {
         const modal = document.createElement('div');
-        modal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: flex; align-items: center;
-            justify-content: center; z-index: 1000;
-        `;
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;';
 
-        modal.innerHTML = `
-            <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 420px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
-                <h3 style="margin-bottom: 1rem; color: #1f2937; font-size: 1.5rem;">Login with Bluesky</h3>
-                <div id="modal-error" style="display: none; background: #fef2f2; color: #991b1b; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; border: 1px solid #fecaca;"></div>
-                <form id="login-form">
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Handle</label>
-                        <input type="text" id="modal-handle" placeholder="user.bsky.social" required
-                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
-                        <div class="form-feedback" id="handle-feedback"></div>
-                    </div>
-                    <div style="margin-bottom: 1.5rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">App Password</label>
-                        <input type="password" id="modal-password" placeholder="xxxx-xxxx-xxxx-xxxx" required
-                               style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
-                        <small style="color: #6b7280; margin-top: 0.25rem; display: block;">
-                            🔒 Create an app password at <a href="https://bsky.app/settings/app-passwords" target="_blank" style="color: #2563eb;">bsky.app/settings/app-passwords</a>
-                        </small>
-                    </div>
-                    <div style="display: flex; gap: 1rem;">
-                        <button type="submit" id="login-submit" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s;">
-                            Login
-                        </button>
-                        <button type="button" id="cancel-login" style="flex: 1; background: #6b7280; color: white; border: none; padding: 0.75rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        `;
+        modal.innerHTML = '<div style="background: white; padding: 2rem; border-radius: 12px; max-width: 420px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);"><h3 style="margin-bottom: 1rem; color: #1f2937; font-size: 1.5rem;">Login with Bluesky</h3><div id="modal-error" style="display: none; background: #fef2f2; color: #991b1b; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; border: 1px solid #fecaca;"></div><form id="login-form"><div style="margin-bottom: 1rem;"><label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Handle</label><input type="text" id="modal-handle" placeholder="user.bsky.social" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;"><div class="form-feedback" id="handle-feedback"></div></div><div style="margin-bottom: 1.5rem;"><label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">App Password</label><input type="password" id="modal-password" placeholder="xxxx-xxxx-xxxx-xxxx" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;"><small style="color: #6b7280; margin-top: 0.25rem; display: block;">🔒 Create an app password at <a href="https://bsky.app/settings/app-passwords" target="_blank" style="color: #2563eb;">bsky.app/settings/app-passwords</a></small></div><div style="display: flex; gap: 1rem;"><button type="submit" id="login-submit" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s;">Login</button><button type="button" id="cancel-login" style="flex: 1; background: #6b7280; color: white; border: none; padding: 0.75rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">Cancel</button></div></form></div>';
 
         // Handle form submission
         modal.querySelector('#login-form').addEventListener('submit', async (e) => {
@@ -398,7 +365,7 @@ class WukkieApp {
 
             localStorage.setItem('wukkie_session', JSON.stringify(this.session));
             this.updateAuthUI(true);
-            this.showStatus(`Welcome back, @${this.session.handle}! 🎉`, 'success');
+            this.showStatus('Welcome back, @' + this.session.handle + '! 🎉', 'success');
 
         } catch (networkError) {
             if (networkError.name === 'TypeError' && networkError.message.includes('fetch')) {
@@ -525,7 +492,7 @@ class WukkieApp {
 
     async reverseGeocode(lat, lng) {
         try {
-            const response = await fetch(\`https://nominatim.openstreetmap.org/reverse?format=json&lat=\${lat}&lon=\${lng}\`);
+            const response = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng);
             const data = await response.json();
             if (data?.display_name) {
                 document.getElementById('location').value = data.display_name;
@@ -559,7 +526,7 @@ class WukkieApp {
         issues.unshift({...issueData, id: Date.now().toString()});
         localStorage.setItem('wukkie_issues', JSON.stringify(issues.slice(0, 20)));
 
-        this.showStatus(`✨ Issue "${issueData.title}" reported successfully! (Demo mode - stored locally)`, 'success');
+        this.showStatus('✨ Issue "' + issueData.title + '" reported successfully! (Demo mode - stored locally)', 'success');
         e.target.reset();
         document.getElementById('location-feedback').textContent = '';
         this.loadLocalIssues();
@@ -570,24 +537,35 @@ class WukkieApp {
         if (issues.length === 0) return;
 
         const listEl = document.getElementById('issues-list');
-        listEl.innerHTML = issues.map(issue => `
-            <div class="issue-item" onclick="wukkie.viewIssue('${issue.id}')">
-                <div class="issue-header">
-                    <div class="issue-title">${this.escapeHtml(issue.title)}</div>
-                    ${issue.location ? `<div class="issue-distance">📍 ${issue.location.address ? this.truncateAddress(issue.location.address) : 'Location set'}</div>` : ''}
-                </div>
-                <div class="issue-description">${this.escapeHtml(issue.description)}</div>
-                <div class="issue-meta">
-                    <div>${issue.hashtags.map(tag => `<span class="hashtag">${tag.startsWith('#') ? tag : '#' + tag}</span>`).join('')}</div>
-                    <div>${this.formatTimeAgo(new Date(issue.createdAt))} • @${issue.author}</div>
-                </div>
-                <div class="issue-actions" onclick="event.stopPropagation()">
-                    <button class="action-btn" onclick="wukkie.voteIssue('${issue.id}', 'up')">👍 ${Math.floor(Math.random() * 20) + 1}</button>
-                    <button class="action-btn" onclick="wukkie.commentOnIssue('${issue.id}')">💬 ${Math.floor(Math.random() * 10)}</button>
-                    <button class="action-btn" onclick="wukkie.showOnMap('${issue.id}')">📍 View</button>
-                </div>
-            </div>
-        `).join('');
+        listEl.innerHTML = issues.map(issue => {
+            let locationHtml = '';
+            if (issue.location) {
+                let addressText = issue.location.address ? this.truncateAddress(issue.location.address) : 'Location set';
+                locationHtml = '<div class="issue-distance">📍 ' + addressText + '</div>';
+            }
+
+            let hashtagsHtml = issue.hashtags.map(tag => {
+                let displayTag = tag.startsWith('#') ? tag : '#' + tag;
+                return '<span class="hashtag">' + displayTag + '</span>';
+            }).join('');
+
+            return '<div class="issue-item" onclick="wukkie.viewIssue(\'' + issue.id + '\')">' +
+                '<div class="issue-header">' +
+                    '<div class="issue-title">' + this.escapeHtml(issue.title) + '</div>' +
+                    locationHtml +
+                '</div>' +
+                '<div class="issue-description">' + this.escapeHtml(issue.description) + '</div>' +
+                '<div class="issue-meta">' +
+                    '<div>' + hashtagsHtml + '</div>' +
+                    '<div>' + this.formatTimeAgo(new Date(issue.createdAt)) + ' • @' + issue.author + '</div>' +
+                '</div>' +
+                '<div class="issue-actions" onclick="event.stopPropagation()">' +
+                    '<button class="action-btn" onclick="wukkie.voteIssue(\'' + issue.id + '\', \'up\')">👍 ' + (Math.floor(Math.random() * 20) + 1) + '</button>' +
+                    '<button class="action-btn" onclick="wukkie.commentOnIssue(\'' + issue.id + '\')">💬 ' + Math.floor(Math.random() * 10) + '</button>' +
+                    '<button class="action-btn" onclick="wukkie.showOnMap(\'' + issue.id + '\')">📍 View</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
     }
 
     formatTimeAgo(date) {
@@ -597,9 +575,9 @@ class WukkieApp {
         const days = Math.floor(diff / 86400000);
 
         if (minutes < 1) return 'just now';
-        if (minutes < 60) return `${minutes}m ago`;
-        if (hours < 24) return `${hours}h ago`;
-        if (days < 7) return `${days}d ago`;
+        if (minutes < 60) return minutes + 'm ago';
+        if (hours < 24) return hours + 'h ago';
+        if (days < 7) return days + 'd ago';
         return new Date(date).toLocaleDateString();
     }
 
@@ -650,7 +628,7 @@ class WukkieApp {
     showStatus(message, type) {
         const statusEl = document.getElementById('status-message');
         statusEl.textContent = message;
-        statusEl.className = \`status-message status-\${type}\`;
+        statusEl.className = 'status-message status-' + type;
         statusEl.style.display = 'block';
         setTimeout(() => statusEl.style.display = 'none', 5000);
     }
