@@ -710,6 +710,12 @@ class BlueskyAuth {
   }
 
   private async doRestoreSession(): Promise<boolean> {
+    // Don't restore if already authenticated (e.g., from OAuth callback)
+    if (this.authState.isAuthenticated) {
+      console.log("🔑 Already authenticated, skipping session restore");
+      return true;
+    }
+
     const stored = localStorage.getItem("wukkie_session");
     if (!stored) {
       console.log("🔑 No stored session found");
