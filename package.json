@@ -22,10 +22,6 @@
   ],
   "author": "Joop Kiefte",
   "license": "MIT",
-  "dependencies": {
-    "@atcute/client": "^4.0.3",
-    "@atcute/oauth-browser-client": "^1.0.26"
-  },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250115.0",
     "@types/leaflet": "^1.9.8",

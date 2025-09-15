@@ -1,17 +1,7 @@
 /**
- * Bluesky OAuth Authentication Module
- * Handles OAuth flow for secure Bluesky authentication
+ * Simple Bluesky App Password Authentication
+ * Replaces complex OAuth with direct app password authentication
  */
-
-import { configureOAuth } from "@atcute/oauth-browser-client";
-import { resolveFromIdentity } from "@atcute/oauth-browser-client";
-import { createAuthorizationUrl } from "@atcute/oauth-browser-client";
-import { Client } from "@atcute/client";
-import {
-  OAuthUserAgent,
-  finalizeAuthorization,
-  getSession,
-} from "@atcute/oauth-browser-client";
 
 export interface BlueskySession {
   handle: string;
@@ -19,13 +9,14 @@ export interface BlueskySession {
   accessJwt: string;
   refreshJwt: string;
   active: boolean;
+  isDemo?: boolean;
 }
 
 export interface AuthState {
   isAuthenticated: boolean;
   session: BlueskySession | null;
-  agent: OAuthUserAgent | null;
-  xrpc: Client | null;
+  agent: any | null;
+  xrpc: any | null;
 }
 
 class BlueskyAuth {
@@ -39,69 +30,63 @@ class BlueskyAuth {
   private listeners: Array<(state: AuthState) => void> = [];
 
   constructor() {
-    this.initialize();
+    console.log("🔧 BlueskyAuth: Initializing simple auth...");
   }
 
   /**
-   * Initialize OAuth configuration
+   * Login with Bluesky handle and app password
    */
-  private initialize(): void {
+  async login(handle: string, password: string): Promise<void> {
     try {
-      const baseUrl = window.location.origin;
+      console.log("🔐 Logging in with handle:", handle);
 
-      // Determine if we're in development or production
-      const isDevelopment =
-        baseUrl.includes("localhost") ||
-        baseUrl.includes("127.0.0.1") ||
-        baseUrl.includes(".local");
-
-      configureOAuth({
-        metadata: {
-          client_id: `${baseUrl}/client-metadata.json`,
-          redirect_uri: baseUrl,
+      const response = await fetch(
+        "https://bsky.social/xrpc/com.atproto.server.createSession",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            identifier: handle,
+            password: password,
+          }),
         },
-      });
+      );
 
-      // Log configuration for debugging
-      if (isDevelopment) {
-        console.log("🔧 OAuth configured for development:", {
-          baseUrl,
-          client_id: `${baseUrl}/client-metadata.json`,
-          redirect_uri: baseUrl,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to initialize OAuth:", error);
-      // Fallback: continue without OAuth - demo mode will still work
-    }
-  }
-
-  /**
-   * Start the OAuth login flow
-   */
-  async login(handle: string): Promise<void> {
-    try {
-      if (!handle) {
-        throw new Error("Handle is required");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Login failed");
       }
 
-      // Resolve the user's identity and OAuth metadata
-      const { identity, metadata } = await resolveFromIdentity(handle);
+      const data = await response.json();
 
-      // Create authorization URL
-      const authUrl = await createAuthorizationUrl({
-        metadata: metadata,
-        identity: identity,
-        scope: "atproto transition:generic",
-      });
+      // Create session
+      this.authState = {
+        isAuthenticated: true,
+        session: {
+          handle: data.handle,
+          did: data.did,
+          accessJwt: data.accessJwt,
+          refreshJwt: data.refreshJwt,
+          active: true,
+        },
+        agent: null,
+        xrpc: this, // Use this auth instance as the XRPC client
+      };
 
-      // Store the handle for after redirect
-      localStorage.setItem("wukkie_pending_handle", handle);
+      // Store session
+      localStorage.setItem(
+        "wukkie_session",
+        JSON.stringify(this.authState.session),
+      );
 
-      // Redirect to authorization server
-      window.location.assign(authUrl);
+      // Notify listeners
+      this.notifyListeners();
+
+      console.log("✅ Login successful");
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("❌ Login failed:", error);
       throw new Error(
         `Login failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -109,140 +94,103 @@ class BlueskyAuth {
   }
 
   /**
-   * Handle OAuth callback after redirect
+   * Demo login for testing
+   */
+  async demoLogin(): Promise<void> {
+    console.log("🎭 Demo login");
+
+    // Create demo session
+    this.authState = {
+      isAuthenticated: true,
+      session: {
+        handle: "demo.wukkie.uk",
+        did: "did:demo:wukkie",
+        accessJwt: "demo-token",
+        refreshJwt: "demo-refresh",
+        active: true,
+        isDemo: true,
+      },
+      agent: null,
+      xrpc: this,
+    };
+
+    // Store demo session
+    localStorage.setItem(
+      "wukkie_session",
+      JSON.stringify(this.authState.session),
+    );
+
+    // Notify listeners
+    this.notifyListeners();
+
+    console.log("✅ Demo login successful");
+  }
+
+  /**
+   * Handle OAuth callback - not needed for app password auth
    */
   async handleOAuthCallback(): Promise<boolean> {
-    console.log("🔍 handleOAuthCallback: Starting...");
-    try {
-      // Check if this is an OAuth callback
-      if (
-        !window.location.href.includes("state") &&
-        !window.location.href.includes("code")
-      ) {
-        console.log("🔍 handleOAuthCallback: No OAuth params found, skipping");
-        return false;
-      }
-      console.log(
-        "🔍 handleOAuthCallback: OAuth params detected, processing...",
-      );
-
-      // Extract parameters from URL fragment or search params
-      const urlParams = new URLSearchParams(window.location.search);
-      const fragmentParams = new URLSearchParams(window.location.hash.slice(1));
-
-      // Combine both parameter sources
-      const params = new URLSearchParams();
-      urlParams.forEach((value, key) => params.set(key, value));
-      fragmentParams.forEach((value, key) => params.set(key, value));
-
-      if (!params.has("state") && !params.has("code")) {
-        console.log(
-          "🔍 handleOAuthCallback: No valid OAuth params after parsing",
-        );
-        return false;
-      }
-
-      console.log("🔍 handleOAuthCallback: Cleaning up URL...");
-      // Clean up URL
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState(null, "", cleanUrl);
-
-      console.log("🔍 handleOAuthCallback: Finalizing authorization...");
-      // Finalize authorization
-      const session = await finalizeAuthorization(params);
-      const agent = new OAuthUserAgent(session);
-      const xrpc = new Client({ handler: agent });
-
-      // Get handle from storage or session
-      const pendingHandle = localStorage.getItem("wukkie_pending_handle");
-      localStorage.removeItem("wukkie_pending_handle");
-
-      // Update auth state
-      this.authState = {
-        isAuthenticated: true,
-        session: {
-          handle: pendingHandle || session.info.sub || "unknown",
-          did: session.info.sub,
-          accessJwt: "oauth-token", // OAuth tokens are handled internally
-          refreshJwt: "oauth-refresh", // OAuth tokens are handled internally
-          active: true,
-        },
-        agent,
-        xrpc,
-      };
-
-      // Notify listeners
-      this.notifyListeners();
-
-      console.log("✅ handleOAuthCallback: Success!");
-      return true;
-    } catch (error) {
-      console.error("❌ handleOAuthCallback: Error:", error);
-      throw new Error(
-        `OAuth callback failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
+    return false; // No OAuth handling needed
   }
 
   /**
    * Restore existing session from storage
    */
   async restoreSession(): Promise<boolean> {
-    console.log("🔑 restoreSession: Starting...");
+    console.log("🔑 Attempting to restore session...");
+
     try {
-      const sessions = localStorage.getItem("atcute-oauth:sessions");
-      if (!sessions) {
-        console.log("🔑 restoreSession: No sessions in localStorage");
-        return false;
-      }
-      console.log("🔑 restoreSession: Found sessions, parsing...");
-
-      const sessionData = JSON.parse(sessions);
-      const dids = Object.keys(sessionData);
-
-      if (dids.length === 0) {
-        console.log("🔑 restoreSession: No DIDs found in sessions");
+      const stored = localStorage.getItem("wukkie_session");
+      if (!stored) {
+        console.log("🔑 No stored session found");
         return false;
       }
 
-      console.log(
-        `🔑 restoreSession: Found ${dids.length} session(s), using first one`,
+      const session: BlueskySession = JSON.parse(stored);
+
+      // If it's a demo session, just restore it
+      if (session.isDemo) {
+        this.authState = {
+          isAuthenticated: true,
+          session: session,
+          agent: null,
+          xrpc: this,
+        };
+        this.notifyListeners();
+        console.log("✅ Demo session restored");
+        return true;
+      }
+
+      // For real sessions, test if they're still valid
+      const testResponse = await fetch(
+        "https://bsky.social/xrpc/com.atproto.server.getSession",
+        {
+          headers: {
+            Authorization: `Bearer ${session.accessJwt}`,
+          },
+        },
       );
-      // Use the first (most recent) session
-      const did = dids[0];
-      console.log("🔑 restoreSession: Getting session for DID:", did);
-      const session = await getSession(did, { allowStale: true });
 
-      if (!session) {
-        console.log("🔑 restoreSession: Session not found or invalid");
+      if (!testResponse.ok) {
+        console.log("🔑 Stored session is invalid, removing");
+        localStorage.removeItem("wukkie_session");
         return false;
       }
 
-      console.log("🔑 restoreSession: Creating OAuth agent and client...");
-      const agent = new OAuthUserAgent(session);
-      const xrpc = new Client({ handler: agent });
-
-      // Update auth state
+      // Session is valid, restore it
       this.authState = {
         isAuthenticated: true,
-        session: {
-          handle: session.info.sub || "unknown",
-          did: session.info.sub,
-          accessJwt: "oauth-token",
-          refreshJwt: "oauth-refresh",
-          active: true,
-        },
-        agent,
-        xrpc,
+        session: session,
+        agent: null,
+        xrpc: this,
       };
 
-      // Notify listeners
       this.notifyListeners();
-
-      console.log("✅ restoreSession: Success!");
+      console.log("✅ Session restored successfully");
       return true;
     } catch (error) {
-      console.error("❌ restoreSession: Error:", error);
+      console.error("❌ Session restore failed:", error);
+      localStorage.removeItem("wukkie_session");
       return false;
     }
   }
@@ -252,9 +200,10 @@ class BlueskyAuth {
    */
   async logout(): Promise<void> {
     try {
-      // Clear OAuth sessions from storage
-      localStorage.removeItem("atcute-oauth:sessions");
-      localStorage.removeItem("wukkie_pending_handle");
+      console.log("👋 Logging out...");
+
+      // Clear stored session
+      localStorage.removeItem("wukkie_session");
 
       // Reset auth state
       this.authState = {
@@ -266,8 +215,10 @@ class BlueskyAuth {
 
       // Notify listeners
       this.notifyListeners();
+
+      console.log("✅ Logout successful");
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("❌ Logout error:", error);
     }
   }
 
@@ -279,16 +230,16 @@ class BlueskyAuth {
   }
 
   /**
-   * Get authenticated XRPC client
+   * Get authenticated XRPC client (this instance)
    */
-  getXRPC(): Client | null {
+  getXRPC(): any | null {
     return this.authState.xrpc;
   }
 
   /**
-   * Get authenticated agent
+   * Get authenticated agent (not needed for simple auth)
    */
-  getAgent(): OAuthUserAgent | null {
+  getAgent(): any | null {
     return this.authState.agent;
   }
 
@@ -343,22 +294,94 @@ class BlueskyAuth {
     params?: Record<string, unknown>;
     data?: Record<string, unknown>;
   }): Promise<any> {
-    if (!this.authState.xrpc) {
+    if (!this.authState.session) {
       throw new Error("Not authenticated");
     }
 
-    try {
-      const response = await this.authState.xrpc.call({
-        lex: options.nsid,
-        ...(options.params && { params: options.params }),
-        ...(options.data && { data: options.data }),
-      });
+    // For demo sessions, return mock data
+    if (this.authState.session.isDemo) {
+      console.log("🎭 Mock API request for demo:", options.nsid);
+      return {
+        success: true,
+        uri: "at://demo.wukkie.uk/uk.wukkie.issue/demo123",
+        cid: "demo-cid-123",
+      };
+    }
 
-      return response.data;
+    try {
+      const url = `https://bsky.social/xrpc/${options.nsid}`;
+      const method = options.type.toUpperCase();
+
+      const requestInit: RequestInit = {
+        method,
+        headers: {
+          Authorization: `Bearer ${this.authState.session.accessJwt}`,
+          "Content-Type": "application/json",
+        },
+      };
+
+      if (method === "POST" && options.data) {
+        requestInit.body = JSON.stringify(options.data);
+      }
+
+      if (method === "GET" && options.params) {
+        const searchParams = new URLSearchParams();
+        Object.entries(options.params).forEach(([key, value]) => {
+          searchParams.append(key, String(value));
+        });
+        const urlWithParams = `${url}?${searchParams.toString()}`;
+        const response = await fetch(urlWithParams, requestInit);
+        return await this.handleResponse(response);
+      }
+
+      const response = await fetch(url, requestInit);
+      return await this.handleResponse(response);
     } catch (error) {
       console.error("API request error:", error);
       throw error;
     }
+  }
+
+  /**
+   * Handle API response
+   */
+  private async handleResponse(response: Response): Promise<any> {
+    const contentType = response.headers.get("content-type");
+    const isJson = contentType && contentType.includes("application/json");
+
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = isJson ? await response.json() : await response.text();
+      } catch {
+        errorData = "Unknown error";
+      }
+      throw new Error(`API request failed: ${JSON.stringify(errorData)}`);
+    }
+
+    if (isJson) {
+      return await response.json();
+    }
+
+    return await response.text();
+  }
+
+  /**
+   * Simplified call method compatible with XRPC client interface
+   */
+  async call(options: {
+    lex: string;
+    params?: any;
+    data?: any;
+  }): Promise<{ data: any }> {
+    const result = await this.makeRequest({
+      type: options.data ? "post" : "get",
+      nsid: options.lex,
+      params: options.params,
+      data: options.data,
+    });
+
+    return { data: result };
   }
 }
 
