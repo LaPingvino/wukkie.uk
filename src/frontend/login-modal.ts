@@ -56,6 +56,9 @@ export class LoginModal {
     // Create modal
     this.modal = document.createElement("div");
     this.modal.className = "login-modal";
+    this.modal.setAttribute("role", "dialog");
+    this.modal.setAttribute("aria-labelledby", "login-title");
+    this.modal.setAttribute("aria-describedby", "login-desc");
     this.modal.style.cssText = `
       background: white;
       border-radius: 12px;
@@ -70,8 +73,8 @@ export class LoginModal {
     // Create modal content
     this.modal.innerHTML = `
       <div class="login-modal-header">
-        <h2 style="margin: 0 0 8px 0; font-size: 1.5rem; color: #1a1a1a;">Login with Bluesky</h2>
-        <p style="margin: 0 0 24px 0; color: #666; font-size: 0.9rem;">
+        <h2 id="login-title" style="margin: 0 0 8px 0; font-size: 1.5rem; color: #1a1a1a;">Login with Bluesky</h2>
+        <p id="login-desc" style="margin: 0 0 24px 0; color: #666; font-size: 0.9rem;">
           Enter your Bluesky handle to securely authenticate with OAuth
         </p>
         <button class="login-modal-close" style="
@@ -310,6 +313,11 @@ export class LoginModal {
       ".login-loading",
     ) as HTMLElement;
 
+    // Initialize element states
+    this.errorMessage.style.display = "none";
+    this.loadingSpinner.style.display = "none";
+    this.loginButton.disabled = false;
+
     this.overlay.appendChild(this.modal);
     document.body.appendChild(this.overlay);
   }
@@ -398,9 +406,7 @@ export class LoginModal {
 
     // Basic handle validation
     if (!this.isValidHandle(handle)) {
-      this.showError(
-        "Please enter a valid Bluesky handle (e.g., user.bsky.social)",
-      );
+      this.showError("Please enter a valid Bluesky handle");
       this.handleInput.focus();
       return;
     }
@@ -524,8 +530,14 @@ export class LoginModal {
   }
 
   private isValidHandle(handle: string): boolean {
-    // Basic validation - should contain at least one dot and no @ symbol
-    return handle.includes(".") && !handle.includes("@") && handle.length > 3;
+    // Comprehensive handle validation
+    if (!handle || handle.trim().length === 0) return false;
+    if (!handle.includes(".")) return false;
+    if (handle.startsWith(".") || handle.endsWith(".")) return false;
+    if (handle.includes("..")) return false;
+    if (handle.includes("@") || handle.includes(" ")) return false;
+    if (handle.includes("\n") || handle.includes("\r")) return false;
+    return handle.length >= 4;
   }
 
   private setLoading(loading: boolean): void {
@@ -537,15 +549,13 @@ export class LoginModal {
     ) as HTMLElement;
 
     if (loading) {
-      btnText.style.display = "none";
-      spinner.style.display = "block";
+      if (btnText) btnText.style.display = "none";
+      if (spinner) spinner.style.display = "block";
       this.loginButton.disabled = true;
-      this.handleInput.disabled = true;
     } else {
-      btnText.style.display = "block";
-      spinner.style.display = "none";
+      if (btnText) btnText.style.display = "inline";
+      if (spinner) spinner.style.display = "none";
       this.loginButton.disabled = false;
-      this.handleInput.disabled = false;
     }
   }
 

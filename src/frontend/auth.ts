@@ -27,8 +27,14 @@ function base64UrlEncode(input: ArrayBuffer | Uint8Array | string): string {
   let base64: string;
 
   if (typeof input === "string") {
-    // Handle string input
-    base64 = btoa(input);
+    // Handle string input - convert to UTF-8 bytes first to handle Unicode
+    const utf8Bytes = new TextEncoder().encode(input);
+    // Convert bytes to binary string safely
+    let binaryString = "";
+    for (let i = 0; i < utf8Bytes.length; i++) {
+      binaryString += String.fromCharCode(utf8Bytes[i]);
+    }
+    base64 = btoa(binaryString);
   } else {
     // Handle ArrayBuffer or Uint8Array input
     const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
@@ -41,12 +47,17 @@ function base64UrlEncode(input: ArrayBuffer | Uint8Array | string): string {
 function base64UrlDecode(str: string): ArrayBuffer {
   str = str.split("-").join("+").split("_").join("/");
   while (str.length % 4) str += "=";
-  const decoded = atob(str);
-  const bytes = new Uint8Array(decoded.length);
-  for (let i = 0; i < decoded.length; i++) {
-    bytes[i] = decoded.charCodeAt(i);
+
+  try {
+    const decoded = atob(str);
+    const bytes = new Uint8Array(decoded.length);
+    for (let i = 0; i < decoded.length; i++) {
+      bytes[i] = decoded.charCodeAt(i);
+    }
+    return bytes.buffer;
+  } catch (error) {
+    throw new Error(`Base64 decode error: ${error.message}`);
   }
-  return bytes.buffer;
 }
 
 // Simple random string generator
