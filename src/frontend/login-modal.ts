@@ -90,89 +90,171 @@ export class LoginModal {
       </div>
 
       <div class="login-modal-form">
-        <div class="form-group" style="margin-bottom: 20px;">
-          <label for="login-handle" style="
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
-          ">Bluesky Handle</label>
-          <input
-            type="text"
-            id="login-handle"
-            placeholder="user.bsky.social"
-            style="
-              width: 100%;
-              padding: 12px 16px;
-              border: 2px solid #e1e5e9;
-              border-radius: 8px;
-              font-size: 1rem;
-              background: #fff;
-              transition: border-color 0.2s;
-              box-sizing: border-box;
-            "
-          />
-          <small style="
-            display: block;
-            margin-top: 6px;
-            color: #666;
-            font-size: 0.85rem;
-          ">
-            Don't include the @ symbol. Example: alice.bsky.social
-          </small>
-        </div>
-
-        <div class="login-error" style="
-          display: none;
-          background: #fef2f2;
-          border: 1px solid #fecaca;
-          color: #dc2626;
-          padding: 12px;
-          border-radius: 6px;
-          margin-bottom: 16px;
-          font-size: 0.9rem;
-        "></div>
-
-        <button class="login-submit-btn" style="
-          width: 100%;
-          padding: 12px 24px;
-          background: #1d4ed8;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-size: 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background-color 0.2s;
-          position: relative;
-        ">
-          <span class="login-btn-text">Continue with OAuth</span>
-          <span class="login-loading" style="
-            display: none;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-          ">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="animation: spin 1s linear infinite;">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
-              <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-            </svg>
-          </span>
-        </button>
-
-        <div class="login-info" style="
-          margin-top: 16px;
-          padding: 16px;
-          background: #f8fafc;
-          border-radius: 6px;
-          border-left: 4px solid #3b82f6;
-        ">
-          <div style="font-size: 0.85rem; color: #475569;">
-            <strong>🔒 Secure OAuth Flow</strong><br>
-            You'll be redirected to Bluesky's secure login page. No passwords are stored on this site.
+        <form>
+          <!-- Authentication Method Selector -->
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label style="
+              display: block;
+              margin-bottom: 12px;
+              font-weight: 500;
+              color: #333;
+            ">Authentication Method</label>
+            <div style="
+              display: flex;
+              gap: 16px;
+              margin-bottom: 8px;
+            ">
+              <label style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+                font-size: 0.9rem;
+              ">
+                <input
+                  type="radio"
+                  name="auth-method"
+                  value="oauth"
+                  checked
+                  style="margin: 0;"
+                />
+                OAuth (Recommended)
+              </label>
+              <label style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+                font-size: 0.9rem;
+              ">
+                <input
+                  type="radio"
+                  name="auth-method"
+                  value="password"
+                  style="margin: 0;"
+                />
+                App Password
+              </label>
+            </div>
+            <small id="auth-method-hint" style="
+              display: block;
+              color: #666;
+              font-size: 0.8rem;
+            ">
+              Secure authentication via your Bluesky server
+            </small>
           </div>
-        </div>
+
+          <!-- Handle Input -->
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label for="login-handle" style="
+              display: block;
+              margin-bottom: 8px;
+              font-weight: 500;
+              color: #333;
+            ">Bluesky Handle</label>
+            <input
+              type="text"
+              id="login-handle"
+              placeholder="user.bsky.social"
+              style="
+                width: 100%;
+                padding: 12px 16px;
+                border: 2px solid #e1e5e9;
+                border-radius: 8px;
+                font-size: 1rem;
+                background: #fff;
+                transition: border-color 0.2s;
+                box-sizing: border-box;
+              "
+            />
+            <small style="
+              display: block;
+              margin-top: 6px;
+              color: #666;
+              font-size: 0.85rem;
+            ">
+              Don't include the @ symbol. Example: alice.bsky.social
+            </small>
+          </div>
+
+          <!-- Password Field (hidden by default) -->
+          <div id="password-field" class="form-group" style="margin-bottom: 20px; display: none;">
+            <label for="login-password" style="
+              display: block;
+              margin-bottom: 8px;
+              font-weight: 500;
+              color: #333;
+            ">App Password</label>
+            <input
+              type="password"
+              id="login-password"
+              placeholder="xxxx-xxxx-xxxx-xxxx"
+              style="
+                width: 100%;
+                padding: 12px 16px;
+                border: 2px solid #e1e5e9;
+                border-radius: 8px;
+                font-size: 1rem;
+                background: #fff;
+                transition: border-color 0.2s;
+                box-sizing: border-box;
+              "
+            />
+            <small style="
+              display: block;
+              margin-top: 6px;
+              color: #666;
+              font-size: 0.85rem;
+            ">
+              🔒 Create an app password at
+              <a href="https://bsky.app/settings/app-passwords" target="_blank" style="color: #2563eb;">
+                bsky.app/settings/app-passwords
+              </a>
+            </small>
+          </div>
+
+          <!-- Error Message -->
+          <div class="login-error" style="
+            display: none;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+          "></div>
+
+          <!-- Submit Button -->
+          <button class="login-submit-btn" style="
+            width: 100%;
+            padding: 12px 24px;
+            background: #1d4ed8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+          ">
+            <span class="login-btn-text">Login with Bluesky</span>
+            <span class="login-loading" style="
+              display: none;
+              position: absolute;
+              left: 50%;
+              top: 50%;
+              transform: translate(-50%, -50%);
+            ">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="animation: spin 1s linear infinite;">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              </svg>
+            </span>
+          </button>
+        </form>
       </div>
     `;
 
@@ -254,7 +336,7 @@ export class LoginModal {
       this.handleLogin();
     });
 
-    // Handle enter key
+    // Handle enter key on handle input
     this.handleInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
@@ -262,9 +344,38 @@ export class LoginModal {
       }
     });
 
+    // Handle enter key on password input
+    const passwordInput = this.modal.querySelector(
+      "#login-password",
+    ) as HTMLInputElement;
+    if (passwordInput) {
+      passwordInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this.handleLogin();
+        }
+      });
+    }
+
     // Clear error when typing
     this.handleInput.addEventListener("input", () => {
       this.clearError();
+    });
+
+    if (passwordInput) {
+      passwordInput.addEventListener("input", () => {
+        this.clearError();
+      });
+    }
+
+    // Handle auth method toggle
+    const authMethodRadios = this.modal.querySelectorAll(
+      'input[name="auth-method"]',
+    ) as NodeListOf<HTMLInputElement>;
+    authMethodRadios.forEach((radio) => {
+      radio.addEventListener("change", () => {
+        this.handleAuthMethodChange(radio.value);
+      });
     });
 
     // Handle escape key
@@ -294,17 +405,18 @@ export class LoginModal {
       return;
     }
 
-    // Check if we're in password mode (OAuth fallback)
+    // Check which auth method is selected
+    const authMethod = this.getSelectedAuthMethod();
     const passwordInput = this.modal.querySelector(
       "#login-password",
     ) as HTMLInputElement;
     const password = passwordInput?.value?.trim();
 
-    if (passwordInput && passwordInput.style.display !== "none") {
-      // We're in app password mode
+    if (authMethod === "password") {
+      // User chose app password mode
       if (!password) {
         this.showError("Please enter your app password");
-        passwordInput.focus();
+        passwordInput?.focus();
         return;
       }
     }
@@ -313,26 +425,29 @@ export class LoginModal {
     this.setLoading(true);
 
     try {
-      await blueskyAuth.login(handle, password);
-      // OAuth flow should redirect to authorization server
-      // If we get here without redirect, either app password worked or something went wrong
-      if (!password) {
+      if (authMethod === "password") {
+        // Direct app password login
+        await blueskyAuth.loginWithAppPassword(handle, password!);
+        this.hide(); // App password login succeeded, close modal
+      } else {
+        // Try OAuth login
+        await blueskyAuth.login(handle);
+        // OAuth flow should redirect to authorization server
+        // If we get here without redirect, something went wrong
         this.showError(
           "OAuth login flow did not start properly. Please try again.",
         );
-      } else {
-        // App password login succeeded, close modal
-        this.hide();
       }
     } catch (error) {
       console.error("Login error:", error);
 
       if (
         error instanceof Error &&
-        error.message.includes("OAUTH_NOT_SUPPORTED")
+        error.message.includes("OAUTH_NOT_SUPPORTED") &&
+        authMethod === "oauth"
       ) {
-        // OAuth not supported, show app password option
-        this.showAppPasswordOption();
+        // OAuth not supported, automatically switch to app password mode
+        this.switchToAppPasswordMode();
       } else {
         this.showError(
           error instanceof Error
@@ -345,70 +460,60 @@ export class LoginModal {
     }
   }
 
-  private showAppPasswordOption(): void {
-    // Update modal content to show app password field
-    const form = this.modal.querySelector("form");
-    if (!form) return;
-
-    // Check if password field already exists
-    let passwordInput = this.modal.querySelector(
-      "#login-password",
+  private getSelectedAuthMethod(): string {
+    const selectedRadio = this.modal.querySelector(
+      'input[name="auth-method"]:checked',
     ) as HTMLInputElement;
+    return selectedRadio?.value || "oauth";
+  }
 
-    if (!passwordInput) {
-      // Create password field
-      const passwordGroup = document.createElement("div");
-      passwordGroup.style.cssText = "margin-bottom: 1rem;";
-      passwordGroup.innerHTML = `
-        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">
-          App Password
-        </label>
-        <input
-          type="password"
-          id="login-password"
-          placeholder="xxxx-xxxx-xxxx-xxxx"
-          required
-          style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem;"
-        >
-        <small style="color: #6b7280; margin-top: 0.25rem; display: block;">
-          🔒 OAuth not available. Create an app password at
-          <a href="https://bsky.app/settings/app-passwords" target="_blank" style="color: #2563eb;">
-            bsky.app/settings/app-passwords
-          </a>
-        </small>
-      `;
-
-      // Insert after handle field
-      const handleGroup = form.querySelector("div");
-      if (handleGroup?.nextSibling) {
-        form.insertBefore(passwordGroup, handleGroup.nextSibling);
-      } else {
-        form.appendChild(passwordGroup);
-      }
-
-      passwordInput = passwordGroup.querySelector(
-        "#login-password",
-      ) as HTMLInputElement;
-
-      // Add enter key handler for password field
-      passwordInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          this.handleLogin();
-        }
-      });
-    }
-
-    // Show the password field and focus it
-    passwordInput.style.display = "block";
-    passwordInput.focus();
-
-    // Update button text
+  private handleAuthMethodChange(method: string): void {
+    const passwordField = this.modal.querySelector(
+      "#password-field",
+    ) as HTMLElement;
+    const hintElement = this.modal.querySelector(
+      "#auth-method-hint",
+    ) as HTMLElement;
     const btnText = this.loginButton.querySelector(
       ".login-btn-text",
     ) as HTMLElement;
-    if (btnText) {
-      btnText.textContent = "Login with App Password";
+
+    if (method === "password") {
+      passwordField.style.display = "block";
+      hintElement.textContent =
+        "Use your Bluesky app password for direct authentication";
+      if (btnText) btnText.textContent = "Login with App Password";
+
+      // Focus password field after a short delay
+      setTimeout(() => {
+        const passwordInput = this.modal.querySelector(
+          "#login-password",
+        ) as HTMLInputElement;
+        if (passwordInput) passwordInput.focus();
+      }, 100);
+    } else {
+      passwordField.style.display = "none";
+      hintElement.textContent = "Secure authentication via your Bluesky server";
+      if (btnText) btnText.textContent = "Login with Bluesky";
+
+      // Clear password field
+      const passwordInput = this.modal.querySelector(
+        "#login-password",
+      ) as HTMLInputElement;
+      if (passwordInput) passwordInput.value = "";
+    }
+
+    this.clearError();
+  }
+
+  private switchToAppPasswordMode(): void {
+    // Switch radio button to app password
+    const passwordRadio = this.modal.querySelector(
+      'input[value="password"]',
+    ) as HTMLInputElement;
+    if (passwordRadio) {
+      passwordRadio.checked = true;
+      this.handleAuthMethodChange("password");
     }
 
     // Show helpful message
@@ -471,21 +576,13 @@ export class LoginModal {
     this.clearError();
     this.setLoading(false);
 
-    // Reset to OAuth mode (hide password field if it exists)
-    const passwordInput = this.modal.querySelector(
-      "#login-password",
+    // Reset to OAuth mode
+    const oauthRadio = this.modal.querySelector(
+      'input[value="oauth"]',
     ) as HTMLInputElement;
-    if (passwordInput) {
-      passwordInput.value = "";
-      passwordInput.style.display = "none";
-    }
-
-    // Reset button text
-    const btnText = this.loginButton.querySelector(
-      ".login-btn-text",
-    ) as HTMLElement;
-    if (btnText) {
-      btnText.textContent = "Login with Bluesky";
+    if (oauthRadio) {
+      oauthRadio.checked = true;
+      this.handleAuthMethodChange("oauth");
     }
 
     // Focus the handle input after a short delay
@@ -502,12 +599,21 @@ export class LoginModal {
     this.overlay.style.display = "none";
     this.handleInput.value = "";
 
-    // Clear password field if it exists
+    // Clear password field
     const passwordInput = this.modal.querySelector(
       "#login-password",
     ) as HTMLInputElement;
     if (passwordInput) {
       passwordInput.value = "";
+    }
+
+    // Reset to OAuth mode
+    const oauthRadio = this.modal.querySelector(
+      'input[value="oauth"]',
+    ) as HTMLInputElement;
+    if (oauthRadio) {
+      oauthRadio.checked = true;
+      this.handleAuthMethodChange("oauth");
     }
 
     this.clearError();
