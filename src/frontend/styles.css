@@ -29,8 +29,13 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 1rem;
+}
+
+.header-content > div:first-child {
+    flex: 1;
+    min-width: 0;
 }
 
 .header h1 {
@@ -43,6 +48,9 @@ body {
     font-size: 1.1rem;
     opacity: 0.9;
     margin-top: 0.5rem;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    max-width: 60vw;
 }
 
 /* Auth section */
@@ -51,6 +59,7 @@ body {
     align-items: center;
     gap: 1rem;
     flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .auth-section button {
@@ -699,12 +708,25 @@ button.loading::after {
         padding: 1rem 0;
     }
 
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
     .header h1 {
         font-size: 1.75rem;
     }
 
     .tagline {
         font-size: 1rem;
+        max-width: 100%;
+        margin-top: 0.25rem;
+    }
+
+    .auth-section {
+        width: 100%;
+        justify-content: flex-start;
     }
 
     .main-grid {
