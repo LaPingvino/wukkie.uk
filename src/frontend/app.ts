@@ -138,9 +138,9 @@ class WukkieApp {
       // Set up authentication state listener
       console.log("🟢 [DEBUG] init(): About to setup auth state listener");
       try {
-        this.authUnsubscribe = blueskyAuth.onStateChange((authState) => {
+        this.authUnsubscribe = blueskyAuth.onStateChange(async (authState) => {
           console.log("🟢 [DEBUG] Auth state changed:", authState);
-          this.handleAuthStateChange(authState);
+          await this.handleAuthStateChange(authState);
         });
         console.log("🟢 [DEBUG] init(): Auth state listener setup complete");
       } catch (error) {
@@ -219,7 +219,7 @@ class WukkieApp {
     }, 100);
   }
 
-  private handleAuthStateChange(authState: AuthState): void {
+  private async handleAuthStateChange(authState: AuthState): Promise<void> {
     if (authState.isAuthenticated && authState.session) {
       this.session = {
         accessJwt: authState.session.accessJwt,
@@ -230,7 +230,7 @@ class WukkieApp {
 
       // Initialize ATProto manager when authenticated
       const agent = new BskyAgent({ service: "https://bsky.social" });
-      agent.session = authState.session;
+      await agent.resumeSession(authState.session);
       this.atprotoManager = new ATProtoIssueManager(agent);
       console.log("🟢 ATProto manager initialized");
 
