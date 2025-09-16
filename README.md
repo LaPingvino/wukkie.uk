@@ -127,17 +127,17 @@ wukkie.uk/
 
 ### OAuth Scopes
 
-Wukkie.uk uses **transitional OAuth scopes** for reliable authentication while the granular system stabilizes:
+Wukkie.uk uses **modern granular OAuth scopes** with comprehensive debugging to test compatibility:
 
 ```javascript
-scope: 'atproto transition:generic transition:chat.bsky'
+scope: 'atproto repo:app.bsky.feed.post blob:*/*'
 ```
 
 - `atproto` - Required base scope for AT Protocol access
-- `transition:generic` - App Password equivalent (broad read/write access)
-- `transition:chat.bsky` - Chat functionality for future features
+- `repo:app.bsky.feed.post` - Create posts (issue reports) on Bluesky  
+- `blob:*/*` - Upload files (images for issue reports)
 
-📚 **Complete Documentation**: See [OAUTH_SCOPES.md](OAUTH_SCOPES.md) for detailed scope management, migration to granular scopes, and future expansion guidelines.
+📚 **Complete Documentation**: See [OAUTH_SCOPES.md](OAUTH_SCOPES.md) for detailed scope management, debugging output, and fallback strategies.
 
 ### Environment Variables
 

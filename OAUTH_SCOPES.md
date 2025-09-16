@@ -2,21 +2,21 @@
 
 ## Current OAuth Scope Configuration
 
-Wukkie.uk currently uses **transitional scopes** while the granular scope system stabilizes. The current scope configuration is:
+Wukkie.uk uses **modern granular scopes** with comprehensive debugging to test compatibility. The current scope configuration is:
 
 ```javascript
-scope: 'atproto transition:generic transition:chat.bsky'
+scope: 'atproto repo:app.bsky.feed.post blob:*/*'
 ```
 
-**Note:** We're using transitional scopes because the granular scope system is still evolving and not all providers fully support it yet. This provides reliable OAuth functionality during the transition period.
+**Note:** We're testing the granular scope system with extensive debugging to identify compatibility issues and help the ecosystem stabilize. If OAuth fails, detailed logs help diagnose whether it's a scope issue or other problem.
 
 ## Current Functionality Coverage
 
 | Scope | Functionality | Used For |
 |-------|---------------|----------|
 | `atproto` | Required base scope for AT Protocol access | All ATProto operations |
-| `transition:generic` | App Password equivalent (broad read/write) | Issue creation, posting, user data |
-| `transition:chat.bsky` | Chat functionality (when available) | Future chat features |
+| `repo:app.bsky.feed.post` | Create, update, delete posts | Publishing issue reports to Bluesky |
+| `blob:*/*` | Upload any file type | Attaching images to issue reports |
 
 ## Scope System Overview
 
@@ -91,18 +91,18 @@ For reference, the old transitional scopes that provide broader access:
 - `transition:chat.bsky` - Chat functionality
 - `transition:email` - Email access
 
-**Note:** Transitional scopes are currently the most reliable option. Granular scopes will be adopted when fully stable across providers.
+**Note:** We're actively testing granular scopes. If they fail, comprehensive debugging helps identify the issue for the ecosystem.
 
 ## Current Implementation Status
 
-**Using Transitional Scopes** (Current):
+**Testing Granular Scopes** (Current):
 ```javascript
-scope: 'atproto transition:generic transition:chat.bsky'
+scope: 'atproto repo:app.bsky.feed.post blob:*/*'
 ```
 
-**Future Granular Scopes** (When Stable):
+**Fallback Transitional Scopes** (If Granular Fails):
 ```javascript  
-scope: 'atproto repo:app.bsky.feed.post blob:*/*'
+scope: 'atproto transition:generic transition:chat.bsky'
 ```
 
 OAuth scope is configured in:
@@ -110,13 +110,26 @@ OAuth scope is configured in:
 - **Location:** Line ~136 in the `dynamicMetadata` object
 - **Property:** `scope`
 
-## Scope Testing
+## Scope Testing & Debugging
 
 To test new scopes:
 1. Update the `scope` property in `build.js`
 2. Run `npm run build`
 3. Deploy or test locally
-4. Verify the new permissions work in your OAuth flow
+4. Check browser console for detailed OAuth debugging:
+   - Client metadata logs
+   - Scope validation logs
+   - Error details with suggestions
+5. Verify the new permissions work in your OAuth flow
+
+### Debug Output
+The system logs comprehensive OAuth information:
+```
+📋 [DEBUG] OAuth client metadata: {...}
+🎯 [DEBUG] OAuth scopes: atproto repo:app.bsky.feed.post blob:*/*
+🚨 OAuth error detected: invalid_scope
+📋 Error details: {...}
+```
 
 ## Security Best Practices
 
@@ -154,5 +167,5 @@ scope: 'atproto repo:app.bsky.* rpc:com.atproto.* blob:*/* account:email'
 ---
 
 **Last Updated:** January 2025
-**Current Scope Version:** Transitional (stable)
-**Migration Status:** Will transition to granular scopes when fully supported
+**Current Scope Version:** Granular (testing with comprehensive debugging)
+**Migration Status:** Actively testing granular scopes, fallback to transitional if needed
