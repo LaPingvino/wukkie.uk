@@ -230,6 +230,7 @@ class WukkieApp {
 
   private async handleAuthStateChange(authState: AuthState): Promise<void> {
     if (authState.isAuthenticated && authState.session) {
+      // Store session for persistence
       this.session = {
         accessJwt: authState.session.accessJwt,
         refreshJwt: authState.session.refreshJwt,
@@ -238,17 +239,59 @@ class WukkieApp {
       };
 
       // Initialize ATProto manager when authenticated
-      const agent = new BskyAgent({ service: "https://bsky.social" });
-      await agent.resumeSession(authState.session);
-      this.atprotoManager = new ATProtoIssueManager(agent);
-      console.log("🟢 ATProto manager initialized");
+      try {
+        const agent = new BskyAgent({ service: "https://bsky.social" });
+
+        if (authState.session.isDemo) {
+          // Demo mode - create manager without authentication
+          console.log("🎭 Using demo mode authentication");
+          this.atprotoManager = new ATProtoIssueManager(agent);
+          console.log("🟢 ATProto manager initialized (demo mode)");
+        } else {
+          // Try to determine if this is OAuth or traditional ATProto session
+          const isOAuthToken =
+            authState.session.accessJwt &&
+            (!authState.session.accessJwt.startsWith("eyJ") ||
+              authState.session.accessJwt.includes("access_token"));
+
+          if (isOAuthToken) {
+            console.log("🔐 OAuth authentication detected");
+            console.log(
+              "⚠️ OAuth tokens not directly compatible with ATProto agent",
+            );
+            // Set up for local-only operations until OAuth integration is improved
+            this.atprotoManager = null;
+            this.showStatus(
+              `Welcome back, @${this.session.handle}! Note: Bluesky posting temporarily unavailable with OAuth.`,
+              "info",
+            );
+          } else {
+            // Traditional ATProto session - try to resume
+            console.log("🔐 Using ATProto session authentication");
+            await agent.resumeSession(authState.session);
+            this.atprotoManager = new ATProtoIssueManager(agent);
+            console.log("🟢 ATProto manager initialized");
+          }
+        }
+      } catch (error) {
+        console.error("⚠️ Failed to initialize ATProto manager:", error);
+        this.atprotoManager = null;
+        this.showStatus(
+          `Welcome back, @${this.session.handle}! Some Bluesky features may be limited.`,
+          "info",
+        );
+      }
 
       // Update demo issues to current user if transitioning from demo
       this.updateDemoIssuesOnLogin();
 
       this.updateAuthUI(true);
       this.loginModal.hide();
-      this.showStatus(`Welcome back, @${this.session.handle}! 🎉`, "success");
+
+      // Only show generic success message if we haven't already shown a more specific one
+      if (this.atprotoManager !== null || authState.session.isDemo) {
+        this.showStatus(`Welcome back, @${this.session.handle}! 🎉`, "success");
+      }
     } else {
       this.session = null;
       this.atprotoManager = null;
@@ -802,7 +845,7 @@ class WukkieApp {
           hashtags: issue.hashtags,
         };
 
-      if (issue.postToBluesky) {
+      if (issue.postToBluesky && this.atprotoManager) {
         // Create the issue with Bluesky posting
         const createdIssue = await this.atprotoManager.createIssue(
           wukkieIssue,
@@ -829,6 +872,16 @@ class WukkieApp {
             "error",
           );
         }
+      } else if (issue.postToBluesky && !this.atprotoManager) {
+        // User wanted to post to Bluesky but ATProto manager not available
+        console.log(
+          "📝 Bluesky posting requested but not available due to OAuth limitations",
+        );
+        issue.blueskyStatus = "local-only";
+        this.showStatus(
+          "Issue saved locally (Bluesky posting not available with OAuth authentication)",
+          "info",
+        );
       } else {
         // Store locally only
         console.log("📝 Storing issue locally only (user choice)");
