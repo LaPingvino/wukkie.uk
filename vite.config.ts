@@ -10,7 +10,6 @@ export default defineConfig({
       input: {
         main: "src/frontend/index.html",
       },
-      external: ["@atproto/api", "pluscodes"],
     },
     target: "es2018",
     sourcemap: true,

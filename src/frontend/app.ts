@@ -16,7 +16,6 @@ import {
   BlueskyPostOptions,
 } from "./atproto-integration";
 
-// @ts-ignore - External dependency handled by build process
 import { RichText, BskyAgent } from "@atproto/api";
 
 // Type definitions
