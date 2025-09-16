@@ -5,7 +5,41 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Read OAuth configuration from package.json
+const packageJsonPath = path.join(__dirname, "package.json");
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+const oauthConfig = packageJson.oauth || {};
+const oauthScopes = oauthConfig.scopes || "atproto transition:generic";
+const clientName =
+  oauthConfig.clientName || "Wukkie.uk - Bug Tracker for the World";
+
 console.log("🚀 Building Wukkie.uk...");
+console.log("🔧 OAuth Scopes:", oauthScopes);
+console.log("📋 Client Name:", clientName);
+
+// Update static client-metadata.json with centralized config
+console.log("🔄 Updating client metadata with centralized OAuth config...");
+const staticClientMetadataPath = path.join(
+  __dirname,
+  "static",
+  "client-metadata.json",
+);
+if (fs.existsSync(staticClientMetadataPath)) {
+  const clientMetadata = JSON.parse(
+    fs.readFileSync(staticClientMetadataPath, "utf8"),
+  );
+  clientMetadata.scope = oauthScopes;
+  clientMetadata.client_name = clientName;
+
+  // Write back to static directory
+  fs.writeFileSync(
+    staticClientMetadataPath,
+    JSON.stringify(clientMetadata, null, 2) + "\n",
+  );
+  console.log("✅ Updated static/client-metadata.json");
+} else {
+  console.log("⚠️  static/client-metadata.json not found, skipping update");
+}
 
 // Clean previous builds
 console.log("🧹 Cleaning previous builds...");
@@ -47,6 +81,9 @@ if (fs.existsSync(assetsDir)) {
   const jsFile = assetFiles.find((file) => file.endsWith(".js"));
   if (jsFile) {
     appJs = fs.readFileSync(path.join(assetsDir, jsFile), "utf8");
+    // Replace OAuth scope placeholder with actual scopes
+    appJs = appJs.replace(/__OAUTH_SCOPES__/g, oauthScopes);
+    console.log("🔄 Replaced OAuth scope placeholders in JavaScript");
   }
 
   // Find the main CSS file (usually has hash in name)
@@ -129,11 +166,11 @@ export default {
           client_uri: baseUrl,
           redirect_uris: [baseUrl],
           application_type: 'web',
-          client_name: 'Wukkie.uk - Bug Tracker for the World',
+          client_name: clientName,
           dpop_bound_access_tokens: true,
           grant_types: ['authorization_code', 'refresh_token'],
           response_types: ['code'],
-          scope: 'atproto repo:app.bsky.feed.post blob:*/*',
+          scope: oauthScopes,
           token_endpoint_auth_method: 'none',
         };
 

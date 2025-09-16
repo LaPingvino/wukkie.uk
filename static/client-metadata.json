@@ -1,12 +1,19 @@
 {
   "client_id": "https://wukkie.uk/client-metadata.json",
   "client_uri": "https://wukkie.uk",
-  "redirect_uris": ["https://wukkie.uk"],
+  "redirect_uris": [
+    "https://wukkie.uk"
+  ],
   "application_type": "web",
   "client_name": "Wukkie.uk - Bug Tracker for the World",
   "dpop_bound_access_tokens": true,
-  "grant_types": ["authorization_code", "refresh_token"],
-  "response_types": ["code"],
-  "scope": "atproto transition:generic",
+  "grant_types": [
+    "authorization_code",
+    "refresh_token"
+  ],
+  "response_types": [
+    "code"
+  ],
+  "scope": "atproto repo:app.bsky.feed.post blob:*/*",
   "token_endpoint_auth_method": "none"
 }

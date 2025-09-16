@@ -282,7 +282,7 @@ class BlueskyAuth {
       const authUrl = new URL(metadata.authorization_endpoint);
       const clientId = window.location.origin + "/client-metadata.json";
 
-      const requestedScope = "atproto repo:app.bsky.feed.post blob:*/*";
+      const requestedScope = "__OAUTH_SCOPES__";
 
       authUrl.searchParams.set("response_type", "code");
       authUrl.searchParams.set("client_id", clientId);
