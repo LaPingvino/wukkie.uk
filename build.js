@@ -166,11 +166,11 @@ export default {
           client_uri: baseUrl,
           redirect_uris: [baseUrl],
           application_type: 'web',
-          client_name: clientName,
+          client_name: ${JSON.stringify(clientName)},
           dpop_bound_access_tokens: true,
           grant_types: ['authorization_code', 'refresh_token'],
           response_types: ['code'],
-          scope: oauthScopes,
+          scope: ${JSON.stringify(oauthScopes)},
           token_endpoint_auth_method: 'none',
         };
 
