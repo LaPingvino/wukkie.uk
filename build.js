@@ -133,7 +133,7 @@ export default {
           dpop_bound_access_tokens: true,
           grant_types: ['authorization_code', 'refresh_token'],
           response_types: ['code'],
-          scope: 'atproto repo:app.bsky.feed.post blob:*/*',
+          scope: 'atproto transition:generic transition:chat.bsky',
           token_endpoint_auth_method: 'none',
         };
 

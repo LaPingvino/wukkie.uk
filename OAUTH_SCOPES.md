@@ -2,19 +2,21 @@
 
 ## Current OAuth Scope Configuration
 
-Wukkie.uk uses **minimal granular scopes** for security and user privacy. The current scope configuration is:
+Wukkie.uk currently uses **transitional scopes** while the granular scope system stabilizes. The current scope configuration is:
 
 ```javascript
-scope: 'atproto repo:app.bsky.feed.post blob:*/*'
+scope: 'atproto transition:generic transition:chat.bsky'
 ```
+
+**Note:** We're using transitional scopes because the granular scope system is still evolving and not all providers fully support it yet. This provides reliable OAuth functionality during the transition period.
 
 ## Current Functionality Coverage
 
 | Scope | Functionality | Used For |
 |-------|---------------|----------|
 | `atproto` | Required base scope for AT Protocol access | All ATProto operations |
-| `repo:app.bsky.feed.post` | Create, update, delete posts | Publishing issue reports to Bluesky |
-| `blob:*/*` | Upload any file type | Attaching images to issue reports |
+| `transition:generic` | App Password equivalent (broad read/write) | Issue creation, posting, user data |
+| `transition:chat.bsky` | Chat functionality (when available) | Future chat features |
 
 ## Scope System Overview
 
@@ -89,9 +91,19 @@ For reference, the old transitional scopes that provide broader access:
 - `transition:chat.bsky` - Chat functionality
 - `transition:email` - Email access
 
-**Note:** Transitional scopes are deprecated. Use granular scopes for new features.
+**Note:** Transitional scopes are currently the most reliable option. Granular scopes will be adopted when fully stable across providers.
 
-## Implementation Location
+## Current Implementation Status
+
+**Using Transitional Scopes** (Current):
+```javascript
+scope: 'atproto transition:generic transition:chat.bsky'
+```
+
+**Future Granular Scopes** (When Stable):
+```javascript  
+scope: 'atproto repo:app.bsky.feed.post blob:*/*'
+```
 
 OAuth scope is configured in:
 - **File:** `build.js`
@@ -142,5 +154,5 @@ scope: 'atproto repo:app.bsky.* rpc:com.atproto.* blob:*/* account:email'
 ---
 
 **Last Updated:** January 2025
-**Current Scope Version:** Granular v1
-**Migration Status:** Transitioned from transitional scopes
+**Current Scope Version:** Transitional (stable)
+**Migration Status:** Will transition to granular scopes when fully supported
