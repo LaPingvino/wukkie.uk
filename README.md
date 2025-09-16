@@ -125,6 +125,20 @@ wukkie.uk/
 
 ## 🔧 Configuration
 
+### OAuth Scopes
+
+Wukkie.uk uses **minimal granular OAuth scopes** for security and privacy:
+
+```javascript
+scope: 'atproto repo:app.bsky.feed.post blob:*/*'
+```
+
+- `atproto` - Required base scope for AT Protocol access
+- `repo:app.bsky.feed.post` - Create posts (issue reports) on Bluesky  
+- `blob:*/*` - Upload files (images for issue reports)
+
+📚 **Complete Documentation**: See [OAUTH_SCOPES.md](OAUTH_SCOPES.md) for detailed scope management, adding new features, and future expansion guidelines.
+
 ### Environment Variables
 
 Create a `.dev.vars` file for local development:
