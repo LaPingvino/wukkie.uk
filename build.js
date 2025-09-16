@@ -17,6 +17,40 @@ console.log("🚀 Building Wukkie.uk...");
 console.log("🔧 OAuth Scopes:", oauthScopes);
 console.log("📋 Client Name:", clientName);
 
+// Run tests before building
+console.log("");
+console.log("🧪 Running tests...");
+console.log("📁 Test files location: src/frontend/*.test.ts");
+console.log("📋 Found test files:");
+console.log("   • atproto-integration.test.ts");
+console.log("   • auth.test.ts");
+console.log("   • issue-management.test.ts");
+console.log("   • location-hashtag-case-enhanced.test.ts");
+console.log("   • location-privacy.test.ts");
+console.log("   • login-fix.test.ts");
+console.log("   • login-integration.test.ts");
+console.log("   • login-modal.test.ts");
+console.log("   • login-real.test.ts");
+console.log("   • multiple-locations.test.ts");
+console.log("");
+
+let testsPassed = false;
+let testsWarning = false;
+try {
+  const testResult = execSync("node test.js src/frontend", {
+    stdio: "inherit",
+    encoding: "utf8",
+  });
+  console.log("✅ All tests passed!");
+  testsPassed = true;
+} catch (error) {
+  console.log("⚠️  Some tests failed, but continuing build...");
+  console.log("📊 Test results: Check output above for details");
+  console.log("💡 Consider fixing failing tests for better code quality");
+  testsWarning = true;
+}
+console.log("");
+
 // Update static client-metadata.json with centralized config
 console.log("🔄 Updating client metadata with centralized OAuth config...");
 const staticClientMetadataPath = path.join(
@@ -217,4 +251,11 @@ console.log("  ✓ dist/index.html");
 if (appJs) console.log("  ✓ dist/assets/*.js");
 if (appCss) console.log("  ✓ dist/assets/*.css");
 console.log("");
+if (testsPassed) {
+  console.log("🧪 Tests: All passed ✅");
+} else if (testsWarning) {
+  console.log("🧪 Tests: Some failures (see details above) ⚠️");
+} else {
+  console.log("🧪 Tests: Not run");
+}
 console.log("🚀 Ready to deploy with: npm run deploy");

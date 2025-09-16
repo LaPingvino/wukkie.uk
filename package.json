@@ -15,6 +15,8 @@
     "type-check": "tsc --noEmit",
     "test": "node test.js",
     "test:verbose": "node test.js -v",
+    "test:frontend": "node test.js src/frontend",
+    "test:summary": "echo '🧪 Test Files in src/frontend:' && echo '  • atproto-integration.test.ts - ATProto/Bluesky integration tests' && echo '  • auth.test.ts - Authentication system tests' && echo '  • issue-management.test.ts - Issue creation and management tests' && echo '  • location-hashtag-case-enhanced.test.ts - Location hashtag case handling' && echo '  • location-privacy.test.ts - Privacy-friendly location system tests' && echo '  • login-fix.test.ts - Login system validation and fixes' && echo '  • login-integration.test.ts - Login modal integration tests' && echo '  • login-modal.test.ts - Login modal component tests' && echo '  • login-real.test.ts - Real authentication flow tests' && echo '  • multiple-locations.test.ts - Multiple location handling tests' && echo '' && echo 'Run: npm test (all tests) | npm run test:frontend (frontend only) | npm run test:verbose (detailed)'",
     "test:watch": "node --test --watch src/**/*.test.ts --experimental-strip-types"
   },
   "keywords": [
