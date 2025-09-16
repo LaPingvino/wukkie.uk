@@ -16,7 +16,8 @@ import {
   BlueskyPostOptions,
 } from "./atproto-integration";
 
-import { BskyAgent } from "@atproto/api";
+// @ts-ignore - External dependency handled by build process
+import { RichText, BskyAgent } from "@atproto/api";
 
 // Type definitions
 interface BlueskySession {
@@ -63,22 +64,25 @@ class WukkieApp {
   private currentPrivacyLocation: PrivacyLocation | null = null;
   private session: BlueskySession | null = null;
   private geocodeTimeout?: number;
-  private loginModal: LoginModal;
+  private loginModal!: LoginModal;
   private authUnsubscribe?: () => void;
   private isLoading: boolean = false;
   private atprotoManager: ATProtoIssueManager | null = null;
 
   private taglines: string[] = [
     "oopsie woopsie de trein is stukkie wukkie...",
-    "it's barely a respectable world as it is",
+    "it's barely a respectable world to begin with anyway...",
     "this is fine 🔥",
     "another day, another issue to fix",
-    "The earth is but one country, and mankind its citizens.",
-    "So powerful is the light of unity that it can illuminate the whole earth.",
-    "The well-being of mankind, its peace and security, are unattainable unless and until its unity is firmly established.",
+    "fixing the world, one bug report at a time ✨",
+    "\"The earth is but one country, and mankind its citizens.\" - Bahá'u'lláh",
+    "making the world a little less broken 🌍",
+    "\"So powerful is the light of unity that it can illuminate the whole earth.\" - Bahá'u'lláh",
+    "\"The well-being of mankind, its peace and security, are unattainable unless and until its unity is firmly established.\" - Bahá'u'lláh",
     "Let your vision be world-embracing, rather than confined to your own self.",
     "The diversity in the human family should be the cause of love and harmony.",
     "when something's broken, let's fix it together! 🚂",
+    "when life gives you bugs, make bug reports 🐛",
     "bug tracker for the world (literally)",
     "because even the world needs debugging",
     "The betterment of the conditions of the people is the fundamental purpose of government.",
@@ -108,7 +112,10 @@ class WukkieApp {
       console.log("🟢 [DEBUG] init(): About to show loading");
       this.showLoading("Initializing app...");
     } catch (error) {
-      console.error("❌ [DEBUG] Error in showLoading:", error);
+      console.error(
+        "❌ [DEBUG] Error in showLoading:",
+        error instanceof Error ? error.message : error,
+      );
     }
 
     // Emergency timeout to prevent infinite loading
@@ -196,7 +203,7 @@ class WukkieApp {
         }
       } catch (error) {
         console.error("OAuth callback error:", error);
-        if (!error.message.includes("timeout")) {
+        if (!(error instanceof Error) || !error.message.includes("timeout")) {
           this.showStatus("Login failed. Please try again.", "error");
         }
       }
@@ -245,7 +252,7 @@ class WukkieApp {
       this.showStatus(`Welcome back, @${this.session.handle}! 🎉`, "success");
     } else {
       this.session = null;
-      this.atprotoManager = undefined;
+      this.atprotoManager = null;
       this.updateAuthUI(false);
     }
   }
@@ -1191,7 +1198,7 @@ class WukkieApp {
     ) as HTMLTextAreaElement;
     const categorySelect = document.getElementById(
       "category",
-    ) as HTMLSelectElement;
+    ) as unknown as HTMLSelectElement;
     const hashtagsInput = document.getElementById(
       "hashtags",
     ) as HTMLInputElement;
@@ -1713,7 +1720,11 @@ class WukkieApp {
       );
 
       if (response.ok) {
-        const metadata = await response.json();
+        const metadata = (await response.json()) as {
+          scope?: string;
+          client_id?: string;
+          redirect_uris?: string[];
+        };
         console.log(
           "📋 [DEBUG] OAuth client metadata:",
           JSON.stringify(metadata, null, 2),
@@ -1745,6 +1756,15 @@ if (document.readyState === "loading") {
     try {
       wukkie = new WukkieApp();
       console.log("🟢 [DEBUG] WukkieApp created successfully");
+
+      // Make wukkie globally available for debugging
+      console.log("🟢 [DEBUG] Making wukkie globally available");
+      try {
+        (window as any).wukkie = wukkie;
+        console.log("🟢 [DEBUG] Global wukkie assignment complete");
+      } catch (error) {
+        console.error("❌ [DEBUG] Error setting global wukkie:", error);
+      }
     } catch (error) {
       console.error("❌ [DEBUG] Error creating WukkieApp:", error);
     }
@@ -1754,16 +1774,18 @@ if (document.readyState === "loading") {
   try {
     wukkie = new WukkieApp();
     console.log("🟢 [DEBUG] WukkieApp created successfully");
+
+    // Make wukkie globally available for debugging
+    console.log("🟢 [DEBUG] Making wukkie globally available");
+    try {
+      (window as any).wukkie = wukkie;
+      console.log("🟢 [DEBUG] Global wukkie assignment complete");
+    } catch (error) {
+      console.error("❌ [DEBUG] Error setting global wukkie:", error);
+    }
   } catch (error) {
     console.error("❌ [DEBUG] Error creating WukkieApp:", error);
   }
 }
 
-// Make wukkie available globally for button handlers
-console.log("🟢 [DEBUG] Making wukkie globally available");
-try {
-  (window as any).wukkie = wukkie;
-  console.log("🟢 [DEBUG] Global wukkie assignment complete");
-} catch (error) {
-  console.error("❌ [DEBUG] Error setting global wukkie:", error);
-}
+// Global assignment will happen after wukkie is initialized

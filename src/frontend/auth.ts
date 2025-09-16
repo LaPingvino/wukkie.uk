@@ -56,7 +56,9 @@ function base64UrlDecode(str: string): ArrayBuffer {
     }
     return bytes.buffer;
   } catch (error) {
-    throw new Error(`Base64 decode error: ${error.message}`);
+    throw new Error(
+      `Base64 decode error: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
@@ -301,9 +303,8 @@ class BlueskyAuth {
       window.location.href = authUrl.toString();
     } catch (error) {
       console.error("❌ Login failed:", error);
-
-      if (error.message === "OAUTH_NOT_SUPPORTED") {
-        throw error; // Re-throw for handling in UI
+      if (error instanceof Error && error.message === "OAUTH_NOT_SUPPORTED") {
+        throw error;
       }
 
       throw new Error(
@@ -334,20 +335,25 @@ class BlueskyAuth {
       );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Login failed");
+        const errorData = (await response.json()) as { message?: string };
+        throw new Error(errorData.message || "Login failed");
       }
 
-      const data = await response.json();
+      const sessionData = (await response.json()) as {
+        handle: string;
+        did: string;
+        accessJwt: string;
+        refreshJwt: string;
+      };
 
       // Create session
       this.authState = {
         isAuthenticated: true,
         session: {
-          handle: data.handle,
-          did: data.did,
-          accessJwt: data.accessJwt,
-          refreshJwt: data.refreshJwt,
+          handle: sessionData.handle,
+          did: sessionData.did,
+          accessJwt: sessionData.accessJwt,
+          refreshJwt: sessionData.refreshJwt,
           active: true,
         },
         agent: null,
@@ -474,19 +480,25 @@ class BlueskyAuth {
       throw new Error(`Failed to resolve handle: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { did: string };
     const did = data.did;
 
     // Get DID document to find PDS
+    // Get DID document
     const didResponse = await fetch(`https://plc.directory/${did}`);
     if (!didResponse.ok) {
       throw new Error(`Failed to get DID document: ${didResponse.statusText}`);
     }
 
-    const didDoc = await didResponse.json();
+    const didDoc = (await didResponse.json()) as {
+      service?: Array<{
+        id: string;
+        type: string;
+        serviceEndpoint: string;
+      }>;
+    };
     const pdsService = didDoc.service?.find(
-      (s: any) =>
-        s.type === "AtprotoPersonalDataServer" || s.id === "#atproto_pds",
+      (s) => s.type === "AtprotoPersonalDataServer" || s.id === "#atproto_pds",
     );
 
     if (!pdsService) {
@@ -532,7 +544,10 @@ class BlueskyAuth {
           );
         }
       } catch (error) {
-        console.log(`❌ OAuth metadata error at ${endpoint}:`, error.message);
+        console.log(
+          `❌ OAuth metadata error at ${endpoint}:`,
+          error instanceof Error ? error.message : "Unknown error",
+        );
         lastError = error instanceof Error ? error : new Error("Unknown error");
       }
     }
@@ -600,7 +615,10 @@ class BlueskyAuth {
         );
       }
 
-      const tokens = await tokenResponse.json();
+      const tokens = (await tokenResponse.json()) as {
+        access_token: string;
+        refresh_token?: string;
+      };
 
       // Create session
       this.authState = {
@@ -869,7 +887,7 @@ class BlueskyAuth {
         window.location.origin + "/client-metadata.json",
       );
       if (response.ok) {
-        const metadata = await response.json();
+        const metadata = (await response.json()) as { scope?: string };
         return metadata.scope || "unknown";
       }
       return "fetch-failed";

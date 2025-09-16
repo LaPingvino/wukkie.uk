@@ -16,7 +16,7 @@
                 <div class="header-content">
                     <div>
                         <h1>Wukkie.uk</h1>
-                        <div class="tagline">
+                        <div id="rotating-tagline" class="tagline">
                             oopsie woopsie de trein is stukkie wukkie...
                         </div>
                     </div>
@@ -46,8 +46,8 @@
                 ATProto.
                 <strong>Quick start:</strong> Use "🎭 Demo Login" to try it
                 instantly, or securely login with your Bluesky account using
-                <strong>modern OAuth</strong> - no app passwords needed! Choose
-                to store issues locally only or share them on Bluesky.
+                <strong>modern OAuth</strong> - no app passwords needed! All
+                issues are currently stored locally for testing.
             </div>
 
             <div class="main-grid">
@@ -106,15 +106,13 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="location-input"
-                                >Privacy Location *</label
-                            >
+                            <label for="location">Location</label>
                             <div class="location-group">
                                 <input
                                     type="text"
-                                    id="location-input"
+                                    id="location"
                                     name="location"
-                                    placeholder="Enter geo hashtags separated by spaces (#geo123456 #geo789abc) or click map"
+                                    placeholder="Address or description"
                                     class="location-input"
                                 />
                                 <button
@@ -122,45 +120,15 @@
                                     class="get-location-btn"
                                     id="get-location"
                                 >
-                                    📍 Get My Area
+                                    📍 Get Location
                                 </button>
                             </div>
-                            <input
-                                type="text"
-                                id="location-label"
-                                placeholder="Optional location label (e.g., 'Near Central Station')"
-                                class="location-label-input"
-                            />
-                            <div class="form-feedback" id="location-feedback">
-                                <div class="privacy-info">
-                                    <h4>📍 Privacy-Friendly Location(s)</h4>
-                                    <p>
-                                        We use geo hashtags that only show your
-                                        approximate area (~1km), not your exact
-                                        location.
-                                        <strong
-                                            >Multiple locations
-                                            supported!</strong
-                                        >
-                                    </p>
-                                    <p>
-                                        Examples: <code>#geo9c3xgp</code> or
-                                        <code>#geo9c3xgp #geo9c4abc</code>
-                                    </p>
-                                    <p>
-                                        💡 <strong>Tip:</strong> Click multiple
-                                        points on the map or enter
-                                        space-separated geo hashtags for issues
-                                        affecting multiple areas
-                                    </p>
-                                    <p>
-                                        <strong
-                                            >Your privacy is protected!</strong
-                                        >
-                                        🛡️
-                                    </p>
-                                </div>
-                            </div>
+                            <div
+                                class="form-feedback"
+                                id="location-feedback"
+                            ></div>
+                            <input type="hidden" id="lat" name="lat" />
+                            <input type="hidden" id="lng" name="lng" />
                         </div>
 
                         <div class="form-group">
@@ -171,25 +139,6 @@
                                 name="hashtags"
                                 placeholder="#pothole #mainstreet #infrastructure"
                             />
-                        </div>
-
-                        <div class="form-group">
-                            <div class="checkbox-group">
-                                <input
-                                    type="checkbox"
-                                    id="post-to-bluesky"
-                                    name="postToBluesky"
-                                    checked
-                                />
-                                <label for="post-to-bluesky">
-                                    📢 Share on Bluesky (helps others discover
-                                    this issue)
-                                </label>
-                            </div>
-                            <small class="form-hint">
-                                Unchecked = Local storage only. Checked = Post
-                                to Bluesky for community visibility.
-                            </small>
                         </div>
 
                         <button type="submit" id="submit-btn">
@@ -221,7 +170,7 @@
                                     ><span class="hashtag">#infrastructure</span
                                     ><span class="hashtag">#safety</span>
                                 </div>
-                                <div>1 day ago • @demo-user.invalid</div>
+                                <div>1 day ago • @demo.bsky.social</div>
                             </div>
                             <div class="issue-actions">
                                 <button class="action-btn">👍 12</button>
@@ -262,5 +211,5 @@
 
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script type="module" src="./app.ts"></script>
-    </body>
+
 </html>
