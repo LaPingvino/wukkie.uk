@@ -282,13 +282,18 @@ class BlueskyAuth {
       const authUrl = new URL(metadata.authorization_endpoint);
       const clientId = window.location.origin + "/client-metadata.json";
 
+      const requestedScope = "atproto repo:app.bsky.feed.post blob:*/*";
+
       authUrl.searchParams.set("response_type", "code");
       authUrl.searchParams.set("client_id", clientId);
       authUrl.searchParams.set("redirect_uri", window.location.origin);
-      authUrl.searchParams.set("scope", "atproto transition:generic");
+      authUrl.searchParams.set("scope", requestedScope);
       authUrl.searchParams.set("state", state);
       authUrl.searchParams.set("code_challenge", challenge);
       authUrl.searchParams.set("code_challenge_method", "S256");
+
+      console.log("🔍 [DEBUG] Authorization URL scope:", requestedScope);
+      console.log("🔍 [DEBUG] Full authorization URL:", authUrl.toString());
       authUrl.searchParams.set("login_hint", handle);
 
       // Step 5: Redirect to authorization server
