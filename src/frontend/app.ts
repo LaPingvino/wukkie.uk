@@ -39,6 +39,15 @@ interface Issue {
   blueskyUri?: string; // URI of the Bluesky post if posted
   blueskyStatus?: "pending" | "posted" | "failed" | "local-only"; // Bluesky posting status
   lastEditedAt?: string; // Timestamp of last edit
+  likes?: number; // Number of likes
+  comments?: Comment[]; // Array of comments
+}
+
+interface Comment {
+  id: string;
+  text: string;
+  author: string;
+  createdAt: string;
 }
 
 interface GeolocationResult {
@@ -327,7 +336,7 @@ class WukkieApp {
 
     // Location input for manual entry and geo hashtag parsing
     const locationInput = document.getElementById(
-      "location-input",
+      "location",
     ) as HTMLInputElement;
     locationInput?.addEventListener("input", (e) => this.parseLocationInput(e));
 
@@ -584,7 +593,7 @@ class WukkieApp {
     try {
       // Update form inputs - using privacy-first approach
       const locationInput = document.getElementById(
-        "location-input",
+        "location",
       ) as HTMLInputElement;
 
       // Reverse geocode to get address
@@ -718,7 +727,7 @@ class WukkieApp {
 
     // Also check for geo hashtags directly entered in location input
     const locationInput = document.getElementById(
-      "location-input",
+      "location",
     ) as HTMLInputElement;
     if (locationInput?.value) {
       const inputGeoHashtags = locationInput.value
@@ -1002,8 +1011,8 @@ class WukkieApp {
             <div class="issue-author">${timeAgo} • @${this.escapeHtml(issue.author)} ${blueskyStatus}</div>
           </div>
           <div class="issue-actions">
-            <button class="action-btn" onclick="wukkie.voteIssue('${issue.id}')">👍 ${Math.floor(Math.random() * 50)}</button>
-            <button class="action-btn" onclick="wukkie.commentOnIssue('${issue.id}')">💬 ${Math.floor(Math.random() * 10)}</button>
+            <button class="action-btn" onclick="wukkie.likeIssue('${issue.id}')">👍 <span id="likes-${issue.id}">${issue.likes || 0}</span></button>
+            <button class="action-btn" onclick="wukkie.commentOnIssue('${issue.id}')">💬 <span id="comments-${issue.id}">${issue.comments ? issue.comments.length : 0}</span></button>
             ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length > 0 ? `<button class="action-btn" onclick="wukkie.showOnMap('${issue.id}')">📍 ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length > 1 ? `View ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length} Locations` : "View Location"}</button>` : ""}
             <button class="action-btn edit-btn" onclick="wukkie.editIssue('${issue.id}')">✏️ Edit</button>
             ${retryButtons}
@@ -1057,27 +1066,26 @@ class WukkieApp {
   }
 
   // Public methods for button handlers
-  public voteIssue(issueId: string): void {
-    console.log("Vote on issue:", issueId);
-    this.showStatus("Voting feature coming soon! 🗳️", "info");
-  }
-
-  public commentOnIssue(issueId: string): void {
-    console.log("Comment on issue:", issueId);
-    this.showStatus("Comments feature coming soon! 💬", "info");
-  }
 
   public showOnMap(issueId: string): void {
-    console.log("Show issue on map:", issueId);
+    console.log("🗺️ Show issue on map:", issueId);
     const stored = localStorage.getItem("wukkie_issues");
     const issues: Issue[] = stored ? JSON.parse(stored) : [];
     const issue = issues.find((i) => i.id === issueId);
+
+    if (!issue) {
+      this.showStatus("Issue not found", "error");
+      return;
+    }
 
     // Extract all geo hashtags from hashtags to show on map
     const geoHashtags =
       issue?.hashtags.filter((tag) =>
         LocationPrivacySystem.isValidGeoHashtag(tag),
       ) || [];
+
+    console.log("🔍 Found geo hashtags:", geoHashtags);
+
     if (geoHashtags.length > 0 && this.map) {
       try {
         // Clear existing markers and areas
@@ -1158,6 +1166,60 @@ class WukkieApp {
   public viewIssue(issueId: string): void {
     console.log("View issue details:", issueId);
     this.showStatus("Issue details view coming soon! 📋", "info");
+  }
+
+  public likeIssue(issueId: string): void {
+    console.log("👍 Like issue:", issueId);
+    const stored = localStorage.getItem("wukkie_issues");
+    const issues: Issue[] = stored ? JSON.parse(stored) : [];
+    const issue = issues.find((i) => i.id === issueId);
+
+    if (issue) {
+      issue.likes = (issue.likes || 0) + 1;
+      localStorage.setItem("wukkie_issues", JSON.stringify(issues));
+
+      // Update the display
+      const likesSpan = document.getElementById(`likes-${issueId}`);
+      if (likesSpan) {
+        likesSpan.textContent = issue.likes.toString();
+      }
+
+      this.showStatus("Issue liked! 👍", "success");
+    }
+  }
+
+  public commentOnIssue(issueId: string): void {
+    console.log("💬 Comment on issue:", issueId);
+    const comment = prompt("Add your comment:");
+
+    if (comment && comment.trim()) {
+      const stored = localStorage.getItem("wukkie_issues");
+      const issues: Issue[] = stored ? JSON.parse(stored) : [];
+      const issue = issues.find((i) => i.id === issueId);
+
+      if (issue) {
+        if (!issue.comments) {
+          issue.comments = [];
+        }
+
+        issue.comments.push({
+          id: Date.now().toString(),
+          text: comment.trim(),
+          author: this.session?.handle || "Anonymous",
+          createdAt: new Date().toISOString(),
+        });
+
+        localStorage.setItem("wukkie_issues", JSON.stringify(issues));
+
+        // Update the display
+        const commentsSpan = document.getElementById(`comments-${issueId}`);
+        if (commentsSpan) {
+          commentsSpan.textContent = issue.comments.length.toString();
+        }
+
+        this.showStatus("Comment added! 💬", "success");
+      }
+    }
   }
 
   public async retryBlueskyPost(issueId: string): Promise<void> {
@@ -1373,7 +1435,7 @@ class WukkieApp {
 
     // Get current location input to support multiple locations
     const locationInput = document.getElementById(
-      "location-input",
+      "location",
     ) as HTMLInputElement;
     const existingLocations = locationInput?.value
       ? locationInput.value
@@ -1643,7 +1705,23 @@ class WukkieApp {
       LocationPrivacySystem.isValidGeoHashtag(token),
     );
 
+    console.log("🔍 Parsed geo hashtags from input:", geoHashtags);
+
     if (geoHashtags.length > 0) {
+      // Support multiple locations - show all on map
+      console.log(`📍 Processing ${geoHashtags.length} location(s)`);
+
+      // Update input field to show clean geo hashtags
+      input.value = geoHashtags.join(" ");
+
+      // Update feedback to show multiple location support
+      const locationFeedback = document.getElementById("location-feedback");
+      if (locationFeedback) {
+        const locationText =
+          geoHashtags.length === 1 ? "location" : "locations";
+        locationFeedback.innerHTML = `<div class="location-success">✅ ${geoHashtags.length} privacy ${locationText} detected</div>`;
+        locationFeedback.className = "form-feedback success";
+      }
       try {
         // Clear existing markers and areas
         if (this.map) {
