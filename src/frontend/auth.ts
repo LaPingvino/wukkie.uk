@@ -391,7 +391,18 @@ class BlueskyAuth {
 
       // Handle error case
       if (error) {
-        console.error("OAuth error:", error);
+        console.error("🚨 OAuth error detected:", error);
+        const errorDescription = urlParams.get("error_description");
+        const errorUri = urlParams.get("error_uri");
+
+        console.error("📋 Error details:", {
+          error,
+          error_description: errorDescription,
+          error_uri: errorUri,
+        });
+
+        // Clear any existing session on OAuth error
+        this.clearSessionAndStorage();
         return false;
       }
 
@@ -413,12 +424,15 @@ class BlueskyAuth {
         stateData = JSON.parse(storedStateData);
         localStorage.removeItem("oauth_state");
       } catch (e) {
-        console.error("Invalid OAuth state data");
+        console.error("🚨 Invalid OAuth state data - clearing session:", e);
+        this.clearSessionAndStorage();
         return false;
       }
 
       if (stateData.state !== state) {
-        console.error("OAuth state mismatch");
+        console.error("🚨 OAuth state mismatch - clearing session");
+        console.error("🔍 Expected:", stateData.state, "Got:", state);
+        this.clearSessionAndStorage();
         return false;
       }
 
@@ -426,12 +440,16 @@ class BlueskyAuth {
 
       // Exchange code for tokens (non-blocking)
       this.exchangeCodeForTokens(code, stateData).catch((error) => {
-        console.error("Token exchange failed:", error);
+        console.error("🚨 Token exchange failed:", error);
+        console.error("🔍 Clearing session due to token exchange failure");
+        this.clearSessionAndStorage();
       });
 
       return true;
     } catch (error) {
-      console.error("OAuth callback error:", error);
+      console.error("🚨 OAuth callback error:", error);
+      console.error("🔍 Clearing session due to callback error");
+      this.clearSessionAndStorage();
       return false;
     }
   }
@@ -538,6 +556,11 @@ class BlueskyAuth {
 
       const clientId = window.location.origin + "/client-metadata.json";
 
+      // Log OAuth scopes being requested
+      console.log("🔍 OAuth scopes being used:", this.getScopesFromMetadata());
+      console.log("🔍 Client ID:", clientId);
+      console.log("🔍 Token endpoint:", metadata.token_endpoint);
+
       // Try token exchange with DPoP (with nonce retry if needed)
       const tokenResponse = await this.performTokenExchange(
         metadata.token_endpoint,
@@ -552,7 +575,24 @@ class BlueskyAuth {
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
-        throw new Error(`Token exchange failed: ${errorText}`);
+        console.error(
+          "🚨 Token exchange HTTP error:",
+          tokenResponse.status,
+          tokenResponse.statusText,
+        );
+        console.error("🚨 Token exchange error body:", errorText);
+
+        // Try to parse error as JSON for better debugging
+        try {
+          const errorJson = JSON.parse(errorText);
+          console.error("🔍 Parsed error:", errorJson);
+        } catch (e) {
+          console.error("🔍 Raw error text:", errorText);
+        }
+
+        throw new Error(
+          `Token exchange failed (${tokenResponse.status}): ${errorText}`,
+        );
       }
 
       const tokens = await tokenResponse.json();
@@ -583,6 +623,8 @@ class BlueskyAuth {
       console.log("✅ Token exchange successful");
     } catch (error) {
       console.error("❌ Token exchange failed:", error);
+      console.error("🔍 Clearing session due to token exchange failure");
+      this.clearSessionAndStorage();
       throw error;
     }
   }
@@ -785,6 +827,49 @@ class BlueskyAuth {
       console.log("✅ Logout successful");
     } catch (error) {
       console.error("❌ Logout error:", error);
+    }
+  }
+
+  /**
+   * Clear session and local storage (for error recovery)
+   */
+  private clearSessionAndStorage(): void {
+    console.log("🧹 Clearing OAuth session and storage");
+
+    // Clear auth state
+    this.authState = {
+      isAuthenticated: false,
+      session: null,
+      agent: null,
+      xrpc: null,
+    };
+
+    // Clear all OAuth-related localStorage
+    localStorage.removeItem("wukkie_session");
+    localStorage.removeItem("oauth_state");
+    localStorage.removeItem("dpop_key");
+
+    // Notify listeners of logout
+    this.notifyListeners();
+
+    console.log("✅ Session and storage cleared");
+  }
+
+  /**
+   * Get current OAuth scopes from client metadata (for debugging)
+   */
+  private async getScopesFromMetadata(): Promise<string> {
+    try {
+      const response = await fetch(
+        window.location.origin + "/client-metadata.json",
+      );
+      if (response.ok) {
+        const metadata = await response.json();
+        return metadata.scope || "unknown";
+      }
+      return "fetch-failed";
+    } catch (e) {
+      return "error";
     }
   }
 

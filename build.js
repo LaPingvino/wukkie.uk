@@ -133,9 +133,13 @@ export default {
           dpop_bound_access_tokens: true,
           grant_types: ['authorization_code', 'refresh_token'],
           response_types: ['code'],
-          scope: 'atproto transition:generic transition:chat.bsky',
+          scope: 'atproto repo:app.bsky.feed.post blob:*/*',
           token_endpoint_auth_method: 'none',
         };
+
+        console.log('🔍 OAuth client metadata requested for:', baseUrl);
+        console.log('📋 Serving OAuth scopes:', dynamicMetadata.scope);
+        console.log('🔧 Full metadata:', JSON.stringify(dynamicMetadata, null, 2));
 
         return new Response(JSON.stringify(dynamicMetadata, null, 2), {
           headers: {

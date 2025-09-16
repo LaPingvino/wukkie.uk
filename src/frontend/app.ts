@@ -138,13 +138,16 @@ class WukkieApp {
       // Set up authentication state listener
       console.log("🟢 [DEBUG] init(): About to setup auth state listener");
       try {
+        // Debug OAuth metadata being served
+        this.debugOAuthMetadata();
+
         this.authUnsubscribe = blueskyAuth.onStateChange(async (authState) => {
           console.log("🟢 [DEBUG] Auth state changed:", authState);
           await this.handleAuthStateChange(authState);
         });
         console.log("🟢 [DEBUG] init(): Auth state listener setup complete");
       } catch (error) {
-        console.error("❌ [DEBUG] Error setting up auth listener:", error);
+        console.error("❌ Failed to setup auth state listener:", error);
       }
 
       // Load issues and hide loading immediately
@@ -1697,6 +1700,37 @@ class WukkieApp {
 
     // Update auth UI to ensure correct button states
     this.updateAuthUI(this.session !== null);
+  }
+
+  /**
+   * Debug OAuth metadata being served (for troubleshooting)
+   */
+  private async debugOAuthMetadata(): Promise<void> {
+    try {
+      console.log("🔍 [DEBUG] Fetching OAuth client metadata for debugging...");
+      const response = await fetch(
+        window.location.origin + "/client-metadata.json",
+      );
+
+      if (response.ok) {
+        const metadata = await response.json();
+        console.log(
+          "📋 [DEBUG] OAuth client metadata:",
+          JSON.stringify(metadata, null, 2),
+        );
+        console.log("🎯 [DEBUG] OAuth scopes:", metadata.scope);
+        console.log("🆔 [DEBUG] Client ID:", metadata.client_id);
+        console.log("📍 [DEBUG] Redirect URIs:", metadata.redirect_uris);
+      } else {
+        console.error(
+          "❌ [DEBUG] Failed to fetch OAuth metadata:",
+          response.status,
+          response.statusText,
+        );
+      }
+    } catch (error) {
+      console.error("❌ [DEBUG] Error fetching OAuth metadata:", error);
+    }
   }
 }
 
