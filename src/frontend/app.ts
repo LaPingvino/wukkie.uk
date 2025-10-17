@@ -8,6 +8,7 @@ import {
   createPrivacyLocation,
   extractGeoHashtags,
   isValidGeoHashtag,
+  getLocationTooltip,
 } from "./location-privacy";
 
 import {
@@ -1497,11 +1498,11 @@ class WukkieApp {
         )
       : issues;
 
-    this.displayFilteredIssues(filteredIssues);
+    this.displayFilteredIssues(filteredIssues).catch(console.error);
     this.updateTagCloud(issues);
   }
 
-  private displayFilteredIssues(issues: Issue[]): void {
+  private async displayFilteredIssues(issues: Issue[]): Promise<void> {
     const issuesList = document.getElementById("issues-list") as HTMLElement;
     if (!issuesList) return;
 
@@ -1516,35 +1517,35 @@ class WukkieApp {
       return;
     }
 
-    issuesList.innerHTML = issues
-      .map((issue) => {
-        const distance = null; // Distance calculation disabled for privacy
+    // Pre-process all hashtags with tooltips
+    const issueHtmlPromises = issues.map(async (issue) => {
+      const distance = null; // Distance calculation disabled for privacy
 
-        const timeAgo = this.formatTimeAgo(new Date(issue.createdAt));
+      const timeAgo = this.formatTimeAgo(new Date(issue.createdAt));
 
-        // Determine Bluesky status display
-        let blueskyStatus = "";
-        let retryButtons = "";
+      // Determine Bluesky status display
+      let blueskyStatus = "";
+      let retryButtons = "";
 
-        if (issue.blueskyStatus === "posted" && issue.blueskyUri) {
-          const blueskyUrl = `https://bsky.app/profile/${this.escapeHtml(issue.author)}/post/${issue.blueskyUri.split("/").pop()}`;
-          blueskyStatus = `<a href="${blueskyUrl}" target="_blank" class="bluesky-status posted">📢 On Bluesky</a>`;
-        } else if (issue.blueskyStatus === "failed") {
-          blueskyStatus =
-            '<span class="bluesky-status failed">❌ Bluesky post failed</span>';
-          retryButtons = `<button class="action-btn retry-btn" onclick="wukkie.retryBlueskyPost('${issue.id}')">🔄 Retry Bluesky</button>`;
-        } else if (issue.blueskyStatus === "pending") {
-          blueskyStatus =
-            '<span class="bluesky-status pending">⏳ Posting to Bluesky...</span>';
-        } else {
-          blueskyStatus =
-            '<span class="bluesky-status local-only">📝 Local only</span>';
-          if (this.session && !this.session.isDemo) {
-            retryButtons = `<button class="action-btn post-btn" onclick="wukkie.postToBluesky('${issue.id}')">📢 Post to Bluesky</button>`;
-          }
+      if (issue.blueskyStatus === "posted" && issue.blueskyUri) {
+        const blueskyUrl = `https://bsky.app/profile/${this.escapeHtml(issue.author)}/post/${issue.blueskyUri.split("/").pop()}`;
+        blueskyStatus = `<a href="${blueskyUrl}" target="_blank" class="bluesky-status posted">📢 On Bluesky</a>`;
+      } else if (issue.blueskyStatus === "failed") {
+        blueskyStatus =
+          '<span class="bluesky-status failed">❌ Bluesky post failed</span>';
+        retryButtons = `<button class="action-btn retry-btn" onclick="wukkie.retryBlueskyPost('${issue.id}')">🔄 Retry Bluesky</button>`;
+      } else if (issue.blueskyStatus === "pending") {
+        blueskyStatus =
+          '<span class="bluesky-status pending">⏳ Posting to Bluesky...</span>';
+      } else {
+        blueskyStatus =
+          '<span class="bluesky-status local-only">📝 Local only</span>';
+        if (this.session && !this.session.isDemo) {
+          retryButtons = `<button class="action-btn post-btn" onclick="wukkie.postToBluesky('${issue.id}')">📢 Post to Bluesky</button>`;
         }
+      }
 
-        return `
+      return `
         <div class="issue-item">
           <div class="issue-header">
             <div class="issue-title"><a href="#issue/${issue.id}" onclick="wukkie.viewIssue('${issue.id}'); return false;" style="text-decoration: none; color: inherit; cursor: pointer;">${this.escapeHtml(issue.title)}</a></div>
@@ -1553,7 +1554,7 @@ class WukkieApp {
           <div class="issue-description">${this.escapeHtml(issue.description)}</div>
           <div class="issue-meta">
             <div class="issue-hashtags">
-              ${issue.hashtags.map((tag) => `<span class="hashtag" onclick="wukkie.filterByTag('${this.escapeHtml(tag).replace(/'/g, "\\'")}')" style="cursor: pointer;" title="Filter by ${this.escapeHtml(tag)}">${this.escapeHtml(tag)}</span>`).join("")}
+              ${await this.renderHashtagsWithTooltips(issue.hashtags)}
             </div>
             <div class="issue-author">${timeAgo} • @${this.escapeHtml(issue.author)} ${blueskyStatus}</div>
           </div>
@@ -1588,8 +1589,11 @@ class WukkieApp {
               : ""
           }
         </div>`;
-      })
-      .join("");
+    });
+
+    // Wait for all hashtag processing to complete
+    const issueHtmlArray = await Promise.all(issueHtmlPromises);
+    issuesList.innerHTML = issueHtmlArray.join("");
 
     // Update filter status
     this.updateFilterStatus(issues.length);
@@ -1837,7 +1841,7 @@ class WukkieApp {
     }
   }
 
-  public viewIssue(issueId: string): void {
+  public async viewIssue(issueId: string): Promise<void> {
     console.log("View issue details:", issueId);
 
     // Try to find issue in local storage first
@@ -1950,19 +1954,7 @@ class WukkieApp {
         </div>
 
         <div class="issue-hashtags" style="margin: 16px 0;">
-          ${issue.hashtags
-            .map(
-              (tag) => `<span class="hashtag" style="
-            display: inline-block;
-            background: #f0f0f0;
-            padding: 4px 8px;
-            margin: 2px 4px 2px 0;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            color: #333;
-          ">${this.escapeHtml(tag)}</span>`,
-            )
-            .join("")}
+          ${await this.renderHashtagsWithTooltips(issue.hashtags)}
         </div>
 
         <div class="issue-actions" style="margin: 20px 0; display: flex; gap: 8px; flex-wrap: wrap;">
@@ -3059,6 +3051,33 @@ class WukkieApp {
     } catch (error) {
       console.error("❌ [DEBUG] Error fetching OAuth metadata:", error);
     }
+  }
+
+  /**
+   * Render hashtags with reverse geocoding tooltips for location tags
+   */
+  private async renderHashtagsWithTooltips(
+    hashtags: string[],
+  ): Promise<string> {
+    const renderedTags = await Promise.all(
+      hashtags.map(async (tag) => {
+        let tooltip = `Filter by ${this.escapeHtml(tag)}`;
+
+        // Add reverse geocoding tooltip for geo hashtags
+        if (LocationPrivacySystem.isValidGeoHashtag(tag)) {
+          try {
+            const locationTooltip = await getLocationTooltip(tag);
+            tooltip = locationTooltip;
+          } catch (error) {
+            console.warn("Failed to get location tooltip for", tag, error);
+          }
+        }
+
+        return `<span class="hashtag" onclick="wukkie.filterByTag('${this.escapeHtml(tag).replace(/'/g, "\\'")}')" style="display: inline-block; background: #f0f0f0; padding: 4px 8px; margin: 2px 4px 2px 0; border-radius: 12px; font-size: 0.85rem; color: #333; cursor: pointer;" title="${this.escapeHtml(tooltip)}">${this.escapeHtml(tag)}</span>`;
+      }),
+    );
+
+    return renderedTags.join("");
   }
 }
 

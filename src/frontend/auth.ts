@@ -1145,11 +1145,24 @@ class BlueskyAuth {
    * XRPC client interface compatibility
    */
   async call(nsid: string, params?: any): Promise<any> {
+    // Determine request type based on the operation
+    // Search and read operations use GET with query params
+    // Create, update, delete operations use POST with body data
+    const isReadOperation =
+      nsid.includes("searchPosts") ||
+      nsid.includes("getPostThread") ||
+      nsid.includes("getRecord") ||
+      nsid.includes("listRecords") ||
+      nsid.startsWith("app.bsky.feed.get") ||
+      nsid.startsWith("app.bsky.feed.search") ||
+      nsid.startsWith("com.atproto.repo.list") ||
+      nsid.startsWith("com.atproto.repo.get");
+
     const result = await this.makeRequest({
-      type: params ? "post" : "get",
+      type: isReadOperation ? "get" : "post",
       nsid: nsid,
-      params: params ? undefined : params,
-      data: params,
+      params: isReadOperation ? params : undefined,
+      data: isReadOperation ? undefined : params,
     });
 
     return result;

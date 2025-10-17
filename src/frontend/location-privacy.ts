@@ -16,9 +16,20 @@ export interface LocationArea {
   center: { lat: number; lng: number };
 }
 
+export interface LocationDescription {
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  formatted: string;
+}
+
 export class LocationPrivacySystem {
   private static readonly GEO_HASHTAG_PREFIX = "#geo";
   private static readonly PRIVACY_CODE_LENGTH = 6;
+  private static readonly NOMINATIM_BASE_URL =
+    "https://nominatim.openstreetmap.org";
+  private static locationCache = new Map<string, LocationDescription>();
 
   /**
    * Convert GPS coordinates to privacy-friendly geo hashtag
@@ -272,6 +283,112 @@ export class LocationPrivacySystem {
 
     return parts.join(" ");
   }
+
+  /**
+   * Get human-readable location description using reverse geocoding
+   * Uses OpenStreetMap Nominatim API (no API key required)
+   */
+  static async getLocationDescription(
+    geoHashtag: string,
+  ): Promise<LocationDescription | null> {
+    if (!LocationPrivacySystem.isValidGeoHashtag(geoHashtag)) {
+      return null;
+    }
+
+    // Check cache first
+    if (LocationPrivacySystem.locationCache.has(geoHashtag)) {
+      return LocationPrivacySystem.locationCache.get(geoHashtag)!;
+    }
+
+    try {
+      const area = LocationPrivacySystem.parseGeoHashtag(geoHashtag);
+      if (!area) return null;
+
+      const response = await fetch(
+        `${LocationPrivacySystem.NOMINATIM_BASE_URL}/reverse?` +
+          `format=json&lat=${area.center.lat}&lon=${area.center.lng}&` +
+          `addressdetails=1&extratags=1&namedetails=1&zoom=14`,
+        {
+          headers: {
+            "User-Agent": "Wukkie.uk/1.0 (Bug Tracker for the World)",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        console.warn("Reverse geocoding failed:", response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      if (!data || !data.address) {
+        return null;
+      }
+
+      const addr = data.address;
+      const description: LocationDescription = {
+        neighborhood:
+          addr.neighbourhood ||
+          addr.suburb ||
+          addr.district ||
+          addr.quarter ||
+          addr.residential,
+        city:
+          addr.city ||
+          addr.town ||
+          addr.municipality ||
+          addr.village ||
+          addr.hamlet,
+        state:
+          addr.state ||
+          addr.province ||
+          addr.region ||
+          addr.county ||
+          addr.state_district,
+        country: addr.country,
+        formatted: data.display_name || "Unknown location",
+      };
+
+      // Create a concise formatted string
+      const parts = [];
+      if (description.neighborhood) parts.push(description.neighborhood);
+      if (description.city && description.city !== description.neighborhood) {
+        parts.push(description.city);
+      }
+      if (description.country) parts.push(description.country);
+
+      description.formatted = parts.join(", ") || description.formatted;
+
+      // Cache the result
+      LocationPrivacySystem.locationCache.set(geoHashtag, description);
+
+      return description;
+    } catch (error) {
+      console.warn("Reverse geocoding error:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Get a tooltip-friendly location description
+   */
+  static async getLocationTooltip(geoHashtag: string): Promise<string> {
+    const description =
+      await LocationPrivacySystem.getLocationDescription(geoHashtag);
+
+    if (!description) {
+      return `${geoHashtag} (~1km area)`;
+    }
+
+    return `${description.formatted}\n${geoHashtag} (~1km area)`;
+  }
+
+  /**
+   * Clear the location cache (useful for testing or memory management)
+   */
+  static clearLocationCache(): void {
+    LocationPrivacySystem.locationCache.clear();
+  }
 }
 
 // Export utility functions for easy use
@@ -280,6 +397,10 @@ export const createPrivacyLocation =
 export const parseGeoHashtag = LocationPrivacySystem.parseGeoHashtag;
 export const isValidGeoHashtag = LocationPrivacySystem.isValidGeoHashtag;
 export const extractGeoHashtags = LocationPrivacySystem.extractGeoHashtags;
+export const getLocationDescription =
+  LocationPrivacySystem.getLocationDescription;
+export const getLocationTooltip = LocationPrivacySystem.getLocationTooltip;
+export const clearLocationCache = LocationPrivacySystem.clearLocationCache;
 
 // Example usage:
 /*
