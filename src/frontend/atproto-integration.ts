@@ -254,6 +254,9 @@ export class ATProtoIssueManager {
       postText += `\n\n${uniqueHashtags.join(" ")}`;
     }
 
+    // Add link back to Wukkie for full issue details
+    postText += `\n\nView full issue: https://wukkie.uk/issue/${issue.id}`;
+
     // Create rich text - let ATProto handle facet detection automatically
     const rt = new RichText({ text: postText });
     console.log(

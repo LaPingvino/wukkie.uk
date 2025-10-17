@@ -1485,8 +1485,8 @@ class WukkieApp {
         let retryButtons = "";
 
         if (issue.blueskyStatus === "posted" && issue.blueskyUri) {
-          blueskyStatus =
-            '<span class="bluesky-status posted">📢 On Bluesky</span>';
+          const blueskyUrl = `https://bsky.app/profile/${this.escapeHtml(issue.author)}/post/${issue.blueskyUri.split("/").pop()}`;
+          blueskyStatus = `<a href="${blueskyUrl}" target="_blank" class="bluesky-status posted">📢 On Bluesky</a>`;
         } else if (issue.blueskyStatus === "failed") {
           blueskyStatus =
             '<span class="bluesky-status failed">❌ Bluesky post failed</span>';
@@ -1505,7 +1505,7 @@ class WukkieApp {
         return `
         <div class="issue-item">
           <div class="issue-header">
-            <div class="issue-title">${this.escapeHtml(issue.title)}</div>
+            <div class="issue-title"><a href="#issue/${issue.id}" onclick="wukkie.viewIssue('${issue.id}'); return false;" style="text-decoration: none; color: inherit; cursor: pointer;">${this.escapeHtml(issue.title)}</a></div>
             ${distance ? `<div class="issue-distance">${distance}</div>` : ""}
           </div>
           <div class="issue-description">${this.escapeHtml(issue.description)}</div>
@@ -1692,7 +1692,185 @@ class WukkieApp {
 
   public viewIssue(issueId: string): void {
     console.log("View issue details:", issueId);
-    this.showStatus("Issue details view coming soon! 📋", "info");
+
+    const stored = localStorage.getItem("wukkie_issues");
+    const issues: Issue[] = stored ? JSON.parse(stored) : [];
+    const issue = issues.find((i) => i.id === issueId);
+
+    if (!issue) {
+      this.showStatus("Issue not found", "error");
+      return;
+    }
+
+    // Create modal for detailed issue view
+    const modal = document.createElement("div");
+    modal.className = "issue-modal-overlay";
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+      box-sizing: border-box;
+    `;
+
+    const timeAgo = this.formatTimeAgo(new Date(issue.createdAt));
+
+    // Determine Bluesky status and link
+    let blueskySection = "";
+    if (issue.blueskyStatus === "posted" && issue.blueskyUri) {
+      const blueskyUrl = `https://bsky.app/profile/${this.escapeHtml(issue.author)}/post/${issue.blueskyUri.split("/").pop()}`;
+      blueskySection = `
+        <div class="issue-bluesky" style="margin: 16px 0; padding: 12px; background: #e3f2fd; border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>📢 Posted on Bluesky</span>
+            <a href="${blueskyUrl}" target="_blank" style="color: #1976d2; text-decoration: none; font-weight: 500;">View Post →</a>
+          </div>
+        </div>
+      `;
+    } else if (issue.blueskyStatus === "pending") {
+      blueskySection = `
+        <div class="issue-bluesky" style="margin: 16px 0; padding: 12px; background: #fff3e0; border-radius: 8px;">
+          <span>⏳ Posting to Bluesky...</span>
+        </div>
+      `;
+    } else if (issue.blueskyStatus === "failed") {
+      blueskySection = `
+        <div class="issue-bluesky" style="margin: 16px 0; padding: 12px; background: #ffebee; border-radius: 8px;">
+          <span>❌ Failed to post to Bluesky</span>
+          <button onclick="wukkie.retryBlueskyPost('${issue.id}')" style="margin-left: 8px; padding: 4px 8px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer;">Retry</button>
+        </div>
+      `;
+    }
+
+    modal.innerHTML = `
+      <div class="issue-modal" style="
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+      ">
+        <button class="close-modal" style="
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: #666;
+          line-height: 1;
+        ">×</button>
+
+        <h2 style="margin: 0 0 16px 0; padding-right: 32px;">${this.escapeHtml(issue.title)}</h2>
+
+        <div class="issue-meta" style="margin-bottom: 16px; color: #666; font-size: 0.9rem;">
+          <div>By @${this.escapeHtml(issue.author)} • ${timeAgo}</div>
+          <div>Category: ${this.escapeHtml(issue.category)}</div>
+        </div>
+
+        ${blueskySection}
+
+        <div class="issue-description" style="margin: 16px 0; line-height: 1.6;">
+          ${this.escapeHtml(issue.description).replace(/\n/g, "<br>")}
+        </div>
+
+        <div class="issue-hashtags" style="margin: 16px 0;">
+          ${issue.hashtags
+            .map(
+              (tag) => `<span class="hashtag" style="
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            margin: 2px 4px 2px 0;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: #333;
+          ">${this.escapeHtml(tag)}</span>`,
+            )
+            .join("")}
+        </div>
+
+        <div class="issue-actions" style="margin: 20px 0; display: flex; gap: 8px; flex-wrap: wrap;">
+          <button onclick="wukkie.likeIssue('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">👍 <span id="likes-${issue.id}">${issue.likes || 0}</span></button>
+          <button onclick="wukkie.commentOnIssue('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">💬 Add Comment</button>
+          ${issue.hashtags.filter((tag) => tag.startsWith("#geo")).length > 0 ? `<button onclick="wukkie.showOnMap('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">📍 View on Map</button>` : ""}
+          <button onclick="wukkie.editIssue('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">✏️ Edit</button>
+        </div>
+
+        ${
+          issue.comments && issue.comments.length > 0
+            ? `
+          <div class="comments-section" style="margin-top: 24px; border-top: 1px solid #eee; padding-top: 20px;">
+            <h3 style="margin: 0 0 16px 0; font-size: 1.1rem;">Comments (${issue.comments.length})</h3>
+            <div id="comments-${issue.id}" style="display: block;">
+              ${issue.comments
+                .map(
+                  (comment) => `
+                <div class="comment" style="
+                  margin-bottom: 16px;
+                  padding: 12px;
+                  background: #f8f9fa;
+                  border-radius: 8px;
+                  border-left: 3px solid #007bff;
+                ">
+                  <div class="comment-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                    font-size: 0.9rem;
+                    color: #666;
+                  ">
+                    <span class="comment-author" style="font-weight: 500; color: #333;">@${this.escapeHtml(comment.author)}</span>
+                    <span class="comment-time">${this.formatTimeAgo(new Date(comment.createdAt))}</span>
+                  </div>
+                  <div class="comment-text" style="line-height: 1.5;">${this.escapeHtml(comment.text).replace(/\n/g, "<br>")}</div>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+          </div>
+        `
+            : ""
+        }
+      </div>
+    `;
+
+    // Add modal to page
+    document.body.appendChild(modal);
+
+    // Close modal handlers
+    const closeBtn = modal.querySelector(".close-modal") as HTMLButtonElement;
+    closeBtn.onclick = () => {
+      document.body.removeChild(modal);
+    };
+
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    };
+
+    // Close on Escape key
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        document.body.removeChild(modal);
+        document.removeEventListener("keydown", handleKeyPress);
+      }
+    };
+    document.addEventListener("keydown", handleKeyPress);
   }
 
   public likeIssue(issueId: string): void {
@@ -1736,83 +1914,156 @@ class WukkieApp {
 
   public async commentOnIssue(issueId: string): Promise<void> {
     console.log("💬 Comment on issue:", issueId);
-    const comment = prompt("Add your comment:");
 
-    if (comment && comment.trim()) {
-      const stored = localStorage.getItem("wukkie_issues");
-      const issues: Issue[] = stored ? JSON.parse(stored) : [];
-      const issue = issues.find((i) => i.id === issueId);
+    // Show inline comment form instead of prompt
+    const commentsSection = document.getElementById(`comments-${issueId}`);
+    if (commentsSection) {
+      // Toggle comments section visibility
+      if (commentsSection.style.display === "none") {
+        commentsSection.style.display = "block";
+      }
 
-      if (issue) {
-        try {
-          // Add comment locally first
-          if (!issue.comments) {
-            issue.comments = [];
-          }
+      // Check if comment form already exists
+      let commentForm = commentsSection.querySelector(
+        ".comment-form",
+      ) as HTMLElement;
+      if (!commentForm) {
+        // Create inline comment form
+        const formHtml = `
+          <div class="comment-form" style="margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+            <h5 style="margin: 0 0 12px 0;">Add Comment</h5>
+            <textarea id="comment-text-${issueId}" placeholder="Write your comment..." style="width: 100%; min-height: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; font-family: inherit;"></textarea>
+            <div style="margin-top: 12px; display: flex; gap: 8px;">
+              <button onclick="wukkie.submitComment('${issueId}')" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Post Comment</button>
+              <button onclick="wukkie.cancelComment('${issueId}')" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+            </div>
+          </div>
+        `;
+        commentsSection.insertAdjacentHTML("beforeend", formHtml);
 
-          const newComment: Comment = {
-            id: Date.now().toString(),
-            text: comment.trim(),
-            author: this.session?.handle || "Anonymous",
-            createdAt: new Date().toISOString(),
-          };
-
-          issue.comments.push(newComment);
-          localStorage.setItem("wukkie_issues", JSON.stringify(issues));
-
-          // Post to Bluesky if authenticated and has blueskyUri
-          if (
-            this.atprotoManager &&
-            issue.blueskyUri &&
-            this.session &&
-            !this.session.isDemo
-          ) {
-            console.log("🔄 Posting comment to Bluesky...");
-            this.showStatus("Posting comment to Bluesky...", "info");
-
-            // Find the WukkieIssue format for ATProto manager
-            const wukkieIssue = {
-              id: issue.id,
-              title: issue.title,
-              description: issue.description,
-              category: issue.category,
-              priority: "medium" as const,
-              status: issue.status as any,
-              location: {
-                geoHashtag:
-                  issue.hashtags.find((tag) => tag.startsWith("#geo")) ||
-                  "#geo000000",
-                label: "Issue location",
-                precision: 5,
-              },
-              hashtags: issue.hashtags,
-              createdAt: issue.createdAt,
-              blueskyUri: issue.blueskyUri,
-            };
-
-            await this.atprotoManager.postFollowUp(wukkieIssue, comment.trim());
-            console.log("✅ Comment posted to Bluesky successfully");
-            this.showStatus("Comment posted to Bluesky! 💬", "success");
-          } else {
-            this.showStatus("Comment added locally! 💬", "success");
-          }
-
-          // Update the display
-          const commentsSpan = document.getElementById(`comments-${issueId}`);
-          if (commentsSpan) {
-            commentsSpan.textContent = issue.comments.length.toString();
-          }
-
-          // Refresh issues to show any new network comments
-          await this.loadIssues();
-        } catch (error) {
-          console.error("Failed to post comment to Bluesky:", error);
-          this.showStatus(
-            "Comment saved locally, but failed to post to Bluesky",
-            "warning",
-          );
+        // Focus on the textarea
+        const textarea = document.getElementById(
+          `comment-text-${issueId}`,
+        ) as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
         }
       }
+    } else {
+      // Fallback to old prompt method if comments section doesn't exist
+      const comment = prompt("Add your comment:");
+      if (comment && comment.trim()) {
+        await this.submitCommentText(issueId, comment.trim());
+      }
+    }
+  }
+
+  public async submitComment(issueId: string): Promise<void> {
+    const textarea = document.getElementById(
+      `comment-text-${issueId}`,
+    ) as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const comment = textarea.value.trim();
+    if (!comment) {
+      alert("Please enter a comment");
+      return;
+    }
+
+    await this.submitCommentText(issueId, comment);
+
+    // Remove the comment form
+    const commentForm = textarea.closest(".comment-form") as HTMLElement;
+    if (commentForm) {
+      commentForm.remove();
+    }
+  }
+
+  public cancelComment(issueId: string): void {
+    const textarea = document.getElementById(
+      `comment-text-${issueId}`,
+    ) as HTMLTextAreaElement;
+    if (textarea) {
+      const commentForm = textarea.closest(".comment-form") as HTMLElement;
+      if (commentForm) {
+        commentForm.remove();
+      }
+    }
+  }
+
+  private async submitCommentText(
+    issueId: string,
+    comment: string,
+  ): Promise<void> {
+    const stored = localStorage.getItem("wukkie_issues");
+    const issues: Issue[] = stored ? JSON.parse(stored) : [];
+    const issue = issues.find((i) => i.id === issueId);
+
+    if (issue) {
+      try {
+        // Add comment locally first
+        if (!issue.comments) {
+          issue.comments = [];
+        }
+
+        const newComment: Comment = {
+          id: Date.now().toString(),
+          text: comment,
+          author: this.session?.handle || "Anonymous",
+          createdAt: new Date().toISOString(),
+        };
+
+        issue.comments.push(newComment);
+        localStorage.setItem("wukkie_issues", JSON.stringify(issues));
+
+        // Post to Bluesky if authenticated and has blueskyUri
+        if (
+          this.atprotoManager &&
+          issue.blueskyUri &&
+          this.session &&
+          !this.session.isDemo
+        ) {
+          console.log("🔄 Posting comment to Bluesky...");
+          this.showStatus("Posting comment to Bluesky...", "info");
+
+          // Find the WukkieIssue format for ATProto manager
+          const wukkieIssue = {
+            id: issue.id,
+            title: issue.title,
+            description: issue.description,
+            category: issue.category,
+            priority: "medium" as const,
+            status: issue.status as any,
+            location: {
+              geoHashtag:
+                issue.hashtags.find((tag) => tag.startsWith("#geo")) ||
+                "#geo000000",
+              label: "Issue location",
+              precision: 5,
+            },
+            hashtags: issue.hashtags,
+            createdAt: issue.createdAt,
+            blueskyUri: issue.blueskyUri,
+          };
+
+          await this.atprotoManager.postFollowUp(wukkieIssue, comment);
+          console.log("✅ Comment posted to Bluesky successfully");
+          this.showStatus("Comment posted to Bluesky! 💬", "success");
+        } else {
+          this.showStatus("Comment added locally! 💬", "success");
+        }
+
+        // Update the display
+        this.displayIssues(issues);
+      } catch (error) {
+        console.error("Failed to post comment:", error);
+        this.showStatus(
+          "Failed to post comment to Bluesky, but saved locally",
+          "error",
+        );
+      }
+    } else {
+      console.error("Issue not found:", issueId);
     }
   }
 
