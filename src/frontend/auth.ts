@@ -1022,8 +1022,12 @@ class BlueskyAuth {
         const url = `${pdsEndpoint}/xrpc/${options.nsid}`;
         const method = options.type.toUpperCase();
 
-        // Create DPoP proof for API request
-        const dpopProof = await this.createDPoPProof(method, url);
+        // Create DPoP proof for API request (use stored nonce if available)
+        const dpopProof = await this.createDPoPProof(
+          method,
+          url,
+          this.dpopNonce,
+        );
 
         const headers: Record<string, string> = {
           Authorization: `DPoP ${this.authState.session.accessJwt}`,
@@ -1063,9 +1067,9 @@ class BlueskyAuth {
         ) {
           const nonce = error.message.split(":")[1];
           console.log(
-            `🔄 API request requires DPoP nonce, retrying with nonce: ${nonce}`,
+            `🔄 API request requires DPoP nonce, retrying attempt ${retryCount + 1} with nonce: ${nonce}`,
           );
-          this.dpopNonce = nonce;
+          // Note: nonce is already stored in this.dpopNonce by handleResponse
           retryCount++;
           continue;
         }
@@ -1093,20 +1097,25 @@ class BlueskyAuth {
         errorData = "Unknown error";
       }
 
+      // Log detailed error information for debugging
+      console.log(`🚨 API Error ${response.status}:`, errorData);
+      console.log(
+        "🔍 Response headers:",
+        Object.fromEntries(response.headers.entries()),
+      );
+
       // Handle DPoP nonce requirement for API requests
-      if (
-        response.status === 401 &&
-        typeof errorData === "object" &&
-        errorData.error === "use_dpop_nonce"
-      ) {
+      if (response.status === 401) {
         const dpopNonce = response.headers.get("dpop-nonce");
         if (dpopNonce) {
           console.log(
-            "🔄 API request requires DPoP nonce, storing for retry...",
+            `🔄 API request requires DPoP nonce: ${dpopNonce} (previous: ${this.dpopNonce})`,
           );
           this.dpopNonce = dpopNonce;
           // The caller should retry the request
           throw new Error(`DPOP_NONCE_REQUIRED:${dpopNonce}`);
+        } else {
+          console.log("⚠️ 401 error but no dpop-nonce header found");
         }
       }
 
