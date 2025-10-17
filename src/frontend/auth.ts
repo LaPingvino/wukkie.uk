@@ -149,6 +149,7 @@ class BlueskyAuth {
     method: string,
     url: string,
     nonce?: string,
+    accessToken?: string,
   ): Promise<string | null> {
     if (!this.dpopEnabled || !this.dpopKeyPair || !this.dpopJwk) {
       if (!this.dpopEnabled) {
@@ -184,6 +185,19 @@ class BlueskyAuth {
       // Add nonce if provided
       if (nonce) {
         payload.nonce = nonce;
+      }
+
+      // Add access token hash (ath) for API calls
+      if (accessToken) {
+        const tokenBytes = new TextEncoder().encode(accessToken);
+        const hashBuffer = await window.crypto.subtle.digest(
+          "SHA-256",
+          tokenBytes,
+        );
+        const hashArray = new Uint8Array(hashBuffer);
+        const ath = base64UrlEncode(hashArray);
+        payload.ath = ath;
+        console.log("🔒 Added access token hash to DPoP proof");
       }
 
       // Create and sign JWT
@@ -1027,6 +1041,7 @@ class BlueskyAuth {
           method,
           url,
           this.dpopNonce,
+          this.authState.session.accessJwt,
         );
 
         const headers: Record<string, string> = {
