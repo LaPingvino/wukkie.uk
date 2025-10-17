@@ -301,7 +301,7 @@ class WukkieApp {
       }
 
       // Update demo issues to current user if transitioning from demo
-      this.updateDemoIssuesOnLogin();
+      await this.updateDemoIssuesOnLogin();
 
       this.updateAuthUI(true);
       this.loginModal.hide();
@@ -1860,7 +1860,7 @@ class WukkieApp {
   /**
    * Update demo issues to current user when transitioning from demo to real login
    */
-  private updateDemoIssuesOnLogin(): void {
+  private async updateDemoIssuesOnLogin(): Promise<void> {
     if (!this.session || this.session.isDemo) return;
 
     try {
