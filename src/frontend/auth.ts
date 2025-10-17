@@ -981,80 +981,101 @@ class BlueskyAuth {
     }
 
     // For real sessions, make actual API calls
-    try {
-      // Extract PDS endpoint from JWT token's 'aud' field or use stored PDS
-      let pdsEndpoint = "https://bsky.social"; // fallback
+    let retryCount = 0;
+    const maxRetries = 2;
+
+    while (retryCount <= maxRetries) {
       try {
-        // Try to decode JWT to get the audience (PDS endpoint)
-        const tokenParts = this.authState.session.accessJwt.split(".");
-        if (tokenParts.length === 3) {
-          const payload = JSON.parse(atob(tokenParts[1]));
-          if (payload.aud) {
-            let audienceUrl = payload.aud;
-            console.log("🎯 JWT audience field:", audienceUrl);
+        // Extract PDS endpoint from JWT token's 'aud' field or use stored PDS
+        let pdsEndpoint = "https://bsky.social"; // fallback
+        try {
+          // Try to decode JWT to get the audience (PDS endpoint)
+          const tokenParts = this.authState.session.accessJwt.split(".");
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            if (payload.aud) {
+              let audienceUrl = payload.aud;
+              console.log("🎯 JWT audience field:", audienceUrl);
 
-            // If the audience is a DID, we need to resolve it to HTTP URL
-            if (audienceUrl.startsWith("did:")) {
-              console.log("🔄 DID detected, converting to HTTP URL...");
-              // Extract hostname from DID (e.g., did:web:lionsmane.us-east.host.bsky.network)
-              if (audienceUrl.startsWith("did:web:")) {
-                const hostname = audienceUrl.replace("did:web:", "");
-                audienceUrl = `https://${hostname}`;
-                console.log("✅ Converted DID to HTTP URL:", audienceUrl);
-              } else {
-                console.log("⚠️ Unknown DID format, using fallback");
-                audienceUrl = "https://bsky.social";
+              // If the audience is a DID, we need to resolve it to HTTP URL
+              if (audienceUrl.startsWith("did:")) {
+                console.log("🔄 DID detected, converting to HTTP URL...");
+                // Extract hostname from DID (e.g., did:web:lionsmane.us-east.host.bsky.network)
+                if (audienceUrl.startsWith("did:web:")) {
+                  const hostname = audienceUrl.replace("did:web:", "");
+                  audienceUrl = `https://${hostname}`;
+                  console.log("✅ Converted DID to HTTP URL:", audienceUrl);
+                } else {
+                  console.log("⚠️ Unknown DID format, using fallback");
+                  audienceUrl = "https://bsky.social";
+                }
               }
+
+              pdsEndpoint = audienceUrl;
+              console.log("🎯 Using PDS endpoint:", pdsEndpoint);
             }
-
-            pdsEndpoint = audienceUrl;
-            console.log("🎯 Using PDS endpoint:", pdsEndpoint);
           }
+        } catch (e) {
+          console.log("⚠️ Could not decode JWT, using fallback PDS");
         }
-      } catch (e) {
-        console.log("⚠️ Could not decode JWT, using fallback PDS");
-      }
 
-      const url = `${pdsEndpoint}/xrpc/${options.nsid}`;
-      const method = options.type.toUpperCase();
+        const url = `${pdsEndpoint}/xrpc/${options.nsid}`;
+        const method = options.type.toUpperCase();
 
-      // Create DPoP proof for API request
-      const dpopProof = await this.createDPoPProof(method, url);
+        // Create DPoP proof for API request
+        const dpopProof = await this.createDPoPProof(method, url);
 
-      const headers: Record<string, string> = {
-        Authorization: `DPoP ${this.authState.session.accessJwt}`,
-        "Content-Type": "application/json",
-      };
+        const headers: Record<string, string> = {
+          Authorization: `DPoP ${this.authState.session.accessJwt}`,
+          "Content-Type": "application/json",
+        };
 
-      if (dpopProof) {
-        headers["DPoP"] = dpopProof;
-      }
+        if (dpopProof) {
+          headers["DPoP"] = dpopProof;
+        }
 
-      const requestInit: RequestInit = {
-        method,
-        headers,
-      };
+        const requestInit: RequestInit = {
+          method,
+          headers,
+        };
 
-      if (method === "POST" && options.data) {
-        requestInit.body = JSON.stringify(options.data);
-      }
+        if (method === "POST" && options.data) {
+          requestInit.body = JSON.stringify(options.data);
+        }
 
-      if (method === "GET" && options.params) {
-        const searchParams = new URLSearchParams();
-        Object.entries(options.params).forEach(([key, value]) => {
-          searchParams.append(key, String(value));
-        });
-        const urlWithParams = `${url}?${searchParams.toString()}`;
-        const response = await fetch(urlWithParams, requestInit);
+        if (method === "GET" && options.params) {
+          const searchParams = new URLSearchParams();
+          Object.entries(options.params).forEach(([key, value]) => {
+            searchParams.append(key, String(value));
+          });
+          const urlWithParams = `${url}?${searchParams.toString()}`;
+          const response = await fetch(urlWithParams, requestInit);
+          return await this.handleResponse(response);
+        }
+
+        const response = await fetch(url, requestInit);
         return await this.handleResponse(response);
-      }
+      } catch (error) {
+        // Handle DPoP nonce retry
+        if (
+          error instanceof Error &&
+          error.message.startsWith("DPOP_NONCE_REQUIRED:")
+        ) {
+          const nonce = error.message.split(":")[1];
+          console.log(
+            `🔄 API request requires DPoP nonce, retrying with nonce: ${nonce}`,
+          );
+          this.dpopNonce = nonce;
+          retryCount++;
+          continue;
+        }
 
-      const response = await fetch(url, requestInit);
-      return await this.handleResponse(response);
-    } catch (error) {
-      console.error("API request error:", error);
-      throw error;
+        console.error("API request error:", error);
+        throw error;
+      }
     }
+
+    throw new Error("API request failed after maximum retries");
   }
 
   /**
@@ -1071,6 +1092,24 @@ class BlueskyAuth {
       } catch {
         errorData = "Unknown error";
       }
+
+      // Handle DPoP nonce requirement for API requests
+      if (
+        response.status === 401 &&
+        typeof errorData === "object" &&
+        errorData.error === "use_dpop_nonce"
+      ) {
+        const dpopNonce = response.headers.get("dpop-nonce");
+        if (dpopNonce) {
+          console.log(
+            "🔄 API request requires DPoP nonce, storing for retry...",
+          );
+          this.dpopNonce = dpopNonce;
+          // The caller should retry the request
+          throw new Error(`DPOP_NONCE_REQUIRED:${dpopNonce}`);
+        }
+      }
+
       throw new Error(`API request failed: ${JSON.stringify(errorData)}`);
     }
 
@@ -1080,19 +1119,15 @@ class BlueskyAuth {
   /**
    * XRPC client interface compatibility
    */
-  async call(options: {
-    lex: string;
-    params?: any;
-    data?: any;
-  }): Promise<{ data: any }> {
+  async call(nsid: string, params?: any): Promise<any> {
     const result = await this.makeRequest({
-      type: options.data ? "post" : "get",
-      nsid: options.lex,
-      params: options.params,
-      data: options.data,
+      type: params ? "post" : "get",
+      nsid: nsid,
+      params: params ? undefined : params,
+      data: params,
     });
 
-    return { data: result };
+    return result;
   }
 }
 
