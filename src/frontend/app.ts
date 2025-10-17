@@ -265,15 +265,25 @@ class WukkieApp {
 
           if (isOAuthToken) {
             console.log("🔐 OAuth authentication detected");
-            console.log(
-              "⚠️ OAuth tokens not directly compatible with ATProto agent",
-            );
-            // Set up for local-only operations until OAuth integration is improved
-            this.atprotoManager = null;
-            this.showStatus(
-              `Welcome back, @${this.session.handle}! Note: Bluesky posting temporarily unavailable with OAuth.`,
-              "info",
-            );
+            // For OAuth, we need to create an agent with the OAuth tokens
+            // The authState.xrpc should contain the authenticated XRPC client
+            if (authState.xrpc) {
+              console.log("🟢 Using OAuth XRPC client for ATProto operations");
+              this.atprotoManager = new ATProtoIssueManager(
+                null,
+                authState.xrpc,
+                "https://wukkie.uk",
+                authState.session.did,
+              );
+              console.log("🟢 ATProto manager initialized with OAuth");
+            } else {
+              console.warn("⚠️ OAuth XRPC client not available");
+              this.atprotoManager = null;
+              this.showStatus(
+                `Welcome back, @${this.session.handle}! Bluesky posting temporarily unavailable.`,
+                "info",
+              );
+            }
           } else {
             // Traditional ATProto session - try to resume
             console.log("🔐 Using ATProto session authentication");

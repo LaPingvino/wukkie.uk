@@ -48,7 +48,7 @@
     "url": "https://github.com/LaVLaS/wukkie.uk/issues"
   },
   "oauth": {
-    "scopes": "atproto repo:app.bsky.feed.post blob:*/*",
+    "scopes": "atproto transition:generic",
     "clientName": "Wukkie.uk - Bug Tracker for the World",
     "description": "OAuth configuration for Bluesky/ATProto integration"
   },

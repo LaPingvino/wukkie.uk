@@ -1,13 +1,17 @@
-import { AtpAgent, BskyAgent, RichText } from '@atproto/api';
-import { LocationPrivacySystem, PrivacyLocation, extractGeoHashtags } from './location-privacy';
+import { AtpAgent, BskyAgent, RichText, XrpcClient } from "@atproto/api";
+import {
+  LocationPrivacySystem,
+  PrivacyLocation,
+  extractGeoHashtags,
+} from "./location-privacy";
 
 export interface WukkieIssue {
   id: string;
   title: string;
   description: string;
   category: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority: "low" | "medium" | "high" | "critical";
+  status: "open" | "in_progress" | "resolved" | "closed";
   location: PrivacyLocation;
   hashtags: string[];
   media?: Blob[];
@@ -35,118 +39,156 @@ export interface IssueSearchOptions {
 // Custom lexicon for Wukkie issues
 export const WUKKIE_LEXICON = {
   lex: 1,
-  id: 'uk.wukkie.issue',
+  id: "uk.wukkie.issue",
   defs: {
     main: {
-      type: 'record',
-      description: 'A public issue report with privacy-friendly location',
-      key: 'tid',
+      type: "record",
+      description: "A public issue report with privacy-friendly location",
+      key: "tid",
       record: {
-        type: 'object',
-        required: ['title', 'description', 'location', 'category', 'createdAt'],
+        type: "object",
+        required: ["title", "description", "location", "category", "createdAt"],
         properties: {
           title: {
-            type: 'string',
+            type: "string",
             maxLength: 200,
-            description: 'Issue title'
+            description: "Issue title",
           },
           description: {
-            type: 'string',
+            type: "string",
             maxLength: 2000,
-            description: 'Detailed issue description'
+            description: "Detailed issue description",
           },
           location: {
-            type: 'object',
-            required: ['geoHashtag'],
+            type: "object",
+            required: ["geoHashtag"],
             properties: {
               geoHashtag: {
-                type: 'string',
-                description: 'Privacy-friendly geo hashtag (#geoXXXXXX)'
+                type: "string",
+                description: "Privacy-friendly geo hashtag (#geoXXXXXX)",
               },
               label: {
-                type: 'string',
+                type: "string",
                 maxLength: 100,
-                description: 'Optional human-readable location label'
+                description: "Optional human-readable location label",
               },
               precision: {
-                type: 'number',
-                description: 'Approximate precision in kilometers'
-              }
-            }
+                type: "number",
+                description: "Approximate precision in kilometers",
+              },
+            },
           },
           category: {
-            type: 'string',
-            enum: ['infrastructure', 'environment', 'safety', 'transport', 'community', 'other']
+            type: "string",
+            enum: [
+              "infrastructure",
+              "environment",
+              "safety",
+              "transport",
+              "community",
+              "other",
+            ],
           },
           priority: {
-            type: 'string',
-            enum: ['low', 'medium', 'high', 'critical'],
-            default: 'medium'
+            type: "string",
+            enum: ["low", "medium", "high", "critical"],
+            default: "medium",
           },
           status: {
-            type: 'string',
-            enum: ['open', 'in_progress', 'resolved', 'closed'],
-            default: 'open'
+            type: "string",
+            enum: ["open", "in_progress", "resolved", "closed"],
+            default: "open",
           },
           hashtags: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Subject hashtags for categorization'
+            type: "array",
+            items: { type: "string" },
+            description: "Subject hashtags for categorization",
           },
           media: {
-            type: 'array',
-            items: { type: 'blob' },
+            type: "array",
+            items: { type: "blob" },
             maxItems: 4,
-            description: 'Photos or other media'
+            description: "Photos or other media",
           },
           createdAt: {
-            type: 'string',
-            format: 'datetime'
+            type: "string",
+            format: "datetime",
           },
           externalUri: {
-            type: 'string',
-            description: 'Link to full issue on wukkie.uk'
-          }
-        }
-      }
-    }
-  }
+            type: "string",
+            description: "Link to full issue on wukkie.uk",
+          },
+        },
+      },
+    },
+  },
 };
 
 export class ATProtoIssueManager {
-  private agent: BskyAgent;
+  private agent: BskyAgent | null;
+  private xrpc: XrpcClient | null;
   private readonly baseUrl: string;
+  private userDid: string | null;
 
-  constructor(agent: BskyAgent, baseUrl: string = 'https://wukkie.uk') {
+  constructor(
+    agent: BskyAgent | null = null,
+    xrpcOrBaseUrl?: XrpcClient | string,
+    baseUrl: string = "https://wukkie.uk",
+    userDid?: string,
+  ) {
     this.agent = agent;
-    this.baseUrl = baseUrl;
+    this.userDid = userDid || null;
+
+    // Handle the overloaded constructor parameters
+    if (typeof xrpcOrBaseUrl === "string") {
+      // Traditional usage: ATProtoIssueManager(agent, baseUrl)
+      this.xrpc = null;
+      this.baseUrl = xrpcOrBaseUrl;
+    } else {
+      // OAuth usage: ATProtoIssueManager(null, xrpc, baseUrl, userDid)
+      this.xrpc = xrpcOrBaseUrl || null;
+      this.baseUrl = baseUrl;
+    }
+  }
+
+  private getClient(): BskyAgent | XrpcClient {
+    if (this.agent) {
+      return this.agent;
+    } else if (this.xrpc) {
+      return this.xrpc;
+    } else {
+      throw new Error("No ATProto client available (neither agent nor XRPC)");
+    }
   }
 
   /**
    * Create a new issue and optionally post to Bluesky
    */
   async createIssue(
-    issue: Omit<WukkieIssue, 'id' | 'createdAt' | 'blueskyUri'>,
+    issue: Omit<WukkieIssue, "id" | "createdAt" | "blueskyUri">,
     postToBluesky: boolean = true,
-    blueskyOptions: BlueskyPostOptions = {}
+    blueskyOptions: BlueskyPostOptions = {},
   ): Promise<WukkieIssue> {
     const newIssue: WukkieIssue = {
       ...issue,
       id: this.generateIssueId(),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     // Store issue locally (you'd implement your storage mechanism here)
     await this.storeIssue(newIssue);
 
     // Post to Bluesky if requested
-    if (postToBluesky && this.agent.session) {
+    if (postToBluesky && (this.agent?.session || this.xrpc)) {
       try {
-        const blueskyUri = await this.postIssueToBluesky(newIssue, blueskyOptions);
+        const blueskyUri = await this.postIssueToBluesky(
+          newIssue,
+          blueskyOptions,
+        );
         newIssue.blueskyUri = blueskyUri;
         await this.updateIssue(newIssue);
       } catch (error) {
-        console.error('Failed to post to Bluesky:', error);
+        console.error("Failed to post to Bluesky:", error);
         // Issue is still created locally even if Bluesky posting fails
       }
     }
@@ -159,10 +201,11 @@ export class ATProtoIssueManager {
    */
   async postIssueToBluesky(
     issue: WukkieIssue,
-    options: BlueskyPostOptions = {}
+    options: BlueskyPostOptions = {},
   ): Promise<string> {
-    if (!this.agent.session) {
-      throw new Error('Not authenticated with Bluesky');
+    const client = this.getClient();
+    if (this.agent && !this.agent.session) {
+      throw new Error("Not authenticated with Bluesky");
     }
 
     // Build the post text
@@ -178,15 +221,15 @@ export class ATProtoIssueManager {
 
     // Add hashtags
     const allHashtags = [
-      '#wukkie',
+      "#wukkie",
       `#${issue.category}`,
       issue.location.geoHashtag,
       ...issue.hashtags,
-      ...(options.customHashtags || [])
+      ...(options.customHashtags || []),
     ];
 
     const uniqueHashtags = [...new Set(allHashtags)];
-    postText += '\n\n' + uniqueHashtags.join(' ');
+    postText += "\n\n" + uniqueHashtags.join(" ");
 
     // Add link to full issue if requested
     if (options.linkToIssue !== false) {
@@ -195,11 +238,13 @@ export class ATProtoIssueManager {
 
     // Create rich text with proper facets for hashtags and links
     const rt = new RichText({ text: postText });
-    await rt.detectFacets(this.agent);
+    if (this.agent) {
+      await rt.detectFacets(this.agent);
+    }
 
     // Prepare the record
     const record = {
-      $type: 'app.bsky.feed.post',
+      $type: "app.bsky.feed.post",
       text: rt.text,
       facets: rt.facets,
       createdAt: new Date().toISOString(),
@@ -210,7 +255,7 @@ export class ATProtoIssueManager {
       const replyRef = this.parseAtUri(options.threadReply);
       record.reply = {
         root: replyRef,
-        parent: replyRef
+        parent: replyRef,
       };
     }
 
@@ -219,14 +264,28 @@ export class ATProtoIssueManager {
       const images = await this.uploadImages(issue.media.slice(0, 4));
       if (images.length > 0) {
         record.embed = {
-          $type: 'app.bsky.embed.images',
-          images: images
+          $type: "app.bsky.embed.images",
+          images: images,
         };
       }
     }
 
     // Post to Bluesky
-    const response = await this.agent.post(record);
+    let response;
+    if (this.agent) {
+      response = await this.agent.post(record);
+    } else if (this.xrpc) {
+      if (!this.userDid) {
+        throw new Error("User DID not available for XRPC operation");
+      }
+      response = await this.xrpc.call("com.atproto.repo.createRecord", {
+        repo: this.userDid,
+        collection: "app.bsky.feed.post",
+        record: record,
+      });
+    } else {
+      throw new Error("No client available");
+    }
     return response.uri;
   }
 
@@ -242,8 +301,8 @@ export class ATProtoIssueManager {
 
     // Filter by geo hashtags
     if (options.geoHashtags && options.geoHashtags.length > 0) {
-      filteredIssues = filteredIssues.filter(issue =>
-        options.geoHashtags!.includes(issue.location.geoHashtag)
+      filteredIssues = filteredIssues.filter((issue) =>
+        options.geoHashtags!.includes(issue.location.geoHashtag),
       );
     }
 
@@ -251,31 +310,31 @@ export class ATProtoIssueManager {
     if (options.nearLocation && options.radius) {
       const nearbyHashtags = LocationPrivacySystem.getNearbyGeoHashtags(
         options.nearLocation.geoHashtag,
-        options.radius
+        options.radius,
       );
-      filteredIssues = filteredIssues.filter(issue =>
-        nearbyHashtags.includes(issue.location.geoHashtag)
+      filteredIssues = filteredIssues.filter((issue) =>
+        nearbyHashtags.includes(issue.location.geoHashtag),
       );
     }
 
     // Filter by category
     if (options.category) {
-      filteredIssues = filteredIssues.filter(issue =>
-        issue.category === options.category
+      filteredIssues = filteredIssues.filter(
+        (issue) => issue.category === options.category,
       );
     }
 
     // Filter by status
     if (options.status) {
-      filteredIssues = filteredIssues.filter(issue =>
-        issue.status === options.status
+      filteredIssues = filteredIssues.filter(
+        (issue) => issue.status === options.status,
       );
     }
 
     // Filter by hashtags
     if (options.hashtags && options.hashtags.length > 0) {
-      filteredIssues = filteredIssues.filter(issue =>
-        options.hashtags!.some(tag => issue.hashtags.includes(tag))
+      filteredIssues = filteredIssues.filter((issue) =>
+        options.hashtags!.some((tag) => issue.hashtags.includes(tag)),
       );
     }
 
@@ -286,22 +345,33 @@ export class ATProtoIssueManager {
    * Search Bluesky for posts with specific geo hashtags
    */
   async searchBlueskyByLocation(geoHashtags: string[]): Promise<any[]> {
-    if (!this.agent.session) {
-      throw new Error('Not authenticated with Bluesky');
+    const client = this.getClient();
+    if (this.agent && !this.agent.session) {
+      throw new Error("Not authenticated with Bluesky");
     }
 
-    const searchQueries = geoHashtags.map(hashtag => hashtag);
+    const searchQueries = geoHashtags.map((hashtag) => hashtag);
     const results: any[] = [];
 
     for (const query of searchQueries) {
       try {
-        const searchResult = await this.agent.app.bsky.feed.searchPosts({
-          q: query,
-          limit: 25
-        });
-        results.push(...searchResult.data.posts);
+        let searchResult;
+        if (this.agent) {
+          searchResult = await this.agent.app.bsky.feed.searchPosts({
+            q: query,
+            limit: 25,
+          });
+        } else if (this.xrpc) {
+          searchResult = await this.xrpc.call("app.bsky.feed.searchPosts", {
+            q: query,
+            limit: 25,
+          });
+        }
+        if (searchResult) {
+          results.push(...searchResult.data.posts);
+        }
       } catch (error) {
-        console.error(`Failed to search for ${query}:`, error);
+        console.error(`Search failed for query ${query}:`, error);
       }
     }
 
@@ -314,34 +384,55 @@ export class ATProtoIssueManager {
   async updateIssue(
     issue: WukkieIssue,
     postUpdate: boolean = false,
-    updateMessage?: string
+    updateMessage?: string,
   ): Promise<WukkieIssue> {
     // Update issue in storage
     await this.storeIssue(issue);
 
     // Post update to Bluesky if requested
-    if (postUpdate && this.agent.session && issue.blueskyUri) {
+    if (postUpdate && (this.agent?.session || this.xrpc) && issue.blueskyUri) {
       try {
-        const updateText = updateMessage || `📄 Issue Updated: ${issue.title}`;
-        const fullText = `${updateText}\n\nStatus: ${issue.status}\n${issue.location.geoHashtag}\n\nView: ${this.baseUrl}/issue/${issue.id}`;
+        const updateText = updateMessage || `🔄 Issue updated: ${issue.title}`;
 
-        const rt = new RichText({ text: fullText });
-        await rt.detectFacets(this.agent);
+        const rt = new RichText({ text: updateText });
+        if (this.agent) {
+          await rt.detectFacets(this.agent);
+        }
 
         const replyRef = this.parseAtUri(issue.blueskyUri);
 
-        await this.agent.post({
-          $type: 'app.bsky.feed.post',
-          text: rt.text,
-          facets: rt.facets,
-          reply: {
-            root: replyRef,
-            parent: replyRef
-          },
-          createdAt: new Date().toISOString()
-        });
+        if (this.agent) {
+          await this.agent.post({
+            $type: "app.bsky.feed.post",
+            text: rt.text,
+            facets: rt.facets,
+            reply: {
+              root: replyRef,
+              parent: replyRef,
+            },
+            createdAt: new Date().toISOString(),
+          });
+        } else if (this.xrpc) {
+          if (!this.userDid) {
+            throw new Error("User DID not available for XRPC operation");
+          }
+          await this.xrpc.call("com.atproto.repo.createRecord", {
+            repo: this.userDid,
+            collection: "app.bsky.feed.post",
+            record: {
+              $type: "app.bsky.feed.post",
+              text: rt.text,
+              facets: rt.facets,
+              reply: {
+                root: replyRef,
+                parent: replyRef,
+              },
+              createdAt: new Date().toISOString(),
+            },
+          });
+        }
       } catch (error) {
-        console.error('Failed to post update to Bluesky:', error);
+        console.error("Failed to post update to Bluesky:", error);
       }
     }
 
@@ -354,31 +445,33 @@ export class ATProtoIssueManager {
   async postFollowUp(
     issue: WukkieIssue,
     message: string,
-    images?: Blob[]
+    images?: Blob[],
   ): Promise<string> {
-    if (!this.agent.session) {
-      throw new Error('Not authenticated with Bluesky');
+    const client = this.getClient();
+    if (this.agent && !this.agent.session) {
+      throw new Error("Not authenticated with Bluesky");
     }
 
     if (!issue.blueskyUri) {
-      throw new Error('Issue has no associated Bluesky post');
+      throw new Error("Issue has no associated Bluesky post");
     }
 
     let postText = `💬 Follow-up on: ${issue.title}\n\n${message}`;
-    postText += `\n\n${issue.location.geoHashtag} #wukkie #${issue.category}`;
 
     const rt = new RichText({ text: postText });
-    await rt.detectFacets(this.agent);
+    if (this.agent) {
+      await rt.detectFacets(this.agent);
+    }
 
     const record: any = {
-      $type: 'app.bsky.feed.post',
+      $type: "app.bsky.feed.post",
       text: rt.text,
       facets: rt.facets,
       reply: {
         root: this.parseAtUri(issue.blueskyUri),
-        parent: this.parseAtUri(issue.blueskyUri)
+        parent: this.parseAtUri(issue.blueskyUri),
       },
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     // Add images if provided
@@ -386,13 +479,29 @@ export class ATProtoIssueManager {
       const uploadedImages = await this.uploadImages(images.slice(0, 4));
       if (uploadedImages.length > 0) {
         record.embed = {
-          $type: 'app.bsky.embed.images',
-          images: uploadedImages
+          $type: "app.bsky.embed.images",
+          images: uploadedImages,
         };
       }
     }
 
-    const response = await this.agent.post(record);
+    // Create the post
+    let response;
+    if (this.agent) {
+      response = await this.agent.post(record);
+    } else if (this.xrpc) {
+      if (!this.userDid) {
+        throw new Error("User DID not available for XRPC operation");
+      }
+      response = await this.xrpc.call("com.atproto.repo.createRecord", {
+        repo: this.userDid,
+        collection: "app.bsky.feed.post",
+        record: record,
+      });
+    } else {
+      throw new Error("No client available");
+    }
+
     return response.uri;
   }
 
@@ -408,10 +517,10 @@ export class ATProtoIssueManager {
    */
   private parseAtUri(uri: string) {
     // Parse AT-URI format: at://did:plc:xxx/app.bsky.feed.post/xxxxx
-    const parts = uri.replace('at://', '').split('/');
+    const parts = uri.replace("at://", "").split("/");
     return {
       uri: uri,
-      cid: '', // You'd need to get the CID from the post
+      cid: "", // You'd need to get the CID from the post
     };
   }
 
@@ -423,16 +532,30 @@ export class ATProtoIssueManager {
 
     for (const image of images) {
       try {
-        const response = await this.agent.uploadBlob(image, {
-          encoding: 'image/jpeg' // Adjust based on actual image type
-        });
+        let response;
+        if (this.agent) {
+          response = await this.agent.uploadBlob(image, {
+            encoding: "image/jpeg", // Adjust based on actual image type
+          });
+        } else if (this.xrpc) {
+          // For XRPC, we need to upload blobs differently
+          const formData = new FormData();
+          formData.append('blob', image);
 
-        uploadedImages.push({
-          alt: 'Issue photo',
-          image: response.data.blob
-        });
+          response = await this.xrpc.call("com.atproto.repo.uploadBlob", {}, {
+            data: formData,
+            encoding: "image/jpeg",
+          });
+        }
+
+        if (response) {
+          uploadedImages.push({
+            alt: "Issue photo",
+            image: response.data.blob,
+          });
+        }
       } catch (error) {
-        console.error('Failed to upload image:', error);
+        console.error("Failed to upload image:", error);
       }
     }
 
@@ -445,24 +568,24 @@ export class ATProtoIssueManager {
   private async storeIssue(issue: WukkieIssue): Promise<void> {
     // This would integrate with your actual storage system
     // localStorage for client-side, or API calls to your backend
-    const stored = localStorage.getItem('wukkie_issues') || '[]';
+    const stored = localStorage.getItem("wukkie_issues") || "[]";
     const issues: WukkieIssue[] = JSON.parse(stored);
 
-    const existingIndex = issues.findIndex(i => i.id === issue.id);
+    const existingIndex = issues.findIndex((i) => i.id === issue.id);
     if (existingIndex >= 0) {
       issues[existingIndex] = issue;
     } else {
       issues.push(issue);
     }
 
-    localStorage.setItem('wukkie_issues', JSON.stringify(issues));
+    localStorage.setItem("wukkie_issues", JSON.stringify(issues));
   }
 
   /**
    * Get all issues from storage
    */
   private async getAllIssues(): Promise<WukkieIssue[]> {
-    const stored = localStorage.getItem('wukkie_issues') || '[]';
+    const stored = localStorage.getItem("wukkie_issues") || "[]";
     return JSON.parse(stored);
   }
 
@@ -474,16 +597,17 @@ export class ATProtoIssueManager {
     description: string,
     category: string,
     hashtags: string[] = [],
-    locationLabel?: string
+    locationLabel?: string,
   ): Promise<Partial<WukkieIssue>> {
-    const location = await LocationPrivacySystem.createFromCurrentLocation(locationLabel);
+    const location =
+      await LocationPrivacySystem.createFromCurrentLocation(locationLabel);
 
     return {
       title,
       description,
       category: category as any,
-      priority: 'medium',
-      status: 'open',
+      priority: "medium",
+      status: "open",
       location,
       hashtags: [...hashtags, location.geoHashtag],
     };
@@ -495,7 +619,10 @@ export function extractLocationFromText(text: string): string[] {
   return extractGeoHashtags(text);
 }
 
-export function formatIssueForBluesky(issue: WukkieIssue, baseUrl: string): string {
+export function formatIssueForBluesky(
+  issue: WukkieIssue,
+  baseUrl: string,
+): string {
   let text = `🚨 ${issue.title}\n\n${issue.description}`;
 
   if (issue.location.label) {
@@ -504,13 +631,25 @@ export function formatIssueForBluesky(issue: WukkieIssue, baseUrl: string): stri
     text += `\n\n📍 ${issue.location.geoHashtag}`;
   }
 
-  const hashtags = ['#wukkie', `#${issue.category}`, ...issue.hashtags].join(' ');
+  const hashtags = ["#wukkie", `#${issue.category}`, ...issue.hashtags].join(
+    " ",
+  );
   text += `\n\n${hashtags}`;
 
   text += `\n\nFull details: ${baseUrl}/issue/${issue.id}`;
 
   return text;
 }
+
+  /**
+   * Get current user's DID for XRPC operations
+   */
+  private getCurrentUserDid(): string {
+    if (!this.userDid) {
+      throw new Error("User DID not available");
+    }
+    return this.userDid;
+  }
 
 // Export for use in main application
 export default ATProtoIssueManager;
