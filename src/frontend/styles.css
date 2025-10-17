@@ -799,6 +799,34 @@ button.loading::after {
     vertical-align: middle;
 }
 
+/* Issue Statistics */
+.issue-stats-container {
+    margin-bottom: 1rem;
+}
+
+.issue-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.stat-item {
+    background: #f3f4f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.stat-item:hover {
+    background: #e5e7eb;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .header-content {

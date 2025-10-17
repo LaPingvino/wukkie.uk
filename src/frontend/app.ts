@@ -303,6 +303,11 @@ class WukkieApp {
       // Update demo issues to current user if transitioning from demo
       await this.updateDemoIssuesOnLogin();
 
+      // Update ATProto manager with current user handle
+      if (this.atprotoManager && this.session.handle) {
+        this.atprotoManager.setUserHandle(this.session.handle);
+      }
+
       this.updateAuthUI(true);
       this.loginModal.hide();
 
@@ -979,34 +984,64 @@ class WukkieApp {
 
   private async loadNetworkIssues(): Promise<void> {
     try {
-      console.log("🔍 Loading issues from ATProto network...");
+      console.log(
+        "🔍 Loading issues from ATProto network using enhanced search...",
+      );
 
       if (!this.atprotoManager) {
         console.log("⚠️ ATProto manager not available");
         return;
       }
 
-      // Search for Wukkie issues by hashtag
+      // Set user handle for personalized search
+      if (this.session && this.session.handle) {
+        this.atprotoManager.setUserHandle(this.session.handle);
+      }
+
+      // Set current location if available
+      if (this.currentPrivacyLocation) {
+        this.atprotoManager.setCurrentLocation(this.currentPrivacyLocation);
+      }
+
+      // Use enhanced multi-strategy search
       const networkIssues = await this.atprotoManager.searchIssues({
         hashtags: ["#wukkie"],
-        limit: 20,
+        limit: 50,
       });
 
-      console.log(`✅ Found ${networkIssues.length} network issues`);
+      console.log(
+        `✅ Found ${networkIssues.length} network issues (enhanced search)`,
+      );
 
-      // Convert WukkieIssues to local Issue format and merge with existing
-      const convertedIssues: Issue[] = networkIssues.map((wissue) => ({
-        id: wissue.id,
-        title: wissue.title,
-        description: wissue.description,
-        category: wissue.category,
-        hashtags: wissue.hashtags,
-        status: wissue.status,
-        createdAt: wissue.createdAt,
-        author: "network-user", // We could extract this from the ATProto record
-        blueskyUri: wissue.blueskyUri,
-        blueskyStatus: "posted",
-      }));
+      // Extract author from ATProto record when possible
+      const convertedIssues: Issue[] = networkIssues.map((wissue) => {
+        // Try to extract author from blueskyUri or use handle from session
+        let author = "network-user";
+        if (wissue.blueskyUri) {
+          // Extract DID or handle from URI: at://did:plc:xyz/app.bsky.feed.post/123
+          const uriMatch = wissue.blueskyUri.match(/at:\/\/([^\/]+)/);
+          if (
+            uriMatch &&
+            this.session &&
+            wissue.blueskyUri.includes(this.session.did)
+          ) {
+            author = this.session.handle;
+          }
+        }
+
+        return {
+          id: wissue.id,
+          title: wissue.title,
+          description: wissue.description,
+          category: wissue.category,
+          hashtags: wissue.hashtags,
+          status: wissue.status,
+          createdAt: wissue.createdAt,
+          author,
+          blueskyUri: wissue.blueskyUri,
+          blueskyStatus: "posted",
+        };
+      });
 
       // Get existing local issues
       const stored = localStorage.getItem("wukkie_issues");
@@ -1027,13 +1062,27 @@ class WukkieApp {
         }
       });
 
-      // Sort by creation date (newest first)
-      allIssues.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+      // Enhanced sorting: own issues first, then by recency
+      const currentUserHandle = this.session?.handle;
+      allIssues.sort((a, b) => {
+        // Prioritize own posts
+        const aIsOwn = a.author === currentUserHandle;
+        const bIsOwn = b.author === currentUserHandle;
 
+        if (aIsOwn && !bIsOwn) return -1;
+        if (!aIsOwn && bIsOwn) return 1;
+
+        // Then sort by creation date (newest first)
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
+
+      console.log(
+        `📊 Total merged issues: ${allIssues.length} (${localIssues.length} local, ${convertedIssues.length} network)`,
+      );
       this.displayIssues(allIssues);
+      this.displayIssueStats(allIssues);
     } catch (error) {
       console.error("Failed to load network issues:", error);
       // Fall back to local issues only
@@ -1836,6 +1885,49 @@ class WukkieApp {
     } catch (error) {
       console.error("Error getting issue by ID:", error);
       return null;
+    }
+  }
+
+  /**
+   * Display enhanced statistics about loaded issues
+   */
+  private displayIssueStats(allIssues: Issue[]): void {
+    if (!this.atprotoManager) return;
+
+    const ownIssues = allIssues.filter(
+      (issue) => issue.author === this.session?.handle,
+    );
+    const networkIssues = allIssues.filter(
+      (issue) => issue.author !== this.session?.handle,
+    );
+
+    console.log(`📊 Issue Statistics:
+    - Own issues: ${ownIssues.length}
+    - Network issues: ${networkIssues.length}
+    - Total: ${allIssues.length}`);
+
+    // Get tag cloud data
+    const tagCloud = this.atprotoManager.getTagCloud();
+    if (tagCloud.length > 0) {
+      console.log(
+        "🏷️ Top Tags:",
+        tagCloud
+          .slice(0, 10)
+          .map((t) => `${t.tag}(${t.count})`)
+          .join(", "),
+      );
+    }
+
+    // Update UI with stats if we have a stats container
+    const statsContainer = document.getElementById("issue-stats");
+    if (statsContainer) {
+      statsContainer.innerHTML = `
+        <div class="issue-stats">
+          <span class="stat-item">📊 ${allIssues.length} issues</span>
+          ${ownIssues.length > 0 ? `<span class="stat-item">👤 ${ownIssues.length} yours</span>` : ""}
+          ${networkIssues.length > 0 ? `<span class="stat-item">🌐 ${networkIssues.length} from network</span>` : ""}
+        </div>
+      `;
     }
   }
 
