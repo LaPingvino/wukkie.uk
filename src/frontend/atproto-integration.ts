@@ -181,14 +181,23 @@ export class ATProtoIssueManager {
     // Post to Bluesky if requested
     if (postToBluesky && (this.agent?.session || this.xrpc)) {
       try {
+        console.log("🔍 [DEBUG] createIssue: About to post to Bluesky");
         const blueskyUri = await this.postIssueToBluesky(
           newIssue,
           blueskyOptions,
         );
+        console.log(
+          "🔍 [DEBUG] createIssue: Bluesky post successful, URI:",
+          blueskyUri,
+        );
         newIssue.blueskyUri = blueskyUri;
         await this.updateIssue(newIssue);
       } catch (error) {
-        console.error("Failed to post to Bluesky:", error);
+        console.error("🚨 [ERROR] Failed to post to Bluesky:", error);
+        console.error(
+          "🚨 [ERROR] Full error object:",
+          JSON.stringify(error, Object.getOwnPropertyNames(error)),
+        );
         // Issue is still created locally even if Bluesky posting fails
       }
     }
@@ -203,6 +212,10 @@ export class ATProtoIssueManager {
     issue: WukkieIssue,
     options: BlueskyPostOptions = {},
   ): Promise<string> {
+    console.log("🔍 [DEBUG] postIssueToBluesky: Starting", {
+      hasAgent: !!this.agent,
+      hasXrpc: !!this.xrpc,
+    });
     const client = this.getClient();
     if (this.agent && !this.agent.session) {
       throw new Error("Not authenticated with Bluesky");
@@ -238,8 +251,16 @@ export class ATProtoIssueManager {
 
     // Create rich text with proper facets for hashtags and links
     const rt = new RichText({ text: postText });
+    console.log(
+      "🔍 [DEBUG] postIssueToBluesky: RichText created, detecting facets...",
+    );
     if (this.agent) {
       await rt.detectFacets(this.agent);
+      console.log("🔍 [DEBUG] postIssueToBluesky: Facets detected with agent");
+    } else {
+      console.log(
+        "🔍 [DEBUG] postIssueToBluesky: No agent available, skipping facet detection",
+      );
     }
 
     // Prepare the record
@@ -271,21 +292,38 @@ export class ATProtoIssueManager {
     }
 
     // Post to Bluesky
+    console.log("🔍 [DEBUG] postIssueToBluesky: About to post", {
+      hasAgent: !!this.agent,
+      hasXrpc: !!this.xrpc,
+      userDid: this.userDid,
+      recordType: record.$type,
+    });
     let response;
     if (this.agent) {
+      console.log("🔍 [DEBUG] postIssueToBluesky: Using agent.post()");
       response = await this.agent.post(record);
+      console.log(
+        "🔍 [DEBUG] postIssueToBluesky: Agent post successful",
+        response,
+      );
     } else if (this.xrpc) {
       if (!this.userDid) {
         throw new Error("User DID not available for XRPC operation");
       }
+      console.log("🔍 [DEBUG] postIssueToBluesky: Using XRPC call");
       response = await this.xrpc.call("com.atproto.repo.createRecord", {
         repo: this.userDid,
         collection: "app.bsky.feed.post",
         record: record,
       });
+      console.log(
+        "🔍 [DEBUG] postIssueToBluesky: XRPC call successful",
+        response,
+      );
     } else {
       throw new Error("No client available");
     }
+    console.log("🔍 [DEBUG] postIssueToBluesky: Returning URI:", response.uri);
     return response.uri;
   }
 
