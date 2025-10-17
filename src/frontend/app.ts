@@ -1117,8 +1117,7 @@ class WukkieApp {
       console.log("🔍 Loading public issues from Bluesky network...");
 
       // Use Cloudflare Worker proxy to avoid CORS issues
-      const targetUrl =
-        "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts";
+      const targetUrl = "https://api.bsky.app/xrpc/app.bsky.feed.searchPosts";
       const searchParams = new URLSearchParams({
         q: "#wukkie",
         limit: "20",
@@ -1129,11 +1128,23 @@ class WukkieApp {
       const response = await fetch(proxyUrl);
 
       if (!response.ok) {
-        console.warn(
-          "Public API search failed:",
-          response.status,
-          response.statusText,
-        );
+        if (response.status === 403) {
+          console.warn(
+            "🚫 Bluesky public API is currently restricted (403 Forbidden)",
+          );
+          console.warn(
+            "ℹ️  This is a known issue - public search API should work without auth but currently doesn't",
+          );
+          console.warn(
+            "🔄 Falling back to local issues only. Login to access network features.",
+          );
+        } else {
+          console.warn(
+            "Public API search failed:",
+            response.status,
+            response.statusText,
+          );
+        }
         return;
       }
 
@@ -1184,7 +1195,19 @@ class WukkieApp {
       }
     } catch (error) {
       console.error("Failed to load public issues:", error);
-      // Silently fall back to local issues only
+      console.log("🔄 Falling back to local issues only");
+
+      // Show a user-friendly message about the limitation
+      const statusEl = document.getElementById("status");
+      if (statusEl) {
+        statusEl.innerHTML = `
+          <div style="background: #fff3cd; color: #856404; padding: 12px; border-radius: 4px; border-left: 4px solid #ffc107; margin: 10px 0;">
+            📡 <strong>Network Discovery Unavailable</strong><br>
+            Public issue discovery is temporarily unavailable due to API restrictions.<br>
+            <a href="#" onclick="document.getElementById('login-btn').click(); return false;" style="color: #856404; text-decoration: underline;">Login</a> to access full network features and discover issues from other users.
+          </div>
+        `;
+      }
     }
   }
 

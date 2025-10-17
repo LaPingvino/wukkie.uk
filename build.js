@@ -194,7 +194,10 @@ export default {
       // Proxy Bluesky API to avoid CORS issues
       if (pathname === '/api/bluesky-proxy') {
         const targetUrl = url.searchParams.get('url');
-        if (!targetUrl || !targetUrl.startsWith('https://public.api.bsky.app/')) {
+        console.log('🔍 Proxy request for URL:', targetUrl);
+
+        if (!targetUrl || !targetUrl.startsWith('https://api.bsky.app/')) {
+          console.error('❌ Invalid target URL:', targetUrl);
           return new Response('Invalid target URL', {
             status: 400,
             headers: corsHeaders
@@ -202,8 +205,19 @@ export default {
         }
 
         try {
-          const response = await fetch(targetUrl);
+          console.log('🌐 Fetching from Bluesky API...');
+          const response = await fetch(targetUrl, {
+            headers: {
+              'User-Agent': 'Wukkie.uk/1.0 (https://wukkie.uk)',
+              'Accept': 'application/json',
+            },
+          });
+
+          console.log('📡 Bluesky API response status:', response.status);
+          console.log('📡 Response headers:', Object.fromEntries(response.headers));
+
           const data = await response.text();
+          console.log('📦 Response data length:', data.length);
 
           return new Response(data, {
             status: response.status,
@@ -214,10 +228,13 @@ export default {
             },
           });
         } catch (error) {
-          console.error('Bluesky API proxy error:', error);
-          return new Response('Proxy error', {
+          console.error('❌ Bluesky API proxy error:', error);
+          return new Response(JSON.stringify({ error: 'Proxy error', details: error.message }), {
             status: 500,
-            headers: corsHeaders
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders
+            }
           });
         }
       }

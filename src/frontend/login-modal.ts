@@ -396,7 +396,20 @@ export class LoginModal {
 
   private async handleLogin(): Promise<void> {
     console.log("🟢 [DEBUG] LoginModal handleLogin: Starting");
-    const handle = this.handleInput.value.trim();
+    const rawHandle = this.handleInput.value;
+
+    // Check for invalid characters in raw input before trimming
+    if (
+      rawHandle.includes("\n") ||
+      rawHandle.includes("\r") ||
+      rawHandle.includes("\t")
+    ) {
+      this.showError("Please enter a valid Bluesky handle");
+      this.handleInput.focus();
+      return;
+    }
+
+    const handle = rawHandle.trim();
 
     if (!handle) {
       this.showError("Please enter your Bluesky handle");
