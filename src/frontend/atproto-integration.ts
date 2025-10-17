@@ -650,6 +650,7 @@ export function formatIssueForBluesky(
     }
     return this.userDid;
   }
+}
 
 // Export for use in main application
 export default ATProtoIssueManager;
