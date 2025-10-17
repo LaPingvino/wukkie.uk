@@ -8,6 +8,6 @@
   "dpop_bound_access_tokens": true,
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
-  "scope": "repo:* rpc:com.atproto.repo.createRecord?aud=* rpc:com.atproto.repo.putRecord?aud=* rpc:com.atproto.repo.deleteRecord?aud=* rpc:com.atproto.repo.listRecords?aud=* rpc:com.atproto.repo.getRecord?aud=* rpc:com.atproto.server.getSession?aud=* blob:*/*",
+  "scope": "atproto repo:* rpc:com.atproto.repo.createRecord?aud=* rpc:com.atproto.repo.putRecord?aud=* rpc:com.atproto.repo.deleteRecord?aud=* rpc:com.atproto.repo.listRecords?aud=* rpc:com.atproto.repo.getRecord?aud=* rpc:com.atproto.server.getSession?aud=* blob:*/*",
   "token_endpoint_auth_method": "none"
 }

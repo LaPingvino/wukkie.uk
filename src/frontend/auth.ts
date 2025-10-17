@@ -96,6 +96,7 @@ class BlueskyAuth {
   private dpopKeyPair: CryptoKeyPair | null = null;
   private dpopJwk: JsonWebKey | null = null;
   private dpopEnabled: boolean = false;
+  private dpopNonce: string | undefined = undefined;
 
   constructor() {
     console.log("🟢 [DEBUG] BlueskyAuth constructor: Starting");
