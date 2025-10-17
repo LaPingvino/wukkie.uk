@@ -1119,7 +1119,7 @@ class WukkieApp {
       // Use Cloudflare Worker proxy to avoid CORS issues
       const targetUrl = "https://api.bsky.app/xrpc/app.bsky.feed.searchPosts";
       const searchParams = new URLSearchParams({
-        q: "#wukkie",
+        q: "wukkie",
         limit: "20",
         sort: "latest",
       });

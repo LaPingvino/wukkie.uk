@@ -315,8 +315,14 @@ export class LoginModal {
 
     // Initialize element states
     this.errorMessage.style.display = "none";
-    this.loadingSpinner.style.display = "none";
+    if (this.loadingSpinner) this.loadingSpinner.style.display = "none";
     this.loginButton.disabled = false;
+
+    // Initialize button text display
+    const btnText = this.loginButton.querySelector(
+      ".login-btn-text",
+    ) as HTMLElement;
+    if (btnText) btnText.style.display = "inline-block";
 
     this.overlay.appendChild(this.modal);
     document.body.appendChild(this.overlay);
@@ -397,27 +403,15 @@ export class LoginModal {
   private async handleLogin(): Promise<void> {
     console.log("🟢 [DEBUG] LoginModal handleLogin: Starting");
     const rawHandle = this.handleInput.value;
+    const handle = rawHandle.trim();
 
-    // Check for invalid characters in raw input before trimming
-    if (
-      rawHandle.includes("\n") ||
-      rawHandle.includes("\r") ||
-      rawHandle.includes("\t")
-    ) {
+    if (!handle) {
       this.showError("Please enter a valid Bluesky handle");
       this.handleInput.focus();
       return;
     }
 
-    const handle = rawHandle.trim();
-
-    if (!handle) {
-      this.showError("Please enter your Bluesky handle");
-      this.handleInput.focus();
-      return;
-    }
-
-    // Basic handle validation
+    // Basic handle validation (validates trimmed handle)
     if (!this.isValidHandle(handle)) {
       this.showError("Please enter a valid Bluesky handle");
       this.handleInput.focus();
@@ -543,14 +537,17 @@ export class LoginModal {
   }
 
   private isValidHandle(handle: string): boolean {
-    // Comprehensive handle validation
-    if (!handle || handle.trim().length === 0) return false;
+    // Comprehensive handle validation - handle should already be trimmed
+    if (!handle || handle.length === 0) return false;
+    if (handle.length < 4) return false;
     if (!handle.includes(".")) return false;
     if (handle.startsWith(".") || handle.endsWith(".")) return false;
     if (handle.includes("..")) return false;
     if (handle.includes("@") || handle.includes(" ")) return false;
-    if (handle.includes("\n") || handle.includes("\r")) return false;
-    return handle.length >= 4;
+    if (handle.includes("\n") || handle.includes("\r") || handle.includes("\t"))
+      return false;
+
+    return true;
   }
 
   private setLoading(loading: boolean): void {
@@ -566,7 +563,7 @@ export class LoginModal {
       if (spinner) spinner.style.display = "block";
       this.loginButton.disabled = true;
     } else {
-      if (btnText) btnText.style.display = "inline";
+      if (btnText) btnText.style.display = "inline-block";
       if (spinner) spinner.style.display = "none";
       this.loginButton.disabled = false;
     }
