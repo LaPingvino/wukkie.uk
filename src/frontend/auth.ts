@@ -982,14 +982,30 @@ class BlueskyAuth {
 
     // For real sessions, make actual API calls
     try {
-      const url = `https://bsky.social/xrpc/${options.nsid}`;
+      // Extract PDS endpoint from JWT token's 'aud' field or use stored PDS
+      let pdsEndpoint = "https://bsky.social"; // fallback
+      try {
+        // Try to decode JWT to get the audience (PDS endpoint)
+        const tokenParts = this.authState.session.accessJwt.split(".");
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          if (payload.aud) {
+            pdsEndpoint = payload.aud;
+            console.log("🎯 Using PDS endpoint from JWT:", pdsEndpoint);
+          }
+        }
+      } catch (e) {
+        console.log("⚠️ Could not decode JWT, using fallback PDS");
+      }
+
+      const url = `${pdsEndpoint}/xrpc/${options.nsid}`;
       const method = options.type.toUpperCase();
 
       // Create DPoP proof for API request
       const dpopProof = await this.createDPoPProof(method, url);
 
       const headers: Record<string, string> = {
-        Authorization: `Bearer ${this.authState.session.accessJwt}`,
+        Authorization: `DPoP ${this.authState.session.accessJwt}`,
         "Content-Type": "application/json",
       };
 
