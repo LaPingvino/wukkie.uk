@@ -964,6 +964,7 @@ class WukkieApp {
       await this.loadLocalIssues();
       if (this.atprotoManager && blueskyAuth.isAuthenticated()) {
         await this.loadNetworkIssues();
+        await this.loadNetworkComments();
       }
     } catch (error) {
       console.error("Load issues error:", error);
@@ -1037,6 +1038,159 @@ class WukkieApp {
       console.error("Failed to load network issues:", error);
       // Fall back to local issues only
       this.loadLocalIssues();
+    }
+  }
+
+  private async loadNetworkComments(): Promise<void> {
+    try {
+      console.log("🔍 Loading comments from ATProto network...");
+
+      if (!this.atprotoManager) {
+        console.log("⚠️ ATProto manager not available for comments");
+        return;
+      }
+
+      const stored = localStorage.getItem("wukkie_issues");
+      const issues: Issue[] = stored ? JSON.parse(stored) : [];
+      let updated = false;
+
+      // For each issue that has a blueskyUri, try to fetch replies
+      for (const issue of issues) {
+        if (issue.blueskyUri) {
+          try {
+            const networkComments = await this.fetchCommentsForIssue(
+              issue.blueskyUri,
+            );
+            if (networkComments.length > 0) {
+              // Merge network comments with local ones, avoiding duplicates
+              if (!issue.comments) {
+                issue.comments = [];
+              }
+
+              networkComments.forEach((networkComment) => {
+                const existsLocally = issue.comments!.some(
+                  (local) =>
+                    local.text === networkComment.text &&
+                    Math.abs(
+                      new Date(local.createdAt).getTime() -
+                        new Date(networkComment.createdAt).getTime(),
+                    ) < 60000, // within 1 minute
+                );
+
+                if (!existsLocally) {
+                  issue.comments!.push(networkComment);
+                  updated = true;
+                }
+              });
+
+              // Sort comments by creation date
+              issue.comments.sort(
+                (a, b) =>
+                  new Date(a.createdAt).getTime() -
+                  new Date(b.createdAt).getTime(),
+              );
+            }
+          } catch (error) {
+            console.warn(
+              `Failed to fetch comments for issue ${issue.id}:`,
+              error,
+            );
+          }
+        }
+      }
+
+      // Update storage if we found new comments
+      if (updated) {
+        localStorage.setItem("wukkie_issues", JSON.stringify(issues));
+        console.log("✅ Updated issues with network comments");
+      }
+    } catch (error) {
+      console.error("Failed to load network comments:", error);
+    }
+  }
+
+  private async fetchCommentsForIssue(blueskyUri: string): Promise<Comment[]> {
+    try {
+      if (!this.atprotoManager || !blueskyAuth.isAuthenticated()) {
+        return [];
+      }
+
+      // Use the XRPC client to get the thread
+      const xrpc = blueskyAuth.getXRPC();
+      if (!xrpc) {
+        return [];
+      }
+
+      // Extract the AT-URI components
+      const uriParts = blueskyUri.split("/");
+      const did = uriParts[2];
+      const rkey = uriParts[4];
+
+      // Get the thread (post and its replies)
+      const threadResponse = await xrpc.call("app.bsky.feed.getPostThread", {
+        uri: blueskyUri,
+        depth: 3, // Get replies up to 3 levels deep
+      });
+
+      const comments: Comment[] = [];
+
+      // Parse replies from the thread
+      if (threadResponse.thread && threadResponse.thread.replies) {
+        this.parseRepliesAsComments(threadResponse.thread.replies, comments);
+      }
+
+      console.log(`Found ${comments.length} network comments for issue`);
+      return comments;
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      return [];
+    }
+  }
+
+  private parseRepliesAsComments(replies: any[], comments: Comment[]): void {
+    for (const reply of replies) {
+      if (reply.post && reply.post.record) {
+        const record = reply.post.record;
+        const text = record.text || "";
+
+        // Skip if this looks like a Wukkie issue post (not a comment)
+        if (text.includes("🚨 New Issue:")) {
+          continue;
+        }
+
+        // Extract the actual comment text (remove "💬 Follow-up on:" prefix if present)
+        let commentText = text;
+        if (text.includes("💬 Follow-up on:")) {
+          const lines = text.split("\n");
+          // Find the content after the follow-up line
+          let foundFollowUp = false;
+          let contentLines: string[] = [];
+          for (const line of lines) {
+            if (foundFollowUp && line.trim()) {
+              contentLines.push(line.trim());
+            } else if (line.includes("💬 Follow-up on:")) {
+              foundFollowUp = true;
+            }
+          }
+          commentText = contentLines.join(" ") || text;
+        }
+
+        if (commentText.trim()) {
+          comments.push({
+            id:
+              reply.post.uri ||
+              `network_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            text: commentText.trim(),
+            author: reply.post.author?.handle || "anonymous",
+            createdAt: reply.post.record.createdAt || new Date().toISOString(),
+          });
+        }
+
+        // Recursively parse nested replies
+        if (reply.replies && reply.replies.length > 0) {
+          this.parseRepliesAsComments(reply.replies, comments);
+        }
+      }
     }
   }
 
@@ -1274,7 +1428,7 @@ class WukkieApp {
     }
   }
 
-  public commentOnIssue(issueId: string): void {
+  public async commentOnIssue(issueId: string): Promise<void> {
     console.log("💬 Comment on issue:", issueId);
     const comment = prompt("Add your comment:");
 
@@ -1284,26 +1438,74 @@ class WukkieApp {
       const issue = issues.find((i) => i.id === issueId);
 
       if (issue) {
-        if (!issue.comments) {
-          issue.comments = [];
+        try {
+          // Add comment locally first
+          if (!issue.comments) {
+            issue.comments = [];
+          }
+
+          const newComment: Comment = {
+            id: Date.now().toString(),
+            text: comment.trim(),
+            author: this.session?.handle || "Anonymous",
+            createdAt: new Date().toISOString(),
+          };
+
+          issue.comments.push(newComment);
+          localStorage.setItem("wukkie_issues", JSON.stringify(issues));
+
+          // Post to Bluesky if authenticated and has blueskyUri
+          if (
+            this.atprotoManager &&
+            issue.blueskyUri &&
+            this.session &&
+            !this.session.isDemo
+          ) {
+            console.log("🔄 Posting comment to Bluesky...");
+            this.showStatus("Posting comment to Bluesky...", "info");
+
+            // Find the WukkieIssue format for ATProto manager
+            const wukkieIssue = {
+              id: issue.id,
+              title: issue.title,
+              description: issue.description,
+              category: issue.category,
+              priority: "medium" as const,
+              status: issue.status as any,
+              location: {
+                geoHashtag:
+                  issue.hashtags.find((tag) => tag.startsWith("#geo")) ||
+                  "#geo000000",
+                label: "Issue location",
+                precision: 5,
+              },
+              hashtags: issue.hashtags,
+              createdAt: issue.createdAt,
+              blueskyUri: issue.blueskyUri,
+            };
+
+            await this.atprotoManager.postFollowUp(wukkieIssue, comment.trim());
+            console.log("✅ Comment posted to Bluesky successfully");
+            this.showStatus("Comment posted to Bluesky! 💬", "success");
+          } else {
+            this.showStatus("Comment added locally! 💬", "success");
+          }
+
+          // Update the display
+          const commentsSpan = document.getElementById(`comments-${issueId}`);
+          if (commentsSpan) {
+            commentsSpan.textContent = issue.comments.length.toString();
+          }
+
+          // Refresh issues to show any new network comments
+          await this.loadIssues();
+        } catch (error) {
+          console.error("Failed to post comment to Bluesky:", error);
+          this.showStatus(
+            "Comment saved locally, but failed to post to Bluesky",
+            "warning",
+          );
         }
-
-        issue.comments.push({
-          id: Date.now().toString(),
-          text: comment.trim(),
-          author: this.session?.handle || "Anonymous",
-          createdAt: new Date().toISOString(),
-        });
-
-        localStorage.setItem("wukkie_issues", JSON.stringify(issues));
-
-        // Update the display
-        const commentsSpan = document.getElementById(`comments-${issueId}`);
-        if (commentsSpan) {
-          commentsSpan.textContent = issue.comments.length.toString();
-        }
-
-        this.showStatus("Comment added! 💬", "success");
       }
     }
   }

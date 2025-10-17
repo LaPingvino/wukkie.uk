@@ -535,6 +535,37 @@ export class ATProtoIssueManager {
     const rt = new RichText({ text: postText });
     if (this.agent) {
       await rt.detectFacets(this.agent);
+    } else {
+      // Manual facet detection for XRPC mode (similar to postIssueToBluesky)
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      let match;
+      while ((match = urlRegex.exec(postText)) !== null) {
+        const url = match[1];
+        const start = match.index;
+        const end = start + url.length;
+
+        rt.facets = rt.facets || [];
+        rt.facets.push({
+          index: { byteStart: start, byteEnd: end },
+          features: [{ $type: "app.bsky.richtext.facet#link", uri: url }],
+        });
+      }
+
+      // Detect hashtags
+      const hashtagRegex = /(#[a-zA-Z0-9_]+)/g;
+      while ((match = hashtagRegex.exec(postText)) !== null) {
+        const hashtag = match[1];
+        const start = match.index;
+        const end = start + hashtag.length;
+
+        rt.facets = rt.facets || [];
+        rt.facets.push({
+          index: { byteStart: start, byteEnd: end },
+          features: [
+            { $type: "app.bsky.richtext.facet#tag", tag: hashtag.slice(1) },
+          ],
+        });
+      }
     }
 
     const record: any = {
