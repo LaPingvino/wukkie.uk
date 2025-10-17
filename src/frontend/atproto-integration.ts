@@ -258,8 +258,44 @@ export class ATProtoIssueManager {
       await rt.detectFacets(this.agent);
       console.log("🔍 [DEBUG] postIssueToBluesky: Facets detected with agent");
     } else {
+      // Manual facet detection for XRPC mode
       console.log(
-        "🔍 [DEBUG] postIssueToBluesky: No agent available, skipping facet detection",
+        "🔍 [DEBUG] postIssueToBluesky: Using manual facet detection for XRPC mode",
+      );
+
+      // Detect URLs
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      let match;
+      while ((match = urlRegex.exec(postText)) !== null) {
+        const url = match[1];
+        const start = match.index;
+        const end = start + url.length;
+
+        rt.facets = rt.facets || [];
+        rt.facets.push({
+          index: { byteStart: start, byteEnd: end },
+          features: [{ $type: "app.bsky.richtext.facet#link", uri: url }],
+        });
+      }
+
+      // Detect hashtags
+      const hashtagRegex = /(#[a-zA-Z0-9_]+)/g;
+      while ((match = hashtagRegex.exec(postText)) !== null) {
+        const hashtag = match[1];
+        const start = match.index;
+        const end = start + hashtag.length;
+
+        rt.facets = rt.facets || [];
+        rt.facets.push({
+          index: { byteStart: start, byteEnd: end },
+          features: [
+            { $type: "app.bsky.richtext.facet#tag", tag: hashtag.slice(1) },
+          ],
+        });
+      }
+
+      console.log(
+        `🔍 [DEBUG] postIssueToBluesky: Manual facets detected: ${rt.facets?.length || 0}`,
       );
     }
 

@@ -334,6 +334,17 @@ class WukkieApp {
     demoLoginBtn?.addEventListener("click", () => this.demoLogin());
     logoutBtn?.addEventListener("click", () => this.logout());
 
+    // Title click to return home
+    const titleElement = document.querySelector("h1");
+    titleElement?.addEventListener("click", () => {
+      // Clear form and reload issues to return to main view
+      const form = document.getElementById("issue-form") as HTMLFormElement;
+      form?.reset();
+      this.loadIssues();
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
     // Issue form
     const issueForm = document.getElementById("issue-form") as HTMLFormElement;
     const getLocationBtn = document.getElementById(
@@ -716,7 +727,7 @@ class WukkieApp {
     const description = formData.get("description") as string;
     const category = formData.get("category") as string;
     const hashtags = formData.get("hashtags") as string;
-    const postToBluesky = formData.get("postToBluesky") === "on";
+    const postToBluesky = formData.get("post-to-bluesky") === "on";
     const editingId = form.dataset.editingId;
 
     if (!title.trim() || !description.trim()) {
@@ -1297,11 +1308,18 @@ class WukkieApp {
       this.loadIssues(); // Refresh display
 
       await this.createIssueRecord({ ...issue, postToBluesky: true });
+
+      // Update UI after successful posting
+      issue.blueskyStatus = "posted";
+      this.updateIssueInStorage(issue);
+      this.loadIssues(); // Refresh display
+      this.showStatus("Issue posted to Bluesky successfully! 📢", "success");
     } catch (error) {
       console.error("Post to Bluesky error:", error);
       issue.blueskyStatus = "failed";
       this.updateIssueInStorage(issue);
       this.loadIssues();
+      this.showStatus("Failed to post to Bluesky", "error");
     }
   }
 
