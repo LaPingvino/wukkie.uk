@@ -1116,8 +1116,8 @@ class WukkieApp {
     try {
       console.log("🔍 Loading public issues from Bluesky network...");
 
-      // Use public Bluesky API endpoint for unauthenticated search
-      const publicApiUrl =
+      // Use Cloudflare Worker proxy to avoid CORS issues
+      const targetUrl =
         "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts";
       const searchParams = new URLSearchParams({
         q: "#wukkie",
@@ -1125,7 +1125,8 @@ class WukkieApp {
         sort: "latest",
       });
 
-      const response = await fetch(`${publicApiUrl}?${searchParams}`);
+      const proxyUrl = `/api/bluesky-proxy?url=${encodeURIComponent(`${targetUrl}?${searchParams}`)}`;
+      const response = await fetch(proxyUrl);
 
       if (!response.ok) {
         console.warn(

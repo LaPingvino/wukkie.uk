@@ -40,40 +40,50 @@ class MockATProtoIssueManager {
       .sort((a, b) => b.count - a.count);
   }
 
-  async searchIssues(options: { hashtags: string[]; limit: number }): Promise<any[]> {
+  async searchIssues(options: {
+    hashtags: string[];
+    limit: number;
+  }): Promise<any[]> {
+    // Require authentication (user handle) for network searches
+    if (!this.userHandle) {
+      return [];
+    }
+
     // Simulate multi-strategy search
-    const ownIssues = this.mockIssues.filter(issue =>
-      issue.author === this.userHandle
+    const ownIssues = this.mockIssues.filter(
+      (issue) => issue.author === this.userHandle,
     );
 
-    const networkIssues = this.mockIssues.filter(issue =>
-      issue.author !== this.userHandle &&
-      options.hashtags.some(tag => issue.hashtags?.includes(tag))
+    const networkIssues = this.mockIssues.filter(
+      (issue) =>
+        issue.author !== this.userHandle &&
+        options.hashtags.some((tag) => issue.hashtags?.includes(tag)),
     );
 
     const locationIssues = this.currentLocation
-      ? this.mockIssues.filter(issue =>
-          issue.location?.geoHashtag === this.currentLocation.geoHashtag
+      ? this.mockIssues.filter(
+          (issue) =>
+            issue.location?.geoHashtag === this.currentLocation.geoHashtag,
         )
       : [];
 
     // Merge and deduplicate
     const allIssues = [...ownIssues];
 
-    networkIssues.forEach(issue => {
-      if (!allIssues.some(existing => existing.id === issue.id)) {
+    networkIssues.forEach((issue) => {
+      if (!allIssues.some((existing) => existing.id === issue.id)) {
         allIssues.push(issue);
       }
     });
 
-    locationIssues.forEach(issue => {
-      if (!allIssues.some(existing => existing.id === issue.id)) {
+    locationIssues.forEach((issue) => {
+      if (!allIssues.some((existing) => existing.id === issue.id)) {
         allIssues.push(issue);
       }
     });
 
     // Update tag cloud
-    allIssues.forEach(issue => {
+    allIssues.forEach((issue) => {
       issue.hashtags?.forEach((tag: string) => {
         const count = this.tagCloud.get(tag) || 0;
         this.tagCloud.set(tag, count + 1);
@@ -118,14 +128,30 @@ class MockATProtoIssueManager {
       postText += `\n\n${uniqueHashtags.join(" ")}`;
     }
 
-    // Verify no broken formatting
-    const hashtagMatches = postText.match(/#[a-zA-Z0-9_]+/g) || [];
-    const brokenHashtags = hashtagMatches.filter(tag =>
-      tag.length < 3 || tag.includes(" ") || tag.includes("\n")
+    // Verify no broken formatting by checking each hashtag from the array
+    const allHashtagsToCheck = [
+      "#wukkie",
+      `#${issue.category}`,
+      issue.location.geoHashtag,
+      ...issue.hashtags,
+      ...(options.customHashtags || []),
+    ];
+
+    const brokenHashtags = allHashtagsToCheck.filter(
+      (tag) =>
+        !tag ||
+        tag.length <= 1 ||
+        tag === "#" ||
+        tag.includes(" ") ||
+        tag.includes("\n") ||
+        tag.includes("\r") ||
+        !tag.match(/^#[a-zA-Z0-9_]+$/),
     );
 
     if (brokenHashtags.length > 0) {
-      throw new Error(`Broken hashtag formatting: ${brokenHashtags.join(", ")}`);
+      throw new Error(
+        `Broken hashtag formatting: ${brokenHashtags.join(", ")}`,
+      );
     }
 
     return `at://did:example:user/app.bsky.feed.post/${Date.now()}`;
@@ -222,7 +248,7 @@ describe("Enhanced Search System", () => {
         author: "joop.kiefte.eu",
         hashtags: ["#wukkie", "#infrastructure"],
         createdAt: "2025-01-15T12:00:00Z",
-        location: { geoHashtag: "#geo8ccgmw" }
+        location: { geoHashtag: "#geo8ccgmw" },
       },
       {
         id: "issue2",
@@ -230,7 +256,7 @@ describe("Enhanced Search System", () => {
         author: "other.user",
         hashtags: ["#wukkie", "#safety"],
         createdAt: "2025-01-14T12:00:00Z",
-        location: { geoHashtag: "#geo8ccgmx" }
+        location: { geoHashtag: "#geo8ccgmx" },
       },
       {
         id: "issue3",
@@ -238,8 +264,8 @@ describe("Enhanced Search System", () => {
         author: "location.user",
         hashtags: ["#wukkie", "#environment"],
         createdAt: "2025-01-13T12:00:00Z",
-        location: { geoHashtag: "#geo8ccgmw" }
-      }
+        location: { geoHashtag: "#geo8ccgmw" },
+      },
     ];
 
     const manager = new MockATProtoIssueManager(mockIssues);
@@ -248,20 +274,31 @@ describe("Enhanced Search System", () => {
 
     const results = await manager.searchIssues({
       hashtags: ["#wukkie"],
-      limit: 10
+      limit: 10,
     });
 
     // Should find all issues
     assert.strictEqual(results.length, 3, "Should find all matching issues");
 
     // Should prioritize own issues first
-    assert.strictEqual(results[0].author, "joop.kiefte.eu", "Own issue should be first");
-    assert.strictEqual(results[0].id, "issue1", "Should be the correct own issue");
+    assert.strictEqual(
+      results[0].author,
+      "joop.kiefte.eu",
+      "Own issue should be first",
+    );
+    assert.strictEqual(
+      results[0].id,
+      "issue1",
+      "Should be the correct own issue",
+    );
 
     // Should include network and location issues
-    const authors = results.map(r => r.author);
+    const authors = results.map((r) => r.author);
     assert.ok(authors.includes("other.user"), "Should include network issues");
-    assert.ok(authors.includes("location.user"), "Should include location issues");
+    assert.ok(
+      authors.includes("location.user"),
+      "Should include location issues",
+    );
   });
 
   test("TestEnhancedSearch_TagCloudGeneration", async () => {
@@ -277,14 +314,15 @@ describe("Enhanced Search System", () => {
         author: "user2",
         hashtags: ["#wukkie", "#infrastructure", "#safety"],
         createdAt: "2025-01-14T12:00:00Z",
-      }
+      },
     ];
 
     const manager = new MockATProtoIssueManager(mockIssues);
+    manager.setUserHandle("test.user");
 
     await manager.searchIssues({
       hashtags: ["#wukkie"],
-      limit: 10
+      limit: 10,
     });
 
     const tagCloud = manager.getTagCloud();
@@ -292,17 +330,32 @@ describe("Enhanced Search System", () => {
     assert.ok(tagCloud.length > 0, "Should generate tag cloud");
 
     // Should track hashtag frequencies
-    const wukkieTag = tagCloud.find(t => t.tag === "#wukkie");
-    const infraTag = tagCloud.find(t => t.tag === "#infrastructure");
-    const urgentTag = tagCloud.find(t => t.tag === "#urgent");
+    const wukkieTag = tagCloud.find((t) => t.tag === "#wukkie");
+    const infraTag = tagCloud.find((t) => t.tag === "#infrastructure");
+    const urgentTag = tagCloud.find((t) => t.tag === "#urgent");
 
     assert.ok(wukkieTag, "Should track #wukkie tag");
-    assert.strictEqual(wukkieTag.count, 2, "#wukkie should appear in both issues");
-    assert.strictEqual(infraTag.count, 2, "#infrastructure should appear in both issues");
-    assert.strictEqual(urgentTag.count, 1, "#urgent should appear in one issue");
+    assert.strictEqual(
+      wukkieTag.count,
+      2,
+      "#wukkie should appear in both issues",
+    );
+    assert.strictEqual(
+      infraTag.count,
+      2,
+      "#infrastructure should appear in both issues",
+    );
+    assert.strictEqual(
+      urgentTag.count,
+      1,
+      "#urgent should appear in one issue",
+    );
 
     // Should sort by frequency (descending)
-    assert.ok(tagCloud[0].count >= tagCloud[1].count, "Should sort by frequency");
+    assert.ok(
+      tagCloud[0].count >= tagCloud[1].count,
+      "Should sort by frequency",
+    );
   });
 
   test("TestEnhancedSearch_TagFollowing", () => {
@@ -316,16 +369,28 @@ describe("Enhanced Search System", () => {
     const followedTags = manager.getFollowedTags();
 
     assert.strictEqual(followedTags.length, 3, "Should track followed tags");
-    assert.ok(followedTags.includes("#infrastructure"), "Should include #infrastructure");
-    assert.ok(followedTags.includes("#safety"), "Should include #safety (with # added)");
-    assert.ok(followedTags.includes("#environment"), "Should include #environment");
+    assert.ok(
+      followedTags.includes("#infrastructure"),
+      "Should include #infrastructure",
+    );
+    assert.ok(
+      followedTags.includes("#safety"),
+      "Should include #safety (with # added)",
+    );
+    assert.ok(
+      followedTags.includes("#environment"),
+      "Should include #environment",
+    );
 
     // Test unfollowing
     manager.unfollowTag("#safety");
     const remainingTags = manager.getFollowedTags();
 
     assert.strictEqual(remainingTags.length, 2, "Should remove unfollowed tag");
-    assert.ok(!remainingTags.includes("#safety"), "Should not include unfollowed tag");
+    assert.ok(
+      !remainingTags.includes("#safety"),
+      "Should not include unfollowed tag",
+    );
   });
 
   test("TestEnhancedSearch_LocationAwareSearch", async () => {
@@ -343,30 +408,41 @@ describe("Enhanced Search System", () => {
         hashtags: ["#wukkie"],
         location: { geoHashtag: "#geo8ccgmx" },
         createdAt: "2025-01-14T12:00:00Z",
-      }
+      },
     ];
 
     const manager = new MockATProtoIssueManager(mockIssues);
+    manager.setUserHandle("test.user");
 
     // Without location
     let results = await manager.searchIssues({
       hashtags: ["#wukkie"],
-      limit: 10
+      limit: 10,
     });
-    assert.strictEqual(results.length, 2, "Should find all issues without location filter");
+    assert.strictEqual(
+      results.length,
+      2,
+      "Should find all issues without location filter",
+    );
 
     // With location set
     manager.setCurrentLocation({ geoHashtag: "#geo8ccgmw" });
     results = await manager.searchIssues({
       hashtags: ["#wukkie"],
-      limit: 10
+      limit: 10,
     });
 
     // Should still find all issues (location adds, doesn't filter)
-    assert.strictEqual(results.length, 2, "Should find all issues with location set");
+    assert.strictEqual(
+      results.length,
+      2,
+      "Should find all issues with location set",
+    );
 
     // Location-specific issue should be included
-    const locationIssue = results.find(r => r.location.geoHashtag === "#geo8ccgmw");
+    const locationIssue = results.find(
+      (r) => r.location.geoHashtag === "#geo8ccgmw",
+    );
     assert.ok(locationIssue, "Should include location-specific issue");
   });
 
@@ -383,29 +459,47 @@ describe("Enhanced Search System", () => {
         author: "other.user",
         hashtags: ["#wukkie"],
         createdAt: "2025-01-14T12:00:00Z",
-      }
+      },
     ];
 
     const manager = new MockATProtoIssueManager(mockIssues);
 
-    // Without user handle set
+    // Without user handle set - should return empty results
     let results = await manager.searchIssues({
       hashtags: ["#wukkie"],
-      limit: 10
+      limit: 10,
     });
-    // Results should not be prioritized by ownership
-    assert.strictEqual(results.length, 2, "Should find all issues");
+    // Results should be empty without authentication
+    assert.strictEqual(
+      results.length,
+      0,
+      "Should not find issues without authentication",
+    );
 
     // With user handle set
     manager.setUserHandle("joop.kiefte.eu");
     results = await manager.searchIssues({
       hashtags: ["#wukkie"],
-      limit: 10
+      limit: 10,
     });
 
+    // Should find all issues with authentication
+    assert.strictEqual(
+      results.length,
+      2,
+      "Should find all issues with authentication",
+    );
     // Own issue should be first
-    assert.strictEqual(results[0].author, "joop.kiefte.eu", "Own issue should be prioritized");
-    assert.strictEqual(results[1].author, "other.user", "Network issue should be second");
+    assert.strictEqual(
+      results[0].author,
+      "joop.kiefte.eu",
+      "Own issue should be prioritized",
+    );
+    assert.strictEqual(
+      results[1].author,
+      "other.user",
+      "Network issue should be second",
+    );
   });
 });
 
@@ -420,16 +514,19 @@ describe("Bluesky Post Formatting", () => {
       hashtags: ["#test", "#urgent"],
       location: {
         geoHashtag: "#geo8ccgmw",
-        label: "Test Location"
-      }
+        label: "Test Location",
+      },
     };
 
     const blueskyUri = await manager.postIssueToBluesky(issue, {
       includeLocation: true,
-      linkToIssue: false
+      linkToIssue: false,
     });
 
-    assert.ok(blueskyUri.startsWith("at://"), "Should return valid ATProto URI");
+    assert.ok(
+      blueskyUri.startsWith("at://"),
+      "Should return valid ATProto URI",
+    );
 
     // Test should not throw errors about broken formatting
     // The postIssueToBluesky mock checks for broken hashtags
@@ -445,8 +542,8 @@ describe("Bluesky Post Formatting", () => {
       hashtags: ["#geo8ccgmw", "#emergency"],
       location: {
         geoHashtag: "#geo8ccgmw",
-        label: "Complex Location Name (with parentheses)"
-      }
+        label: "Complex Location Name (with parentheses)",
+      },
     };
 
     // Should not throw error for valid formatting
@@ -456,14 +553,17 @@ describe("Bluesky Post Formatting", () => {
     // Test with potentially problematic hashtags
     const problematicIssue = {
       ...issue,
-      hashtags: ["#valid", "#al so_invalid", "#"] // Invalid hashtags
+      hashtags: ["#valid", "#al so_invalid", "#"], // Invalid hashtags
     };
 
     try {
       await manager.postIssueToBluesky(problematicIssue);
       assert.fail("Should throw error for broken hashtags");
     } catch (error) {
-      assert.ok(error.message.includes("Broken hashtag"), "Should detect broken hashtags");
+      assert.ok(
+        error.message.includes("Broken hashtag"),
+        "Should detect broken hashtags",
+      );
     }
   });
 
@@ -476,8 +576,8 @@ describe("Bluesky Post Formatting", () => {
       category: "infrastructure",
       hashtags: [],
       location: {
-        geoHashtag: "#geo8ccgmw"
-      }
+        geoHashtag: "#geo8ccgmw",
+      },
     };
 
     // Post with linkToIssue disabled (default behavior now)
@@ -510,7 +610,7 @@ describe("Issue Statistics Display", () => {
         author: "joop.kiefte.eu",
         hashtags: ["#wukkie"],
         createdAt: "2025-01-13T12:00:00Z",
-      }
+      },
     ];
 
     const manager = new MockATProtoIssueManager(mockIssues);
@@ -550,7 +650,7 @@ describe("Issue Statistics Display", () => {
         author: "test.user",
         hashtags: ["#wukkie"],
         createdAt: "2025-01-15T12:00:00Z",
-      }
+      },
     ];
 
     const manager = new MockATProtoIssueManager(mockIssues);
@@ -579,7 +679,11 @@ describe("Authentication Integration", () => {
     app.setSession(session);
 
     // Manager should receive the handle
-    assert.strictEqual(manager["userHandle"], "test.user.eu", "Should set user handle in manager");
+    assert.strictEqual(
+      manager["userHandle"],
+      "test.user.eu",
+      "Should set user handle in manager",
+    );
   });
 
   test("TestAuthIntegration_ManagerInitialization", () => {
@@ -592,7 +696,11 @@ describe("Authentication Integration", () => {
     const manager = new MockATProtoIssueManager();
     app.setATProtoManager(manager);
 
-    assert.strictEqual(manager["userHandle"], "early.user", "Should get handle when manager is set after session");
+    assert.strictEqual(
+      manager["userHandle"],
+      "early.user",
+      "Should get handle when manager is set after session",
+    );
   });
 });
 
@@ -605,7 +713,7 @@ describe("Network Search Trigger", () => {
         author: "test.user",
         hashtags: ["#wukkie"],
         createdAt: "2025-01-15T12:00:00Z",
-      }
+      },
     ];
 
     const manager = new MockATProtoIssueManager(mockIssues);
@@ -616,13 +724,22 @@ describe("Network Search Trigger", () => {
     await app.loadNetworkIssues();
 
     const stats = app.getDisplayedStats();
-    assert.strictEqual(stats.total, 1, "Network search should be triggered after authentication");
+    assert.strictEqual(
+      stats.total,
+      1,
+      "Network search should be triggered after authentication",
+    );
   });
 
   test("TestNetworkSearch_RequiresAuthentication", async () => {
     const app = new MockWukkieApp();
     const manager = new MockATProtoIssueManager([
-      { id: "issue1", author: "test.user", hashtags: ["#wukkie"], createdAt: "2025-01-15T12:00:00Z" }
+      {
+        id: "issue1",
+        author: "test.user",
+        hashtags: ["#wukkie"],
+        createdAt: "2025-01-15T12:00:00Z",
+      },
     ]);
 
     app.setATProtoManager(manager);
@@ -633,6 +750,10 @@ describe("Network Search Trigger", () => {
     // Without session, manager won't have user handle so results won't be prioritized
     const tagCloud = manager.getTagCloud();
     // Tag cloud should be empty since search requires proper authentication
-    assert.strictEqual(tagCloud.length, 0, "Should not perform search without proper authentication");
+    assert.strictEqual(
+      tagCloud.length,
+      0,
+      "Should not perform search without proper authentication",
+    );
   });
 });

@@ -191,6 +191,37 @@ export default {
         });
       }
 
+      // Proxy Bluesky API to avoid CORS issues
+      if (pathname === '/api/bluesky-proxy') {
+        const targetUrl = url.searchParams.get('url');
+        if (!targetUrl || !targetUrl.startsWith('https://public.api.bsky.app/')) {
+          return new Response('Invalid target URL', {
+            status: 400,
+            headers: corsHeaders
+          });
+        }
+
+        try {
+          const response = await fetch(targetUrl);
+          const data = await response.text();
+
+          return new Response(data, {
+            status: response.status,
+            headers: {
+              'Content-Type': response.headers.get('Content-Type') || 'application/json',
+              'Cache-Control': 'public, max-age=300',
+              ...corsHeaders,
+            },
+          });
+        } catch (error) {
+          console.error('Bluesky API proxy error:', error);
+          return new Response('Proxy error', {
+            status: 500,
+            headers: corsHeaders
+          });
+        }
+      }
+
       // Serve OAuth client metadata (dynamically generated)
       if (pathname === '/client-metadata.json') {
         const baseUrl = url.origin;
