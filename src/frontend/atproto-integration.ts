@@ -660,11 +660,175 @@ export class ATProtoIssueManager {
   }
 
   /**
-   * Get all issues from storage
+   * Get all issues from storage and network
    */
   private async getAllIssues(): Promise<WukkieIssue[]> {
+    // Get local issues
     const stored = localStorage.getItem("wukkie_issues") || "[]";
-    return JSON.parse(stored);
+    const localIssues = JSON.parse(stored);
+
+    // If we don't have network access, return local only
+    if (!this.agent && !this.xrpc) {
+      return localIssues;
+    }
+
+    try {
+      // Search for Wukkie posts on the network
+      const networkIssues = await this.searchNetworkIssues();
+
+      // Merge local and network, avoiding duplicates
+      const allIssues = [...localIssues];
+      networkIssues.forEach((networkIssue) => {
+        const existsLocally = localIssues.some(
+          (local) =>
+            local.blueskyUri === networkIssue.blueskyUri ||
+            local.id === networkIssue.id,
+        );
+        if (!existsLocally) {
+          allIssues.push(networkIssue);
+        }
+      });
+
+      return allIssues;
+    } catch (error) {
+      console.error("Failed to fetch network issues:", error);
+      return localIssues;
+    }
+  }
+
+  /**
+   * Search for Wukkie issues on the ATProto network
+   */
+  private async searchNetworkIssues(): Promise<WukkieIssue[]> {
+    try {
+      console.log("🔍 Searching for Wukkie issues on ATProto network...");
+
+      // Use app.bsky.feed.searchPosts to find posts with #wukkie hashtag
+      let searchResults: any;
+
+      if (this.agent) {
+        searchResults = await this.agent.api.app.bsky.feed.searchPosts({
+          q: "#wukkie",
+          limit: 20,
+        });
+      } else if (this.xrpc) {
+        searchResults = await this.xrpc.call("app.bsky.feed.searchPosts", {
+          q: "#wukkie",
+          limit: 20,
+        });
+      } else {
+        return [];
+      }
+
+      console.log(
+        `🔍 Found ${searchResults.posts?.length || 0} posts with #wukkie`,
+      );
+
+      // Convert posts to WukkieIssue format
+      const issues: WukkieIssue[] = [];
+
+      for (const post of searchResults.posts || []) {
+        try {
+          const wukkieIssue = this.parsePostAsWukkieIssue(post);
+          if (wukkieIssue) {
+            issues.push(wukkieIssue);
+          }
+        } catch (error) {
+          console.warn("Failed to parse post as Wukkie issue:", error);
+        }
+      }
+
+      console.log(`✅ Converted ${issues.length} posts to Wukkie issues`);
+      return issues;
+    } catch (error) {
+      console.error("Network search failed:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse a Bluesky post as a WukkieIssue
+   */
+  private parsePostAsWukkieIssue(post: any): WukkieIssue | null {
+    try {
+      const record = post.record;
+      const text = record.text || "";
+
+      // Look for Wukkie issue pattern: "🚨 New Issue: TITLE"
+      const titleMatch = text.match(/🚨 New Issue:\s*(.+?)(\n|$)/);
+      if (!titleMatch) {
+        return null; // Not a Wukkie issue post
+      }
+
+      const title = titleMatch[1].trim();
+
+      // Extract description (text between title and location/hashtags)
+      let description = "";
+      const lines = text.split("\n");
+      let foundTitle = false;
+      let foundLocation = false;
+
+      for (const line of lines) {
+        if (line.includes("🚨 New Issue:")) {
+          foundTitle = true;
+          continue;
+        }
+        if (foundTitle && !foundLocation) {
+          if (
+            line.startsWith("📍") ||
+            line.startsWith("#") ||
+            line.includes("View full issue:")
+          ) {
+            foundLocation = true;
+            break;
+          }
+          if (line.trim()) {
+            description += (description ? " " : "") + line.trim();
+          }
+        }
+      }
+
+      // Extract hashtags
+      const hashtags = (text.match(/#\w+/g) || []).filter(
+        (tag) => tag !== "#wukkie",
+      );
+
+      // Extract geo hashtag
+      const geoMatch = text.match(/#geo[a-z0-9]+/);
+      const geoHashtag = geoMatch ? geoMatch[0] : "#geo000000";
+
+      // Determine category from hashtags
+      const categoryTags = [
+        "infrastructure",
+        "environment",
+        "safety",
+        "transport",
+        "community",
+      ];
+      const category =
+        hashtags.find((tag) => categoryTags.includes(tag.slice(1))) || "other";
+
+      return {
+        id: `network_${post.uri.split("/").pop()}`,
+        title: title,
+        description: description || "Network issue - description not available",
+        category: category.replace("#", "") as any,
+        priority: "medium",
+        status: "open",
+        location: {
+          geoHashtag: geoHashtag,
+          label: `Network location ${geoHashtag}`,
+          precision: 5,
+        },
+        hashtags: hashtags,
+        createdAt:
+          post.indexedAt || record.createdAt || new Date().toISOString(),
+        blueskyUri: post.uri,
+      };
+    } catch (error) {
+      console.error("Error parsing post as WukkieIssue:", error);
+      return null;
+    }
   }
 
   /**

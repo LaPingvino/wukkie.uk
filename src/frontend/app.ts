@@ -167,7 +167,7 @@ class WukkieApp {
 
       // Load issues and hide loading immediately
       console.log("🟢 [DEBUG] init(): About to load issues");
-      this.loadIssues();
+      await this.loadIssues();
 
       console.log("🟢 [DEBUG] init(): About to clear timeout and hide loading");
       clearTimeout(emergencyTimeout);
@@ -340,7 +340,7 @@ class WukkieApp {
       // Clear form and reload issues to return to main view
       const form = document.getElementById("issue-form") as HTMLFormElement;
       form?.reset();
-      this.loadIssues();
+      this.loadIssues().catch(console.error);
       // Scroll to top
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
@@ -813,7 +813,7 @@ class WukkieApp {
       }
 
       this.showStatus("Issue reported successfully! 🎉", "success");
-      this.loadIssues(); // Refresh issues list
+      await this.loadIssues(); // Refresh issues list
     } catch (error) {
       console.error("Submit issue error:", error);
       this.showStatus("Failed to submit issue. Please try again.", "error");
@@ -958,20 +958,86 @@ class WukkieApp {
     }
   }
 
-  private loadIssues(): void {
+  private async loadIssues(): Promise<void> {
     try {
-      // For now, load from local storage
-      // In the future, this would query ATProto records
-      this.loadLocalIssues();
+      // Load both local and network issues
+      await this.loadLocalIssues();
+      if (this.atprotoManager && blueskyAuth.isAuthenticated()) {
+        await this.loadNetworkIssues();
+      }
     } catch (error) {
       console.error("Load issues error:", error);
     }
   }
 
-  private loadLocalIssues(): void {
+  private async loadLocalIssues(): Promise<void> {
     const stored = localStorage.getItem("wukkie_issues");
-    const issues: Issue[] = stored ? JSON.parse(stored) : [];
-    this.displayIssues(issues);
+    const localIssues: Issue[] = stored ? JSON.parse(stored) : [];
+    this.displayIssues(localIssues);
+  }
+
+  private async loadNetworkIssues(): Promise<void> {
+    try {
+      console.log("🔍 Loading issues from ATProto network...");
+
+      if (!this.atprotoManager) {
+        console.log("⚠️ ATProto manager not available");
+        return;
+      }
+
+      // Search for Wukkie issues by hashtag
+      const networkIssues = await this.atprotoManager.searchIssues({
+        hashtags: ["#wukkie"],
+        limit: 20,
+      });
+
+      console.log(`✅ Found ${networkIssues.length} network issues`);
+
+      // Convert WukkieIssues to local Issue format and merge with existing
+      const convertedIssues: Issue[] = networkIssues.map((wissue) => ({
+        id: wissue.id,
+        title: wissue.title,
+        description: wissue.description,
+        category: wissue.category,
+        hashtags: wissue.hashtags,
+        status: wissue.status,
+        createdAt: wissue.createdAt,
+        author: "network-user", // We could extract this from the ATProto record
+        blueskyUri: wissue.blueskyUri,
+        blueskyStatus: "posted",
+      }));
+
+      // Get existing local issues
+      const stored = localStorage.getItem("wukkie_issues");
+      const localIssues: Issue[] = stored ? JSON.parse(stored) : [];
+
+      // Merge local and network issues, avoiding duplicates
+      const allIssues = [...localIssues];
+      convertedIssues.forEach((networkIssue) => {
+        // Check if this issue already exists locally (by blueskyUri or id)
+        const existsLocally = localIssues.some(
+          (local) =>
+            local.blueskyUri === networkIssue.blueskyUri ||
+            local.id === networkIssue.id,
+        );
+
+        if (!existsLocally) {
+          allIssues.push(networkIssue);
+        }
+      });
+
+      // Sort by creation date (newest first)
+      allIssues.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      this.displayIssues(allIssues);
+    } catch (error) {
+      console.error("Failed to load network issues:", error);
+      // Fall back to local issues only
+      this.loadLocalIssues();
+    }
   }
 
   private displayIssues(issues: Issue[]): void {
@@ -1265,14 +1331,14 @@ class WukkieApp {
       this.showStatus("Retrying Bluesky post...", "info");
       issue.blueskyStatus = "pending";
       this.updateIssueInStorage(issue);
-      this.loadIssues(); // Refresh display
+      await this.loadIssues(); // Refresh display
 
       await this.createIssueRecord({ ...issue, postToBluesky: true });
     } catch (error) {
       console.error("Retry Bluesky post error:", error);
       issue.blueskyStatus = "failed";
       this.updateIssueInStorage(issue);
-      this.loadIssues();
+      await this.loadIssues();
     }
   }
 
@@ -1305,20 +1371,20 @@ class WukkieApp {
       }
 
       this.updateIssueInStorage(issue);
-      this.loadIssues(); // Refresh display
+      await this.loadIssues(); // Refresh display
 
       await this.createIssueRecord({ ...issue, postToBluesky: true });
 
       // Update UI after successful posting
       issue.blueskyStatus = "posted";
       this.updateIssueInStorage(issue);
-      this.loadIssues(); // Refresh display
+      await this.loadIssues(); // Refresh display
       this.showStatus("Issue posted to Bluesky successfully! 📢", "success");
     } catch (error) {
       console.error("Post to Bluesky error:", error);
       issue.blueskyStatus = "failed";
       this.updateIssueInStorage(issue);
-      this.loadIssues();
+      await this.loadIssues();
       this.showStatus("Failed to post to Bluesky", "error");
     }
   }
@@ -1572,7 +1638,7 @@ class WukkieApp {
 
       if (updated) {
         localStorage.setItem("wukkie_issues", JSON.stringify(issues));
-        this.loadIssues(); // Refresh display
+        await this.loadIssues(); // Refresh display
         console.log(
           "🔄 Updated demo issues to current user:",
           this.session.handle,
