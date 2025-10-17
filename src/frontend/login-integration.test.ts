@@ -303,9 +303,14 @@ describe("Login Integration Tests", () => {
       },
 
       isValidHandle(handle: string) {
-        return (
-          handle.includes(".") && !handle.includes("@") && handle.length > 3
-        );
+        // Match the real implementation from login-modal.ts
+        if (!handle || handle.trim().length === 0) return false;
+        if (!handle.includes(".")) return false;
+        if (handle.startsWith(".") || handle.endsWith(".")) return false;
+        if (handle.includes("..")) return false;
+        if (handle.includes("@") || handle.includes(" ")) return false;
+        if (handle.includes("\n") || handle.includes("\r")) return false;
+        return handle.length >= 4;
       },
 
       async handleLogin() {
@@ -317,9 +322,7 @@ describe("Login Integration Tests", () => {
         }
 
         if (!this.isValidHandle(handle)) {
-          this.showError(
-            "Please enter a valid Bluesky handle (e.g., user.bsky.social)",
-          );
+          this.showError("Please enter a valid Bluesky handle");
           return;
         }
 
@@ -770,10 +773,14 @@ describe("Login Integration Tests", () => {
   test("TestLoginIntegration_EdgeCaseHandles", () => {
     const edgeCaseHandles = [
       "a.b", // minimum valid length
-      "user.very-long-domain-name.with.multiple.subdomains.com", // very long
+      "user.co", // short TLD
+      "test.localhost", // localhost domain
       "123.456.org", // numeric subdomains
       "test-user.my-site.co.uk", // hyphenated names
       "user.localhost", // localhost domain
+      "test.example",
+      "user.bsky.social",
+      "alice.custom.domain",
     ];
 
     for (const handle of edgeCaseHandles) {

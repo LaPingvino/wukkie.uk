@@ -3,39 +3,44 @@ import assert from "node:assert";
 
 // Mock DOM elements and APIs for testing
 const mockDocument = {
-  createElement: (tagName: string) => ({
-    tagName: tagName.toUpperCase(),
-    className: '',
-    style: { cssText: '' },
-    innerHTML: '',
-    textContent: '',
-    value: '',
-    disabled: false,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    click: () => {},
-    focus: () => {},
-    appendChild: () => {},
-    setAttribute: () => {},
-    getAttribute: () => null,
-    classList: {
-      add: () => {},
-      remove: () => {},
-      toggle: () => {},
-      contains: () => false
-    }
-  }),
+  createElement: (tagName: string) => {
+    const attributes: { [key: string]: string } = {};
+    return {
+      tagName: tagName.toUpperCase(),
+      className: "",
+      style: { cssText: "" },
+      innerHTML: "",
+      textContent: "",
+      value: "",
+      disabled: false,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      click: () => {},
+      focus: () => {},
+      appendChild: () => {},
+      setAttribute: (name: string, value: string) => {
+        attributes[name] = value;
+      },
+      getAttribute: (name: string) => attributes[name] || null,
+      hasAttribute: (name: string) => name in attributes,
+      classList: {
+        add: () => {},
+        remove: () => {},
+        toggle: () => {},
+        contains: () => false,
+      },
+    };
+  },
   body: {
     appendChild: () => {},
-    removeChild: () => {}
+    removeChild: () => {},
   },
   getElementById: () => null,
   querySelector: () => null,
-  querySelectorAll: () => []
+  querySelectorAll: () => [],
 };
 
 describe("Login Modal Component", () => {
-
   test("TestLoginModal_Constructor", () => {
     // Mock the LoginModal class structure
     class MockLoginModal {
@@ -69,7 +74,11 @@ describe("Login Modal Component", () => {
     const loginModal = new MockLoginModal();
 
     assert.ok(loginModal, "LoginModal should be created successfully");
-    assert.strictEqual(typeof loginModal, "object", "LoginModal should be an object");
+    assert.strictEqual(
+      typeof loginModal,
+      "object",
+      "LoginModal should be an object",
+    );
   });
 
   test("TestLoginModal_CreateModal_DOMStructure", () => {
@@ -109,36 +118,84 @@ describe("Login Modal Component", () => {
         this.loadingSpinner.className = "loading-spinner";
       }
 
-      getOverlay() { return this.overlay; }
-      getModal() { return this.modal; }
-      getHandleInput() { return this.handleInput; }
-      getLoginButton() { return this.loginButton; }
-      getErrorMessage() { return this.errorMessage; }
-      getLoadingSpinner() { return this.loadingSpinner; }
+      getOverlay() {
+        return this.overlay;
+      }
+      getModal() {
+        return this.modal;
+      }
+      getHandleInput() {
+        return this.handleInput;
+      }
+      getLoginButton() {
+        return this.loginButton;
+      }
+      getErrorMessage() {
+        return this.errorMessage;
+      }
+      getLoadingSpinner() {
+        return this.loadingSpinner;
+      }
     }
 
     const loginModal = new MockLoginModal();
 
     // Test overlay creation
-    assert.strictEqual(loginModal.getOverlay().className, "login-modal-overlay", "overlay should have correct class");
-    assert.strictEqual(loginModal.getOverlay().tagName, "DIV", "overlay should be div element");
+    assert.strictEqual(
+      loginModal.getOverlay().className,
+      "login-modal-overlay",
+      "overlay should have correct class",
+    );
+    assert.strictEqual(
+      loginModal.getOverlay().tagName,
+      "DIV",
+      "overlay should be div element",
+    );
 
     // Test modal creation
-    assert.strictEqual(loginModal.getModal().className, "login-modal", "modal should have correct class");
-    assert.strictEqual(loginModal.getModal().tagName, "DIV", "modal should be div element");
+    assert.strictEqual(
+      loginModal.getModal().className,
+      "login-modal",
+      "modal should have correct class",
+    );
+    assert.strictEqual(
+      loginModal.getModal().tagName,
+      "DIV",
+      "modal should be div element",
+    );
 
     // Test input creation
-    assert.strictEqual(loginModal.getHandleInput().type, "text", "handle input should be text type");
-    assert.strictEqual(loginModal.getHandleInput().placeholder, "Enter your Bluesky handle", "handle input should have placeholder");
+    assert.strictEqual(
+      loginModal.getHandleInput().type,
+      "text",
+      "handle input should be text type",
+    );
+    assert.strictEqual(
+      loginModal.getHandleInput().placeholder,
+      "Enter your Bluesky handle",
+      "handle input should have placeholder",
+    );
 
     // Test button creation
-    assert.strictEqual(loginModal.getLoginButton().textContent, "Login with Bluesky", "login button should have correct text");
+    assert.strictEqual(
+      loginModal.getLoginButton().textContent,
+      "Login with Bluesky",
+      "login button should have correct text",
+    );
 
     // Test error message element
-    assert.strictEqual(loginModal.getErrorMessage().className, "error-message", "error message should have correct class");
+    assert.strictEqual(
+      loginModal.getErrorMessage().className,
+      "error-message",
+      "error message should have correct class",
+    );
 
     // Test loading spinner
-    assert.strictEqual(loginModal.getLoadingSpinner().className, "loading-spinner", "loading spinner should have correct class");
+    assert.strictEqual(
+      loginModal.getLoadingSpinner().className,
+      "loading-spinner",
+      "loading spinner should have correct class",
+    );
   });
 
   test("TestLoginModal_HandleValidation", () => {
@@ -147,7 +204,12 @@ describe("Login Modal Component", () => {
       if (!handle.includes(".")) return false;
       if (handle.startsWith(".") || handle.endsWith(".")) return false;
       if (handle.includes("..")) return false;
-      if (handle.includes("@") || handle.includes(" ")) return false;
+      if (
+        handle.includes("@") ||
+        handle.includes(" ") ||
+        /[\n\r\t]/.test(handle)
+      )
+        return false;
       return handle.length >= 4;
     }
 
@@ -156,7 +218,7 @@ describe("Login Modal Component", () => {
       "test-user.bsky.social",
       "alice.example.com",
       "bob123.custom.domain",
-      "short.co"
+      "short.co",
     ];
 
     const invalidHandles = [
@@ -170,7 +232,7 @@ describe("Login Modal Component", () => {
       "user bsky.social", // contains space
       "a.b", // too short
       "user.bsky.social.", // trailing dot
-      "user\ntest.bsky.social" // newline character
+      "user\ntest.bsky.social", // newline character
     ];
 
     for (const handle of validHandles) {
@@ -178,7 +240,10 @@ describe("Login Modal Component", () => {
     }
 
     for (const handle of invalidHandles) {
-      assert.ok(!validateBlueskyHandle(handle), `"${handle}" should be invalid`);
+      assert.ok(
+        !validateBlueskyHandle(handle),
+        `"${handle}" should be invalid`,
+      );
     }
   });
 
@@ -210,15 +275,27 @@ describe("Login Modal Component", () => {
     const modal = new MockLoginModal();
 
     // Initially hidden
-    assert.strictEqual(modal.isModalVisible(), false, "modal should start hidden");
+    assert.strictEqual(
+      modal.isModalVisible(),
+      false,
+      "modal should start hidden",
+    );
 
     // Show modal
     modal.show();
-    assert.strictEqual(modal.isModalVisible(), true, "modal should be visible after show()");
+    assert.strictEqual(
+      modal.isModalVisible(),
+      true,
+      "modal should be visible after show()",
+    );
 
     // Hide modal
     modal.hide();
-    assert.strictEqual(modal.isModalVisible(), false, "modal should be hidden after hide()");
+    assert.strictEqual(
+      modal.isModalVisible(),
+      false,
+      "modal should be hidden after hide()",
+    );
   });
 
   test("TestLoginModal_LoadingStates", () => {
@@ -239,7 +316,9 @@ describe("Login Modal Component", () => {
         this.loginButton.disabled = loading;
         this.handleInput.disabled = loading;
         this.loadingSpinner.style.display = loading ? "block" : "none";
-        this.loginButton.textContent = loading ? "Logging in..." : "Login with Bluesky";
+        this.loginButton.textContent = loading
+          ? "Logging in..."
+          : "Login with Bluesky";
       }
 
       getIsLoading(): boolean {
@@ -250,15 +329,27 @@ describe("Login Modal Component", () => {
     const modal = new MockLoginModal();
 
     // Initially not loading
-    assert.strictEqual(modal.getIsLoading(), false, "should not be loading initially");
+    assert.strictEqual(
+      modal.getIsLoading(),
+      false,
+      "should not be loading initially",
+    );
 
     // Set loading state
     modal.setLoading(true);
-    assert.strictEqual(modal.getIsLoading(), true, "should be in loading state");
+    assert.strictEqual(
+      modal.getIsLoading(),
+      true,
+      "should be in loading state",
+    );
 
     // Clear loading state
     modal.setLoading(false);
-    assert.strictEqual(modal.getIsLoading(), false, "should not be loading after clearing");
+    assert.strictEqual(
+      modal.getIsLoading(),
+      false,
+      "should not be loading after clearing",
+    );
   });
 
   test("TestLoginModal_ErrorHandling", () => {
@@ -297,19 +388,43 @@ describe("Login Modal Component", () => {
     const modal = new MockLoginModal();
 
     // Initially no error
-    assert.strictEqual(modal.hasErrorMessage(), false, "should have no error initially");
-    assert.strictEqual(modal.getErrorMessage(), "", "error message should be empty initially");
+    assert.strictEqual(
+      modal.hasErrorMessage(),
+      false,
+      "should have no error initially",
+    );
+    assert.strictEqual(
+      modal.getErrorMessage(),
+      "",
+      "error message should be empty initially",
+    );
 
     // Show error
     const errorMsg = "Invalid handle format";
     modal.showError(errorMsg);
-    assert.strictEqual(modal.hasErrorMessage(), true, "should have error after showError");
-    assert.strictEqual(modal.getErrorMessage(), errorMsg, "should display correct error message");
+    assert.strictEqual(
+      modal.hasErrorMessage(),
+      true,
+      "should have error after showError",
+    );
+    assert.strictEqual(
+      modal.getErrorMessage(),
+      errorMsg,
+      "should display correct error message",
+    );
 
     // Hide error
     modal.hideError();
-    assert.strictEqual(modal.hasErrorMessage(), false, "should have no error after hideError");
-    assert.strictEqual(modal.getErrorMessage(), "", "error message should be empty after hideError");
+    assert.strictEqual(
+      modal.hasErrorMessage(),
+      false,
+      "should have no error after hideError",
+    );
+    assert.strictEqual(
+      modal.getErrorMessage(),
+      "",
+      "error message should be empty after hideError",
+    );
   });
 
   test("TestLoginModal_FormSubmission", () => {
@@ -323,10 +438,12 @@ describe("Login Modal Component", () => {
     class MockLoginModal {
       private attempts: LoginAttempt[] = [];
 
-      async attemptLogin(handle: string): Promise<{ success: boolean; error?: string }> {
+      async attemptLogin(
+        handle: string,
+      ): Promise<{ success: boolean; error?: string }> {
         const attempt: LoginAttempt = {
           handle,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
 
         // Simulate validation
@@ -338,7 +455,7 @@ describe("Login Modal Component", () => {
         }
 
         // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Simulate success for valid handles
         attempt.success = true;
@@ -358,17 +475,32 @@ describe("Login Modal Component", () => {
     const modal = new MockLoginModal();
 
     // Test valid login
-    return modal.attemptLogin("test.bsky.social").then(result => {
-      assert.strictEqual(result.success, true, "valid handle should succeed");
-      assert.strictEqual(modal.getAttempts().length, 1, "should record login attempt");
+    return modal
+      .attemptLogin("test.bsky.social")
+      .then((result) => {
+        assert.strictEqual(result.success, true, "valid handle should succeed");
+        assert.strictEqual(
+          modal.getAttempts().length,
+          1,
+          "should record login attempt",
+        );
 
-      // Test invalid login
-      return modal.attemptLogin("invalid");
-    }).then(result => {
-      assert.strictEqual(result.success, false, "invalid handle should fail");
-      assert.strictEqual(result.error, "Invalid handle format", "should provide error message");
-      assert.strictEqual(modal.getAttempts().length, 2, "should record both attempts");
-    });
+        // Test invalid login
+        return modal.attemptLogin("invalid");
+      })
+      .then((result) => {
+        assert.strictEqual(result.success, false, "invalid handle should fail");
+        assert.strictEqual(
+          result.error,
+          "Invalid handle format",
+          "should provide error message",
+        );
+        assert.strictEqual(
+          modal.getAttempts().length,
+          2,
+          "should record both attempts",
+        );
+      });
   });
 
   test("TestLoginModal_EventHandling", () => {
@@ -394,7 +526,7 @@ describe("Login Modal Component", () => {
 
       triggerEvent(event: string, ...args: any[]): void {
         if (this.eventListeners.has(event)) {
-          this.eventListeners.get(event)!.forEach(handler => {
+          this.eventListeners.get(event)!.forEach((handler) => {
             handler(...args);
           });
         }
@@ -409,15 +541,27 @@ describe("Login Modal Component", () => {
     let clickCount = 0;
     let submitCount = 0;
 
-    const clickHandler = () => { clickCount++; };
-    const submitHandler = () => { submitCount++; };
+    const clickHandler = () => {
+      clickCount++;
+    };
+    const submitHandler = () => {
+      submitCount++;
+    };
 
     // Add event listeners
     modal.addEventListener("click", clickHandler);
     modal.addEventListener("submit", submitHandler);
 
-    assert.strictEqual(modal.getEventListenerCount("click"), 1, "should have 1 click listener");
-    assert.strictEqual(modal.getEventListenerCount("submit"), 1, "should have 1 submit listener");
+    assert.strictEqual(
+      modal.getEventListenerCount("click"),
+      1,
+      "should have 1 click listener",
+    );
+    assert.strictEqual(
+      modal.getEventListenerCount("submit"),
+      1,
+      "should have 1 submit listener",
+    );
 
     // Trigger events
     modal.triggerEvent("click");
@@ -428,11 +572,19 @@ describe("Login Modal Component", () => {
 
     // Remove event listener
     modal.removeEventListener("click", clickHandler);
-    assert.strictEqual(modal.getEventListenerCount("click"), 0, "should have 0 click listeners after removal");
+    assert.strictEqual(
+      modal.getEventListenerCount("click"),
+      0,
+      "should have 0 click listeners after removal",
+    );
 
     // Trigger click again - should not increment
     modal.triggerEvent("click");
-    assert.strictEqual(clickCount, 1, "click handler should not be called after removal");
+    assert.strictEqual(
+      clickCount,
+      1,
+      "click handler should not be called after removal",
+    );
   });
 
   test("TestLoginModal_KeyboardNavigation", () => {
@@ -453,7 +605,8 @@ describe("Login Modal Component", () => {
           const nextIndex = (currentIndex + 1) % this.elements.length;
           this.focusedElement = this.elements[nextIndex];
         } else if (key === "Shift+Tab") {
-          const prevIndex = currentIndex > 0 ? currentIndex - 1 : this.elements.length - 1;
+          const prevIndex =
+            currentIndex > 0 ? currentIndex - 1 : this.elements.length - 1;
           this.focusedElement = this.elements[prevIndex];
         } else if (key === "Enter") {
           if (this.focusedElement === "loginButton") {
@@ -475,25 +628,49 @@ describe("Login Modal Component", () => {
 
     // Test Tab navigation
     modal.focus("handleInput");
-    assert.strictEqual(modal.getFocusedElement(), "handleInput", "should focus on handle input");
+    assert.strictEqual(
+      modal.getFocusedElement(),
+      "handleInput",
+      "should focus on handle input",
+    );
 
     modal.handleKeyDown("Tab");
-    assert.strictEqual(modal.getFocusedElement(), "loginButton", "Tab should move to login button");
+    assert.strictEqual(
+      modal.getFocusedElement(),
+      "loginButton",
+      "Tab should move to login button",
+    );
 
     modal.handleKeyDown("Tab");
-    assert.strictEqual(modal.getFocusedElement(), "cancelButton", "Tab should move to cancel button");
+    assert.strictEqual(
+      modal.getFocusedElement(),
+      "cancelButton",
+      "Tab should move to cancel button",
+    );
 
     modal.handleKeyDown("Tab");
-    assert.strictEqual(modal.getFocusedElement(), "handleInput", "Tab should wrap to handle input");
+    assert.strictEqual(
+      modal.getFocusedElement(),
+      "handleInput",
+      "Tab should wrap to handle input",
+    );
 
     // Test Shift+Tab (reverse)
     modal.handleKeyDown("Shift+Tab");
-    assert.strictEqual(modal.getFocusedElement(), "cancelButton", "Shift+Tab should move backwards");
+    assert.strictEqual(
+      modal.getFocusedElement(),
+      "cancelButton",
+      "Shift+Tab should move backwards",
+    );
 
     // Test Enter on login button
     modal.focus("loginButton");
     const enterResult = modal.handleKeyDown("Enter");
-    assert.strictEqual(enterResult, "submit", "Enter on login button should submit");
+    assert.strictEqual(
+      enterResult,
+      "submit",
+      "Enter on login button should submit",
+    );
 
     // Test Escape
     const escapeResult = modal.handleKeyDown("Escape");
@@ -546,21 +723,57 @@ describe("Login Modal Component", () => {
     const modal = new MockLoginModal();
 
     // Test modal accessibility
-    assert.strictEqual(modal.getAttribute("modal", "role"), "dialog", "modal should have dialog role");
-    assert.strictEqual(modal.getAttribute("modal", "aria-modal"), "true", "modal should have aria-modal");
-    assert.strictEqual(modal.getAttribute("modal", "aria-labelledby"), "modal-title", "modal should have aria-labelledby");
+    assert.strictEqual(
+      modal.getAttribute("modal", "role"),
+      "dialog",
+      "modal should have dialog role",
+    );
+    assert.strictEqual(
+      modal.getAttribute("modal", "aria-modal"),
+      "true",
+      "modal should have aria-modal",
+    );
+    assert.strictEqual(
+      modal.getAttribute("modal", "aria-labelledby"),
+      "modal-title",
+      "modal should have aria-labelledby",
+    );
 
     // Test input accessibility
-    assert.strictEqual(modal.getAttribute("handleInput", "aria-label"), "Bluesky handle", "input should have aria-label");
-    assert.strictEqual(modal.getAttribute("handleInput", "aria-required"), "true", "input should be required");
-    assert.strictEqual(modal.getAttribute("handleInput", "aria-describedby"), "handle-help", "input should have description");
+    assert.strictEqual(
+      modal.getAttribute("handleInput", "aria-label"),
+      "Bluesky handle",
+      "input should have aria-label",
+    );
+    assert.strictEqual(
+      modal.getAttribute("handleInput", "aria-required"),
+      "true",
+      "input should be required",
+    );
+    assert.strictEqual(
+      modal.getAttribute("handleInput", "aria-describedby"),
+      "handle-help",
+      "input should have description",
+    );
 
     // Test button accessibility
-    assert.strictEqual(modal.getAttribute("loginButton", "type"), "submit", "button should be submit type");
+    assert.strictEqual(
+      modal.getAttribute("loginButton", "type"),
+      "submit",
+      "button should be submit type",
+    );
 
     // Test error message accessibility
-    assert.strictEqual(modal.getAttribute("errorMessage", "role"), "alert", "error should have alert role");
-    assert.strictEqual(modal.getAttribute("errorMessage", "aria-live"), "polite", "error should have aria-live");
+    assert.strictEqual(
+      modal.getAttribute("errorMessage", "role"),
+      "alert",
+      "error should have alert role",
+    );
+    assert.strictEqual(
+      modal.getAttribute("errorMessage", "aria-live"),
+      "polite",
+      "error should have aria-live",
+    );
   });
 
   test("TestLoginModal_EdgeCases", () => {
@@ -617,36 +830,83 @@ describe("Login Modal Component", () => {
 
     // Test empty input
     const emptyResult = modal.processHandle("");
-    assert.strictEqual(emptyResult.processed, "", "empty input should remain empty");
-    assert.ok(emptyResult.warnings.includes("Handle is required"), "should warn about required field");
+    assert.strictEqual(
+      emptyResult.processed,
+      "",
+      "empty input should remain empty",
+    );
+    assert.ok(
+      emptyResult.warnings.includes("Handle is required"),
+      "should warn about required field",
+    );
 
     // Test whitespace handling
     const whitespaceResult = modal.processHandle("  user.bsky.social  ");
-    assert.strictEqual(whitespaceResult.processed, "user.bsky.social", "should trim whitespace");
-    assert.ok(whitespaceResult.warnings.includes("Whitespace trimmed"), "should warn about whitespace");
+    assert.strictEqual(
+      whitespaceResult.processed,
+      "user.bsky.social",
+      "should trim whitespace",
+    );
+    assert.ok(
+      whitespaceResult.warnings.includes("Whitespace trimmed"),
+      "should warn about whitespace",
+    );
 
     // Test case conversion
     const caseResult = modal.processHandle("USER.BSKY.SOCIAL");
-    assert.strictEqual(caseResult.processed, "user.bsky.social", "should convert to lowercase");
-    assert.ok(caseResult.warnings.includes("Converted to lowercase"), "should warn about case conversion");
+    assert.strictEqual(
+      caseResult.processed,
+      "user.bsky.social",
+      "should convert to lowercase",
+    );
+    assert.ok(
+      caseResult.warnings.includes("Converted to lowercase"),
+      "should warn about case conversion",
+    );
 
     // Test @ symbol removal
     const atResult = modal.processHandle("@user.bsky.social");
-    assert.strictEqual(atResult.processed, "user.bsky.social", "should remove @ symbol");
-    assert.ok(atResult.warnings.includes("Removed @ symbol"), "should warn about @ removal");
+    assert.strictEqual(
+      atResult.processed,
+      "user.bsky.social",
+      "should remove @ symbol",
+    );
+    assert.ok(
+      atResult.warnings.includes("Removed @ symbol"),
+      "should warn about @ removal",
+    );
 
     // Test protocol removal
     const protocolResult = modal.processHandle("https://user.bsky.social");
-    assert.strictEqual(protocolResult.processed, "user.bsky.social", "should remove protocol");
-    assert.ok(protocolResult.warnings.includes("Removed protocol"), "should warn about protocol removal");
+    assert.strictEqual(
+      protocolResult.processed,
+      "user.bsky.social",
+      "should remove protocol",
+    );
+    assert.ok(
+      protocolResult.warnings.includes("Removed protocol"),
+      "should warn about protocol removal",
+    );
 
     // Test multiple issues at once
-    const multipleResult = modal.processHandle("  @HTTPS://USER.BSKY.SOCIAL/  ");
-    assert.strictEqual(multipleResult.processed, "user.bsky.social", "should handle multiple issues");
-    assert.ok(multipleResult.warnings.length > 1, "should have multiple warnings");
+    const multipleResult = modal.processHandle(
+      "  @HTTPS://USER.BSKY.SOCIAL/  ",
+    );
+    assert.strictEqual(
+      multipleResult.processed,
+      "user.bsky.social",
+      "should handle multiple issues",
+    );
+    assert.ok(
+      multipleResult.warnings.length > 1,
+      "should have multiple warnings",
+    );
 
     // Verify attempts are recorded
-    assert.ok(modal.getAttempts().length >= 6, "should record all processing attempts");
+    assert.ok(
+      modal.getAttempts().length >= 6,
+      "should record all processing attempts",
+    );
   });
 
   test("TestLoginModal_SecurityConsiderations", () => {
@@ -684,7 +944,7 @@ describe("Login Modal Component", () => {
       private attempts: number[] = [];
 
       private getRecentAttempts(since: number): number {
-        return this.attempts.filter(time => time > since).length;
+        return this.attempts.filter((time) => time > since).length;
       }
 
       recordAttempt(): void {
@@ -700,7 +960,10 @@ describe("Login Modal Component", () => {
     assert.ok(!sanitized.includes("<"), "should remove < characters");
     assert.ok(!sanitized.includes(">"), "should remove > characters");
     assert.ok(!sanitized.includes("'"), "should remove quote characters");
-    assert.ok(sanitized.includes("user.bsky.social"), "should preserve valid parts");
+    assert.ok(
+      sanitized.includes("user.bsky.social"),
+      "should preserve valid parts",
+    );
 
     // Test length limiting
     const longHandle = "a".repeat(300) + ".bsky.social";
@@ -713,12 +976,22 @@ describe("Login Modal Component", () => {
     const invalidTokenSpecial = "token-with-special-chars!";
 
     assert.ok(modal.validateCSRF(validToken), "valid token should pass");
-    assert.ok(!modal.validateCSRF(invalidTokenShort), "short token should fail");
-    assert.ok(!modal.validateCSRF(invalidTokenSpecial), "token with special chars should fail");
+    assert.ok(
+      !modal.validateCSRF(invalidTokenShort),
+      "short token should fail",
+    );
+    assert.ok(
+      !modal.validateCSRF(invalidTokenSpecial),
+      "token with special chars should fail",
+    );
 
     // Test rate limiting
     const firstAttempt = modal.rateLimit();
-    assert.strictEqual(firstAttempt.allowed, true, "first attempt should be allowed");
+    assert.strictEqual(
+      firstAttempt.allowed,
+      true,
+      "first attempt should be allowed",
+    );
 
     // Simulate multiple attempts
     for (let i = 0; i < 3; i++) {
@@ -726,7 +999,11 @@ describe("Login Modal Component", () => {
     }
 
     const rateLimited = modal.rateLimit();
-    assert.strictEqual(rateLimited.allowed, false, "should be rate limited after 3 attempts");
+    assert.strictEqual(
+      rateLimited.allowed,
+      false,
+      "should be rate limited after 3 attempts",
+    );
     assert.strictEqual(rateLimited.retryAfter, 60, "should specify retry time");
   });
 
@@ -739,7 +1016,8 @@ describe("Login Modal Component", () => {
     }
 
     class MockLoginModal {
-      private authCallback: ((handle: string) => Promise<AuthResult>) | null = null;
+      private authCallback: ((handle: string) => Promise<AuthResult>) | null =
+        null;
 
       setAuthCallback(callback: (handle: string) => Promise<AuthResult>): void {
         this.authCallback = callback;
@@ -753,7 +1031,10 @@ describe("Login Modal Component", () => {
         try {
           return await this.authCallback(handle);
         } catch (error) {
-          return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error",
+          };
         }
       }
 
@@ -780,16 +1061,35 @@ describe("Login Modal Component", () => {
     modal.setAuthCallback(mockAuthCallback);
 
     // Test successful login
-    return modal.performLogin("valid.bsky.social").then(result => {
-      assert.strictEqual(result.success, true, "should succeed with valid handle");
-      assert.ok(result.session, "should return session data");
-      assert.strictEqual(result.session.handle, "valid.bsky.social", "should have correct handle");
+    return modal
+      .performLogin("valid.bsky.social")
+      .then((result) => {
+        assert.strictEqual(
+          result.success,
+          true,
+          "should succeed with valid handle",
+        );
+        assert.ok(result.session, "should return session data");
+        assert.strictEqual(
+          result.session.handle,
+          "valid.bsky.social",
+          "should have correct handle",
+        );
 
-      // Test failed login
-      return modal.performLogin("invalid.handle");
-    }).then(result => {
-      assert.strictEqual(result.success, false, "should fail with invalid handle");
-      assert.strictEqual(result.error, "Invalid credentials", "should provide error message");
-    });
+        // Test failed login
+        return modal.performLogin("invalid.handle");
+      })
+      .then((result) => {
+        assert.strictEqual(
+          result.success,
+          false,
+          "should fail with invalid handle",
+        );
+        assert.strictEqual(
+          result.error,
+          "Invalid credentials",
+          "should provide error message",
+        );
+      });
   });
 });

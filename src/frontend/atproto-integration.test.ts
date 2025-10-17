@@ -387,7 +387,7 @@ describe("ATProto Integration", () => {
   });
 
   test("TestLexicon_GeoHashtagPattern", () => {
-    const geoHashtagPattern = /^#geo[23456789cfghjmpqrvwxCFGHJMPQRVWX]{6}$/;
+    const geoHashtagPattern = /^#geo[23456789cfghjmpqrvwxCFGHJMPQRVWX]{6}$/i;
 
     const validGeoHashtags = [
       "#geo9c3xgp",

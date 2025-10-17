@@ -540,12 +540,16 @@ export class ATProtoIssueManager {
         } else if (this.xrpc) {
           // For XRPC, we need to upload blobs differently
           const formData = new FormData();
-          formData.append('blob', image);
+          formData.append("blob", image);
 
-          response = await this.xrpc.call("com.atproto.repo.uploadBlob", {}, {
-            data: formData,
-            encoding: "image/jpeg",
-          });
+          response = await this.xrpc.call(
+            "com.atproto.repo.uploadBlob",
+            {},
+            {
+              data: formData,
+              encoding: "image/jpeg",
+            },
+          );
         }
 
         if (response) {
@@ -639,17 +643,6 @@ export function formatIssueForBluesky(
   text += `\n\nFull details: ${baseUrl}/issue/${issue.id}`;
 
   return text;
-}
-
-  /**
-   * Get current user's DID for XRPC operations
-   */
-  private getCurrentUserDid(): string {
-    if (!this.userDid) {
-      throw new Error("User DID not available");
-    }
-    return this.userDid;
-  }
 }
 
 // Export for use in main application
