@@ -1253,12 +1253,34 @@ class WukkieApp {
           <div class="issue-actions">
             <button class="action-btn" onclick="wukkie.likeIssue('${issue.id}')">👍 <span id="likes-${issue.id}">${issue.likes || 0}</span></button>
             <button class="action-btn" onclick="wukkie.commentOnIssue('${issue.id}')">💬 <span id="comments-${issue.id}">${issue.comments ? issue.comments.length : 0}</span></button>
+            ${issue.comments && issue.comments.length > 0 ? `<button class="action-btn" onclick="wukkie.toggleComments('${issue.id}')">👁️ Show Comments</button>` : ""}
             ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length > 0 ? `<button class="action-btn" onclick="wukkie.showOnMap('${issue.id}')">📍 ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length > 1 ? `View ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length} Locations` : "View Location"}</button>` : ""}
             <button class="action-btn edit-btn" onclick="wukkie.editIssue('${issue.id}')">✏️ Edit</button>
             ${retryButtons}
           </div>
-        </div>
-      `;
+          ${
+            issue.comments && issue.comments.length > 0
+              ? `
+          <div id="comments-${issue.id}" class="comments-section" style="display: none;">
+            <h4>Comments (${issue.comments.length})</h4>
+            ${issue.comments
+              .map(
+                (comment) => `
+              <div class="comment">
+                <div class="comment-header">
+                  <span class="comment-author">@${comment.author}</span>
+                  <span class="comment-time">${this.formatTimeAgo(new Date(comment.createdAt))}</span>
+                </div>
+                <div class="comment-text">${comment.text}</div>
+              </div>
+            `,
+              )
+              .join("")}
+          </div>
+          `
+              : ""
+          }
+        </div>`;
       })
       .join("");
   }
@@ -1425,6 +1447,25 @@ class WukkieApp {
       }
 
       this.showStatus("Issue liked! 👍", "success");
+    }
+  }
+
+  public toggleComments(issueId: string): void {
+    const commentsSection = document.getElementById(
+      `comments-${issueId}`,
+    ) as HTMLElement;
+    const toggleButton = document.querySelector(
+      `button[onclick="wukkie.toggleComments('${issueId}')"]`,
+    ) as HTMLElement;
+
+    if (commentsSection) {
+      if (commentsSection.style.display === "none") {
+        commentsSection.style.display = "block";
+        if (toggleButton) toggleButton.textContent = "👁️ Hide Comments";
+      } else {
+        commentsSection.style.display = "none";
+        if (toggleButton) toggleButton.textContent = "👁️ Show Comments";
+      }
     }
   }
 
