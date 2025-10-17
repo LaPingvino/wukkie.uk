@@ -315,6 +315,12 @@ class WukkieApp {
       if (this.atprotoManager !== null || authState.session.isDemo) {
         this.showStatus(`Welcome back, @${this.session.handle}! 🎉`, "success");
       }
+
+      // Reload issues to trigger network search with authentication
+      console.log(
+        "🔄 Reloading issues after authentication to trigger network search...",
+      );
+      await this.loadIssues();
     } else {
       this.session = null;
       this.atprotoManager = null;
@@ -965,11 +971,20 @@ class WukkieApp {
 
   private async loadIssues(): Promise<void> {
     try {
+      console.log("🔍 loadIssues() called");
       // Load both local and network issues
       await this.loadLocalIssues();
       if (this.atprotoManager && blueskyAuth.isAuthenticated()) {
+        console.log(
+          "✅ Conditions met for network search - calling loadNetworkIssues()",
+        );
         await this.loadNetworkIssues();
         await this.loadNetworkComments();
+      } else {
+        console.log("⚠️ Network search skipped:", {
+          hasAtprotoManager: !!this.atprotoManager,
+          isAuthenticated: blueskyAuth.isAuthenticated(),
+        });
       }
     } catch (error) {
       console.error("Load issues error:", error);
