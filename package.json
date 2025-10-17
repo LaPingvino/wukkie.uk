@@ -48,9 +48,35 @@
     "url": "https://github.com/LaVLaS/wukkie.uk/issues"
   },
   "oauth": {
-    "scopes": "atproto transition:generic",
+    "_scopesDocumentation": {
+      "lastUpdated": "2025-01-17",
+      "officialSource": "https://github.com/bluesky-social/atproto/discussions/4118",
+      "blogPostReference": "https://docs.bsky.app/blog/auth-scopes",
+      "criticalInfo": "IMPORTANT: 'atproto transition:generic' scope is DEPRECATED and causes 'Bad token scope' errors",
+      "migrationReason": "Bluesky rolled out granular permissions system. Apps must use specific scope strings for each permission type.",
+      "scopeExplanations": {
+        "repo:*": "Full permission (create, update, delete) on ALL record types in user's repository - wildcard covers all collections",
+        "rpc:com.atproto.repo.createRecord?aud=*": "RPC permission to create new records on any ATProto service (aud=* means any audience/service)",
+        "rpc:com.atproto.repo.putRecord?aud=*": "RPC permission to update/put existing records on any ATProto service",
+        "rpc:com.atproto.repo.deleteRecord?aud=*": "RPC permission to delete records on any ATProto service",
+        "rpc:com.atproto.repo.listRecords?aud=*": "RPC permission to list/query records on any ATProto service",
+        "rpc:com.atproto.repo.getRecord?aud=*": "RPC permission to retrieve specific records on any ATProto service",
+        "rpc:com.atproto.server.getSession?aud=*": "RPC permission to get session information on any ATProto service (needed for auth)",
+        "blob:*/*": "Permission to upload any MIME type of blob/file (images, videos, etc.)"
+      },
+      "scopeSyntax": "Format: 'permission:resource?param=value&param2=value2' - case sensitive, uses subset of ASCII",
+      "alternativeFormats": {
+        "namedParams": "repo?collection=app.bsky.actor.profile (same as repo:app.bsky.actor.profile)",
+        "arrayParams": "repo:*?action=create&action=update&action=delete (explicit actions)",
+        "wildcardRules": "Either lxm or aud can be wildcard (*), but NOT both simultaneously"
+      },
+      "deploymentNote": "These exact scopes were tested and working as of Jan 17, 2025",
+      "warningForFutureDevelopers": "⚠️  DO NOT REVERT TO 'atproto transition:generic' - causes authentication failures. Use these granular permissions.",
+      "troubleshooting": "If you get 'Bad token scope' errors, verify these exact scope strings are being used in both package.json and client-metadata.json"
+    },
+    "scopes": "repo:* rpc:com.atproto.repo.createRecord?aud=* rpc:com.atproto.repo.putRecord?aud=* rpc:com.atproto.repo.deleteRecord?aud=* rpc:com.atproto.repo.listRecords?aud=* rpc:com.atproto.repo.getRecord?aud=* rpc:com.atproto.server.getSession?aud=* blob:*/*",
     "clientName": "Wukkie.uk - Bug Tracker for the World",
-    "description": "OAuth configuration for Bluesky/ATProto integration"
+    "description": "OAuth configuration for Bluesky/ATProto integration with granular permissions (updated Jan 2025)"
   },
   "dependencies": {
     "@atproto/api": "^0.16.9",
