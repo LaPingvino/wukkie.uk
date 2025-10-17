@@ -129,6 +129,10 @@ export class ATProtoIssueManager {
   private xrpc: XrpcClient | null;
   private readonly baseUrl: string;
   private userDid: string | null;
+  private userHandle: string | null;
+  private currentLocation: PrivacyLocation | null;
+  private followedTags: Set<string>;
+  private tagCloud: Map<string, number>;
 
   constructor(
     agent: BskyAgent | null = null,
@@ -138,6 +142,10 @@ export class ATProtoIssueManager {
   ) {
     this.agent = agent;
     this.userDid = userDid || null;
+    this.userHandle = null;
+    this.currentLocation = null;
+    this.followedTags = new Set<string>();
+    this.tagCloud = new Map<string, number>();
 
     // Handle the overloaded constructor parameters
     if (typeof xrpcOrBaseUrl === "string") {
@@ -221,18 +229,18 @@ export class ATProtoIssueManager {
       throw new Error("Not authenticated with Bluesky");
     }
 
-    // Build the post text
-    let postText = `🚨 New Issue: ${issue.title}\n\n${issue.description}`;
+    // Build the post text with simple, clean formatting
+    let postText = `🚨 ${issue.title}\n\n${issue.description}`;
 
     // Add location if requested
     if (options.includeLocation !== false) {
       const locationText = issue.location.label
-        ? `📍 ${issue.location.geoHashtag} (${issue.location.label})`
-        : `📍 ${issue.location.geoHashtag}`;
-      postText += `\n\n${locationText}`;
+        ? `\n\n📍 ${issue.location.geoHashtag} (${issue.location.label})`
+        : `\n\n📍 ${issue.location.geoHashtag}`;
+      postText += locationText;
     }
 
-    // Add hashtags
+    // Add hashtags with proper spacing
     const allHashtags = [
       "#wukkie",
       `#${issue.category}`,
@@ -242,60 +250,23 @@ export class ATProtoIssueManager {
     ];
 
     const uniqueHashtags = [...new Set(allHashtags)];
-    postText += "\n\n" + uniqueHashtags.join(" ");
-
-    // Add link to full issue if requested
-    if (options.linkToIssue !== false) {
-      postText += `\n\nView full issue: ${this.baseUrl}/issue/${issue.id}`;
+    if (uniqueHashtags.length > 0) {
+      postText += `\n\n${uniqueHashtags.join(" ")}`;
     }
 
-    // Create rich text with proper facets for hashtags and links
+    // Create rich text - let ATProto handle facet detection automatically
     const rt = new RichText({ text: postText });
     console.log(
       "🔍 [DEBUG] postIssueToBluesky: RichText created, detecting facets...",
     );
+
     if (this.agent) {
       await rt.detectFacets(this.agent);
       console.log("🔍 [DEBUG] postIssueToBluesky: Facets detected with agent");
     } else {
-      // Manual facet detection for XRPC mode
+      // For XRPC mode, use simple facet detection or skip facets entirely
       console.log(
-        "🔍 [DEBUG] postIssueToBluesky: Using manual facet detection for XRPC mode",
-      );
-
-      // Detect URLs
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      let match;
-      while ((match = urlRegex.exec(postText)) !== null) {
-        const url = match[1];
-        const start = match.index;
-        const end = start + url.length;
-
-        rt.facets = rt.facets || [];
-        rt.facets.push({
-          index: { byteStart: start, byteEnd: end },
-          features: [{ $type: "app.bsky.richtext.facet#link", uri: url }],
-        });
-      }
-
-      // Detect hashtags
-      const hashtagRegex = /(#[a-zA-Z0-9_]+)/g;
-      while ((match = hashtagRegex.exec(postText)) !== null) {
-        const hashtag = match[1];
-        const start = match.index;
-        const end = start + hashtag.length;
-
-        rt.facets = rt.facets || [];
-        rt.facets.push({
-          index: { byteStart: start, byteEnd: end },
-          features: [
-            { $type: "app.bsky.richtext.facet#tag", tag: hashtag.slice(1) },
-          ],
-        });
-      }
-
-      console.log(
-        `🔍 [DEBUG] postIssueToBluesky: Manual facets detected: ${rt.facets?.length || 0}`,
+        "🔍 [DEBUG] postIssueToBluesky: XRPC mode - skipping complex facet detection",
       );
     }
 
@@ -731,50 +702,270 @@ export class ATProtoIssueManager {
    * Search for Wukkie issues on the ATProto network
    */
   private async searchNetworkIssues(): Promise<WukkieIssue[]> {
+    // Search for issues on the network using multiple strategies
     try {
       console.log("🔍 Searching for Wukkie issues on ATProto network...");
 
-      // Use app.bsky.feed.searchPosts to find posts with #wukkie hashtag
+      const allIssues: WukkieIssue[] = [];
+
+      // Strategy 1: Search own posts first (these will always be visible)
+      const ownIssues = await this.searchOwnPosts();
+      allIssues.push(...ownIssues);
+      console.log(`✅ Found ${ownIssues.length} own issues`);
+
+      // Strategy 2: General hashtag search (limited by network scope)
+      const networkIssues = await this.searchByHashtag("#wukkie", 20);
+
+      // Filter out duplicates (own posts already found)
+      const newNetworkIssues = networkIssues.filter(
+        (networkIssue) =>
+          !allIssues.some(
+            (ownIssue) =>
+              ownIssue.blueskyUri === networkIssue.blueskyUri ||
+              ownIssue.id === networkIssue.id,
+          ),
+      );
+      allIssues.push(...newNetworkIssues);
+      console.log(
+        `✅ Found ${newNetworkIssues.length} additional network issues`,
+      );
+
+      // Strategy 3: Search by location tags if we have current location
+      if (this.currentLocation) {
+        const locationIssues = await this.searchByLocation();
+        const newLocationIssues = locationIssues.filter(
+          (locationIssue) =>
+            !allIssues.some(
+              (existing) =>
+                existing.blueskyUri === locationIssue.blueskyUri ||
+                existing.id === locationIssue.id,
+            ),
+        );
+        allIssues.push(...newLocationIssues);
+        console.log(
+          `✅ Found ${newLocationIssues.length} location-based issues`,
+        );
+      }
+
+      // Sort: own issues first, then by recency
+      const currentUserHandle = this.agent?.session?.handle || this.userHandle;
+      allIssues.sort((a, b) => {
+        // Prioritize own posts
+        const aIsOwn = a.author === currentUserHandle;
+        const bIsOwn = b.author === currentUserHandle;
+
+        if (aIsOwn && !bIsOwn) return -1;
+        if (!aIsOwn && bIsOwn) return 1;
+
+        // Then sort by creation date (newest first)
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
+
+      console.log(`✅ Total unique issues found: ${allIssues.length}`);
+      return allIssues;
+    } catch (error) {
+      console.error("Network search failed:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Search for the current user's own posts with #wukkie
+   */
+  private async searchOwnPosts(): Promise<WukkieIssue[]> {
+    try {
+      const currentUser = this.agent?.session?.handle || this.userHandle;
+      if (!currentUser) return [];
+
       let searchResults: any;
 
       if (this.agent) {
+        // Search for own posts specifically
         searchResults = await this.agent.api.app.bsky.feed.searchPosts({
-          q: "#wukkie",
-          limit: 20,
+          q: `#wukkie from:${currentUser}`,
+          limit: 50,
+          sort: "latest",
         });
       } else if (this.xrpc) {
         searchResults = await this.xrpc.call("app.bsky.feed.searchPosts", {
-          q: "#wukkie",
-          limit: 20,
+          q: `#wukkie from:${currentUser}`,
+          limit: 50,
+          sort: "latest",
         });
       } else {
         return [];
       }
 
-      console.log(
-        `🔍 Found ${searchResults.posts?.length || 0} posts with #wukkie`,
-      );
-
-      // Convert posts to WukkieIssue format
-      const issues: WukkieIssue[] = [];
-
-      for (const post of searchResults.posts || []) {
-        try {
-          const wukkieIssue = this.parsePostAsWukkieIssue(post);
-          if (wukkieIssue) {
-            issues.push(wukkieIssue);
-          }
-        } catch (error) {
-          console.warn("Failed to parse post as Wukkie issue:", error);
-        }
-      }
-
-      console.log(`✅ Converted ${issues.length} posts to Wukkie issues`);
-      return issues;
+      return this.parseSearchResults(searchResults);
     } catch (error) {
-      console.error("Network search failed:", error);
+      console.warn("Failed to search own posts:", error);
       return [];
     }
+  }
+
+  /**
+   * Search by hashtag with enhanced query strategies
+   */
+  private async searchByHashtag(
+    hashtag: string,
+    limit: number = 20,
+  ): Promise<WukkieIssue[]> {
+    try {
+      let searchResults: any;
+
+      if (this.agent) {
+        searchResults = await this.agent.api.app.bsky.feed.searchPosts({
+          q: hashtag,
+          limit,
+          sort: "latest",
+        });
+      } else if (this.xrpc) {
+        searchResults = await this.xrpc.call("app.bsky.feed.searchPosts", {
+          q: hashtag,
+          limit,
+          sort: "latest",
+        });
+      } else {
+        return [];
+      }
+
+      return this.parseSearchResults(searchResults);
+    } catch (error) {
+      console.warn(`Failed to search by hashtag ${hashtag}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Search for issues near current location using geo hashtags
+   */
+  private async searchByLocation(): Promise<WukkieIssue[]> {
+    try {
+      if (!this.currentLocation) return [];
+
+      // Generate location-based search queries
+      const locationQueries = [
+        this.currentLocation.geoHashtag, // Exact location
+        // TODO: Add nearby location hashtags based on geo proximity
+      ];
+
+      const allLocationIssues: WukkieIssue[] = [];
+
+      for (const locationQuery of locationQueries) {
+        const locationIssues = await this.searchByHashtag(
+          `#wukkie ${locationQuery}`,
+          10,
+        );
+
+        // Filter out duplicates
+        const newIssues = locationIssues.filter(
+          (locationIssue) =>
+            !allLocationIssues.some(
+              (existing) =>
+                existing.blueskyUri === locationIssue.blueskyUri ||
+                existing.id === locationIssue.id,
+            ),
+        );
+
+        allLocationIssues.push(...newIssues);
+      }
+
+      return allLocationIssues;
+    } catch (error) {
+      console.warn("Failed to search by location:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Parse search results into WukkieIssue format and update tag cloud
+   */
+  private parseSearchResults(searchResults: any): WukkieIssue[] {
+    const issues: WukkieIssue[] = [];
+
+    for (const post of searchResults.posts || []) {
+      try {
+        const wukkieIssue = this.parsePostAsWukkieIssue(post);
+        if (wukkieIssue) {
+          issues.push(wukkieIssue);
+          this.updateTagCloud(wukkieIssue);
+        }
+      } catch (error) {
+        console.warn("Failed to parse post as Wukkie issue:", error);
+      }
+    }
+
+    return issues;
+  }
+
+  /**
+   * Set current location for location-based search
+   */
+  setCurrentLocation(location: PrivacyLocation | null): void {
+    this.currentLocation = location;
+    console.log(
+      "🌍 Current location set for ATProto search:",
+      location?.geoHashtag,
+    );
+  }
+
+  /**
+   * Set user handle for personalized search
+   */
+  setUserHandle(handle: string | null): void {
+    this.userHandle = handle;
+    console.log("👤 User handle set for ATProto search:", handle);
+  }
+
+  /**
+   * Add a hashtag to the followed tags list
+   */
+  followTag(tag: string): void {
+    this.followedTags.add(tag.startsWith("#") ? tag : `#${tag}`);
+    console.log("🏷️ Now following tag:", tag);
+  }
+
+  /**
+   * Remove a hashtag from the followed tags list
+   */
+  unfollowTag(tag: string): void {
+    this.followedTags.delete(tag.startsWith("#") ? tag : `#${tag}`);
+    console.log("🏷️ Unfollowed tag:", tag);
+  }
+
+  /**
+   * Get the list of followed tags
+   */
+  getFollowedTags(): string[] {
+    return Array.from(this.followedTags);
+  }
+
+  /**
+   * Update tag cloud with tags from an issue
+   */
+  private updateTagCloud(issue: WukkieIssue): void {
+    const tags = [
+      "#wukkie",
+      `#${issue.category}`,
+      issue.location.geoHashtag,
+      ...issue.hashtags,
+    ];
+
+    tags.forEach((tag) => {
+      const count = this.tagCloud.get(tag) || 0;
+      this.tagCloud.set(tag, count + 1);
+    });
+  }
+
+  /**
+   * Get tag cloud data sorted by frequency
+   */
+  getTagCloud(): Array<{ tag: string; count: number }> {
+    return Array.from(this.tagCloud.entries())
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count);
   }
 
   /**
@@ -908,8 +1099,6 @@ export function formatIssueForBluesky(
     " ",
   );
   text += `\n\n${hashtags}`;
-
-  text += `\n\nFull details: ${baseUrl}/issue/${issue.id}`;
 
   return text;
 }
