@@ -1,4 +1,5 @@
 {
+  "_comment": "Updated 2025-01-17 to fix OAuth scopes",
   "client_id": "https://wukkie.uk/client-metadata.json",
   "client_uri": "https://wukkie.uk",
   "redirect_uris": ["https://wukkie.uk"],
