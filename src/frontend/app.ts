@@ -249,19 +249,17 @@ class WukkieApp {
 
       // Initialize ATProto manager when authenticated
       try {
-        const agent = new BskyAgent({ service: "https://bsky.social" });
-
         if (authState.session.isDemo) {
           // Demo mode - create manager without authentication
           console.log("🎭 Using demo mode authentication");
+          const agent = new BskyAgent({ service: "https://bsky.social" });
           this.atprotoManager = new ATProtoIssueManager(agent);
           console.log("🟢 ATProto manager initialized (demo mode)");
         } else {
           // Try to determine if this is OAuth or traditional ATProto session
+          // OAuth sessions will have an XRPC client available in authState
           const isOAuthToken =
-            authState.session.accessJwt &&
-            (!authState.session.accessJwt.startsWith("eyJ") ||
-              authState.session.accessJwt.includes("access_token"));
+            authState.xrpc !== null && authState.xrpc !== undefined;
 
           if (isOAuthToken) {
             console.log("🔐 OAuth authentication detected");
@@ -287,6 +285,7 @@ class WukkieApp {
           } else {
             // Traditional ATProto session - try to resume
             console.log("🔐 Using ATProto session authentication");
+            const agent = new BskyAgent({ service: "https://bsky.social" });
             await agent.resumeSession(authState.session);
             this.atprotoManager = new ATProtoIssueManager(agent);
             console.log("🟢 ATProto manager initialized");
