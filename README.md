@@ -84,22 +84,37 @@ wukkie.uk/
 
 ### Deployment to Cloudflare Workers
 
+**⚠️ IMPORTANT FOR OAUTH TESTING**: OAuth changes must be deployed to Cloudflare to test properly since OAuth callbacks require HTTPS and the correct domain.
+
 1. **Login to Cloudflare**
    ```bash
    npx wrangler login
    ```
 
-2. **Deploy to staging**
+2. **Build and deploy changes**
    ```bash
-   npm run deploy:dev
+   npm run build    # Build with updated OAuth scopes
+   npm run deploy   # Deploy to Cloudflare Workers
    ```
 
-3. **Deploy to production**
+3. **Test OAuth flow**
+   - Changes are immediately live at your worker URL
+   - OAuth callbacks work only on deployed HTTPS endpoints
+   - Local development cannot test full OAuth flow due to domain restrictions
+
+4. **Development workflow for OAuth changes**
    ```bash
+   # 1. Make OAuth configuration changes
+   # 2. Commit and push to git
+   git add .
+   git commit -m "Fix OAuth scopes"
+   git push origin main
+   
+   # 3. Deploy to test
    npm run deploy
    ```
 
-4. **Configure custom domain** (optional)
+5. **Configure custom domain** (optional)
    - In Cloudflare dashboard, go to Workers & Pages
    - Add custom domain `wukkie.uk` to your worker
 

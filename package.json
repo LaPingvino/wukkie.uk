@@ -74,7 +74,7 @@
       "warningForFutureDevelopers": "⚠️  DO NOT REVERT TO 'atproto transition:generic' - causes authentication failures. Use these granular permissions.",
       "troubleshooting": "If you get 'Bad token scope' errors, verify these exact scope strings are being used in both package.json and client-metadata.json"
     },
-    "scopes": "repo:* rpc:com.atproto.repo.createRecord?aud=* rpc:com.atproto.repo.putRecord?aud=* rpc:com.atproto.repo.deleteRecord?aud=* rpc:com.atproto.repo.listRecords?aud=* rpc:com.atproto.repo.getRecord?aud=* rpc:com.atproto.server.getSession?aud=* blob:*/*",
+    "scopes": "atproto repo:* rpc:com.atproto.repo.createRecord?aud=* rpc:com.atproto.repo.putRecord?aud=* rpc:com.atproto.repo.deleteRecord?aud=* rpc:com.atproto.repo.listRecords?aud=* rpc:com.atproto.repo.getRecord?aud=* rpc:com.atproto.server.getSession?aud=* blob:*/*",
     "clientName": "Wukkie.uk - Bug Tracker for the World",
     "description": "OAuth configuration for Bluesky/ATProto integration with granular permissions (updated Jan 2025)"
   },
