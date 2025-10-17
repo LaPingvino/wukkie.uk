@@ -990,8 +990,25 @@ class BlueskyAuth {
         if (tokenParts.length === 3) {
           const payload = JSON.parse(atob(tokenParts[1]));
           if (payload.aud) {
-            pdsEndpoint = payload.aud;
-            console.log("🎯 Using PDS endpoint from JWT:", pdsEndpoint);
+            let audienceUrl = payload.aud;
+            console.log("🎯 JWT audience field:", audienceUrl);
+
+            // If the audience is a DID, we need to resolve it to HTTP URL
+            if (audienceUrl.startsWith("did:")) {
+              console.log("🔄 DID detected, converting to HTTP URL...");
+              // Extract hostname from DID (e.g., did:web:lionsmane.us-east.host.bsky.network)
+              if (audienceUrl.startsWith("did:web:")) {
+                const hostname = audienceUrl.replace("did:web:", "");
+                audienceUrl = `https://${hostname}`;
+                console.log("✅ Converted DID to HTTP URL:", audienceUrl);
+              } else {
+                console.log("⚠️ Unknown DID format, using fallback");
+                audienceUrl = "https://bsky.social";
+              }
+            }
+
+            pdsEndpoint = audienceUrl;
+            console.log("🎯 Using PDS endpoint:", pdsEndpoint);
           }
         }
       } catch (e) {
