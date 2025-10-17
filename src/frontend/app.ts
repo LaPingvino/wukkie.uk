@@ -76,6 +76,8 @@ class WukkieApp {
   private authUnsubscribe?: () => void;
   private isLoading: boolean = false;
   private atprotoManager: ATProtoIssueManager | null = null;
+  private allIssues: Issue[] = [];
+  private currentTagFilter: string | null = null;
 
   private taglines: string[] = [
     "oopsie woopsie de trein is stukkie wukkie...",
@@ -972,36 +974,65 @@ class WukkieApp {
   private async loadIssues(): Promise<void> {
     try {
       console.log("🔍 loadIssues() called");
-      // Load both local and network issues
-      await this.loadLocalIssues();
+
+      // Load local issues first
+      const stored = localStorage.getItem("wukkie_issues");
+      const localIssues: Issue[] = stored ? JSON.parse(stored) : [];
+
+      let networkIssues: Issue[] = [];
 
       if (this.atprotoManager && blueskyAuth.isAuthenticated()) {
         console.log(
           "✅ Conditions met for authenticated network search - calling loadNetworkIssues()",
         );
-        await this.loadNetworkIssues();
+        networkIssues = await this.loadNetworkIssues();
         await this.loadNetworkComments();
       } else if (!blueskyAuth.isAuthenticated()) {
         console.log("🌐 Not authenticated - attempting public issue discovery");
-        await this.loadPublicIssues();
+        networkIssues = await this.loadPublicIssues();
       } else {
         console.log("⚠️ Network search skipped:", {
           hasAtprotoManager: !!this.atprotoManager,
           isAuthenticated: blueskyAuth.isAuthenticated(),
         });
       }
+
+      // Merge all issues (local first, then network)
+      const allIssues = [...localIssues, ...networkIssues];
+
+      // Sort by creation date (newest first)
+      allIssues.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // Display merged results
+      this.displayIssues(allIssues);
+      this.displayIssueStats(localIssues.length, networkIssues.length);
     } catch (error) {
       console.error("Load issues error:", error);
     }
   }
 
-  private async loadLocalIssues(): Promise<void> {
-    const stored = localStorage.getItem("wukkie_issues");
-    const localIssues: Issue[] = stored ? JSON.parse(stored) : [];
-    this.displayIssues(localIssues);
+  private displayIssueStats(localCount: number, networkCount: number): void {
+    const statsEl = document.getElementById("issue-stats");
+    if (statsEl) {
+      const total = localCount + networkCount;
+      let statsHTML = `📊 ${total} issue${total !== 1 ? "s" : ""}`;
+
+      if (networkCount > 0) {
+        statsHTML += ` <span style="color: #1976d2;">🌐 ${networkCount} public</span>`;
+      }
+
+      if (localCount > 0) {
+        statsHTML += ` <span style="color: #666;">📝 ${localCount} local</span>`;
+      }
+
+      statsEl.innerHTML = statsHTML;
+    }
   }
 
-  private async loadNetworkIssues(): Promise<void> {
+  private async loadNetworkIssues(): Promise<Issue[]> {
     try {
       console.log(
         "🔍 Loading issues from ATProto network using enhanced search...",
@@ -1112,7 +1143,7 @@ class WukkieApp {
   /**
    * Load public issues for unauthenticated users using public Bluesky API
    */
-  private async loadPublicIssues(): Promise<void> {
+  private async loadPublicIssues(): Promise<Issue[]> {
     try {
       console.log("🔍 Loading public issues from Bluesky network...");
 
@@ -1175,24 +1206,18 @@ class WukkieApp {
       if (publicIssues.length > 0) {
         console.log(`✅ Parsed ${publicIssues.length} public issues`);
 
-        // Get existing local issues
-        const stored = localStorage.getItem("wukkie_issues");
-        const localIssues: Issue[] = stored ? JSON.parse(stored) : [];
-
-        // Merge with local issues (public issues go after local ones)
-        const allIssues = [...localIssues, ...publicIssues];
-
         // Sort by creation date (newest first)
-        allIssues.sort(
+        publicIssues.sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
 
-        this.displayIssues(allIssues);
-        this.displayPublicIssueStats(publicIssues.length, localIssues.length);
+        this.displayPublicIssueStats(publicIssues.length, 0);
+        return publicIssues;
       } else {
         console.log("📭 No valid public issues found after parsing");
       }
+      return [];
     } catch (error) {
       console.error("Failed to load public issues:", error);
       console.log("🔄 Falling back to local issues only");
@@ -1209,6 +1234,7 @@ class WukkieApp {
         `;
       }
     }
+    return [];
   }
 
   /**
@@ -1370,8 +1396,9 @@ class WukkieApp {
         console.log("✅ Updated issues with network comments");
       }
     } catch (error) {
-      console.error("Failed to load network comments:", error);
+      console.error("Failed to load network issues:", error);
     }
+    return [];
   }
 
   private async fetchCommentsForIssue(blueskyUri: string): Promise<Comment[]> {
@@ -1460,6 +1487,21 @@ class WukkieApp {
   }
 
   private displayIssues(issues: Issue[]): void {
+    // Store all issues for filtering
+    this.allIssues = issues;
+
+    // Apply tag filter if active
+    const filteredIssues = this.currentTagFilter
+      ? issues.filter((issue) =>
+          issue.hashtags.includes(this.currentTagFilter!),
+        )
+      : issues;
+
+    this.displayFilteredIssues(filteredIssues);
+    this.updateTagCloud(issues);
+  }
+
+  private displayFilteredIssues(issues: Issue[]): void {
     const issuesList = document.getElementById("issues-list") as HTMLElement;
     if (!issuesList) return;
 
@@ -1511,7 +1553,7 @@ class WukkieApp {
           <div class="issue-description">${this.escapeHtml(issue.description)}</div>
           <div class="issue-meta">
             <div class="issue-hashtags">
-              ${issue.hashtags.map((tag) => `<span class="hashtag">${this.escapeHtml(tag)}</span>`).join("")}
+              ${issue.hashtags.map((tag) => `<span class="hashtag" onclick="wukkie.filterByTag('${this.escapeHtml(tag).replace(/'/g, "\\'")}')" style="cursor: pointer;" title="Filter by ${this.escapeHtml(tag)}">${this.escapeHtml(tag)}</span>`).join("")}
             </div>
             <div class="issue-author">${timeAgo} • @${this.escapeHtml(issue.author)} ${blueskyStatus}</div>
           </div>
@@ -1548,6 +1590,111 @@ class WukkieApp {
         </div>`;
       })
       .join("");
+
+    // Update filter status
+    this.updateFilterStatus(issues.length);
+  }
+
+  private updateFilterStatus(filteredCount: number): void {
+    const statusEl = document.getElementById("filter-status");
+    if (statusEl) {
+      if (this.currentTagFilter) {
+        const totalCount = this.allIssues.length;
+        statusEl.innerHTML = `
+          <div style="margin-bottom: 16px; padding: 12px; background: #e3f2fd; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span>Filtering by <strong>${this.escapeHtml(this.currentTagFilter)}</strong>: ${filteredCount} of ${totalCount} issues</span>
+            <button onclick="wukkie.clearTagFilter()" style="padding: 4px 8px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Clear Filter</button>
+          </div>
+        `;
+      } else {
+        statusEl.innerHTML = "";
+      }
+    }
+  }
+
+  private updateTagCloud(issues: Issue[]): void {
+    const tagCloudEl = document.getElementById("tag-cloud");
+    if (!tagCloudEl) return;
+
+    // Count tag frequency
+    const tagCounts = new Map<string, number>();
+    issues.forEach((issue) => {
+      issue.hashtags.forEach((tag) => {
+        // Skip geo hashtags from the cloud as they're location-specific
+        if (!tag.startsWith("#geo")) {
+          tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+        }
+      });
+    });
+
+    if (tagCounts.size === 0) {
+      tagCloudEl.innerHTML =
+        '<div style="text-align: center; color: #666; font-style: italic;">No hashtags found</div>';
+      return;
+    }
+
+    // Sort tags by frequency
+    const sortedTags = Array.from(tagCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20); // Show top 20 tags
+
+    // Generate tag cloud HTML
+    const maxCount = sortedTags[0]?.[1] || 1;
+    const tagCloudHTML = sortedTags
+      .map(([tag, count]) => {
+        const size = Math.max(0.8, Math.min(2.0, (count / maxCount) * 1.5));
+        const isActive = this.currentTagFilter === tag;
+        return `
+        <span
+          class="tag-cloud-item ${isActive ? "active" : ""}"
+          onclick="wukkie.filterByTag('${this.escapeHtml(tag).replace(/'/g, "\\'")}')"
+          style="
+            font-size: ${size}rem;
+            margin: 4px 8px 4px 0;
+            padding: 6px 12px;
+            background: ${isActive ? "#1976d2" : "#f0f0f0"};
+            color: ${isActive ? "white" : "#333"};
+            border-radius: 20px;
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.2s ease;
+            border: 1px solid ${isActive ? "#1976d2" : "#ddd"};
+          "
+          title="Filter by ${this.escapeHtml(tag)} (${count} issue${count !== 1 ? "s" : ""})"
+          onmouseover="this.style.backgroundColor='${isActive ? "#1565c0" : "#e0e0e0"}'"
+          onmouseout="this.style.backgroundColor='${isActive ? "#1976d2" : "#f0f0f0"}'"
+        >
+          ${this.escapeHtml(tag)} (${count})
+        </span>
+      `;
+      })
+      .join("");
+
+    tagCloudEl.innerHTML = `
+      <div style="line-height: 1.6;">
+        ${tagCloudHTML}
+      </div>
+    `;
+  }
+
+  public filterByTag(tag: string): void {
+    console.log("🏷️ Filter by tag:", tag);
+
+    if (this.currentTagFilter === tag) {
+      // If clicking the same tag, clear the filter
+      this.clearTagFilter();
+    } else {
+      this.currentTagFilter = tag;
+      this.displayIssues(this.allIssues);
+      this.showStatus(`Filtering by ${tag}`, "info");
+    }
+  }
+
+  public clearTagFilter(): void {
+    console.log("🏷️ Clear tag filter");
+    this.currentTagFilter = null;
+    this.displayIssues(this.allIssues);
+    this.showStatus("Filter cleared", "info");
   }
 
   // Distance calculation removed for privacy protection
@@ -1693,13 +1840,30 @@ class WukkieApp {
   public viewIssue(issueId: string): void {
     console.log("View issue details:", issueId);
 
+    // Try to find issue in local storage first
     const stored = localStorage.getItem("wukkie_issues");
-    const issues: Issue[] = stored ? JSON.parse(stored) : [];
-    const issue = issues.find((i) => i.id === issueId);
+    const localIssues: Issue[] = stored ? JSON.parse(stored) : [];
+    let issue = localIssues.find((i) => i.id === issueId);
+
+    // If not found locally, try to find in current displayed issues (including public ones)
+    if (!issue) {
+      const issuesList = document.getElementById("issues-list");
+      if (issuesList) {
+        // Extract issue data from the currently displayed issues
+        // This is a fallback to get public issue data that's already rendered
+        issue = this.findIssueInDisplayedContent(issueId);
+      }
+    }
 
     if (!issue) {
       this.showStatus("Issue not found", "error");
       return;
+    }
+
+    // Remove any existing modal first
+    const existingModal = document.querySelector(".issue-modal-overlay");
+    if (existingModal) {
+      existingModal.remove();
     }
 
     // Create modal for detailed issue view
@@ -1802,10 +1966,20 @@ class WukkieApp {
         </div>
 
         <div class="issue-actions" style="margin: 20px 0; display: flex; gap: 8px; flex-wrap: wrap;">
-          <button onclick="wukkie.likeIssue('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">👍 <span id="likes-${issue.id}">${issue.likes || 0}</span></button>
-          <button onclick="wukkie.commentOnIssue('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">💬 Add Comment</button>
+          <button onclick="wukkie.likeIssueInModal('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">👍 <span id="modal-likes-${issue.id}">${issue.likes || 0}</span></button>
+          <button onclick="wukkie.showCommentFormInModal('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">💬 Add Comment</button>
           ${issue.hashtags.filter((tag) => tag.startsWith("#geo")).length > 0 ? `<button onclick="wukkie.showOnMap('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">📍 View on Map</button>` : ""}
           <button onclick="wukkie.editIssue('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">✏️ Edit</button>
+        </div>
+
+        <!-- Comment Form Container (initially hidden) -->
+        <div id="modal-comment-form-${issue.id}" style="display: none; margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
+          <h5 style="margin: 0 0 12px 0;">Add Comment</h5>
+          <textarea id="modal-comment-text-${issue.id}" placeholder="Write your comment..." style="width: 100%; min-height: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; font-family: inherit; box-sizing: border-box;"></textarea>
+          <div style="margin-top: 12px; display: flex; gap: 8px;">
+            <button onclick="wukkie.submitModalComment('${issue.id}')" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Post Comment</button>
+            <button onclick="wukkie.cancelModalComment('${issue.id}')" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+          </div>
         </div>
 
         ${
@@ -1813,7 +1987,7 @@ class WukkieApp {
             ? `
           <div class="comments-section" style="margin-top: 24px; border-top: 1px solid #eee; padding-top: 20px;">
             <h3 style="margin: 0 0 16px 0; font-size: 1.1rem;">Comments (${issue.comments.length})</h3>
-            <div id="comments-${issue.id}" style="display: block;">
+            <div id="modal-comments-${issue.id}" style="display: block;">
               ${issue.comments
                 .map(
                   (comment) => `
@@ -1873,6 +2047,51 @@ class WukkieApp {
     document.addEventListener("keydown", handleKeyPress);
   }
 
+  private findIssueInDisplayedContent(issueId: string): Issue | null {
+    // This is a helper method to extract issue data from displayed content
+    // when we need to show details of public issues that aren't in localStorage
+    const issueElement = document
+      .querySelector(`[onclick*="${issueId}"]`)
+      ?.closest(".issue-item");
+    if (!issueElement) return null;
+
+    try {
+      const titleElement =
+        issueElement.querySelector(".issue-title a") ||
+        issueElement.querySelector(".issue-title");
+      const descElement = issueElement.querySelector(".issue-description");
+      const hashtagElements = issueElement.querySelectorAll(".hashtag");
+      const authorElement = issueElement.querySelector(".issue-author");
+
+      const title = titleElement?.textContent?.trim() || "Unknown Title";
+      const description = descElement?.textContent?.trim() || "No description";
+      const hashtags = Array.from(hashtagElements).map(
+        (el) => el.textContent?.trim() || "",
+      );
+      const authorText = authorElement?.textContent || "";
+      const author = authorText.includes("@")
+        ? authorText.split("@")[1]?.split(" ")[0] || "unknown"
+        : "unknown";
+
+      return {
+        id: issueId,
+        title,
+        description,
+        category: "other",
+        hashtags,
+        status: "open",
+        createdAt: new Date().toISOString(),
+        author,
+        likes: 0,
+        blueskyStatus: "posted",
+        blueskyUri: "",
+      } as Issue;
+    } catch (error) {
+      console.warn("Error extracting issue data:", error);
+      return null;
+    }
+  }
+
   public likeIssue(issueId: string): void {
     console.log("👍 Like issue:", issueId);
     const stored = localStorage.getItem("wukkie_issues");
@@ -1883,13 +2102,27 @@ class WukkieApp {
       issue.likes = (issue.likes || 0) + 1;
       localStorage.setItem("wukkie_issues", JSON.stringify(issues));
 
-      // Update the display
+      // Update the display in both locations
       const likesSpan = document.getElementById(`likes-${issueId}`);
       if (likesSpan) {
         likesSpan.textContent = issue.likes.toString();
       }
 
       this.showStatus("Issue liked! 👍", "success");
+    } else {
+      // Handle liking public issues (not stored locally)
+      this.showStatus("👍 Like noted! (Public issue)", "info");
+    }
+  }
+
+  public likeIssueInModal(issueId: string): void {
+    this.likeIssue(issueId);
+
+    // Update modal display
+    const modalLikesSpan = document.getElementById(`modal-likes-${issueId}`);
+    if (modalLikesSpan) {
+      const currentLikes = parseInt(modalLikesSpan.textContent || "0") + 1;
+      modalLikesSpan.textContent = currentLikes.toString();
     }
   }
 
@@ -1915,45 +2148,104 @@ class WukkieApp {
   public async commentOnIssue(issueId: string): Promise<void> {
     console.log("💬 Comment on issue:", issueId);
 
-    // Show inline comment form instead of prompt
-    const commentsSection = document.getElementById(`comments-${issueId}`);
-    if (commentsSection) {
-      // Toggle comments section visibility
-      if (commentsSection.style.display === "none") {
-        commentsSection.style.display = "block";
-      }
+    // For main issue list, open the detailed view instead
+    this.viewIssue(issueId);
+  }
 
-      // Check if comment form already exists
-      let commentForm = commentsSection.querySelector(
-        ".comment-form",
-      ) as HTMLElement;
-      if (!commentForm) {
-        // Create inline comment form
-        const formHtml = `
-          <div class="comment-form" style="margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-            <h5 style="margin: 0 0 12px 0;">Add Comment</h5>
-            <textarea id="comment-text-${issueId}" placeholder="Write your comment..." style="width: 100%; min-height: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; font-family: inherit;"></textarea>
-            <div style="margin-top: 12px; display: flex; gap: 8px;">
-              <button onclick="wukkie.submitComment('${issueId}')" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Post Comment</button>
-              <button onclick="wukkie.cancelComment('${issueId}')" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
-            </div>
-          </div>
-        `;
-        commentsSection.insertAdjacentHTML("beforeend", formHtml);
+  public showCommentFormInModal(issueId: string): void {
+    const commentForm = document.getElementById(
+      `modal-comment-form-${issueId}`,
+    );
+    if (commentForm) {
+      commentForm.style.display =
+        commentForm.style.display === "none" ? "block" : "none";
 
-        // Focus on the textarea
+      if (commentForm.style.display === "block") {
         const textarea = document.getElementById(
-          `comment-text-${issueId}`,
+          `modal-comment-text-${issueId}`,
         ) as HTMLTextAreaElement;
         if (textarea) {
           textarea.focus();
         }
       }
-    } else {
-      // Fallback to old prompt method if comments section doesn't exist
-      const comment = prompt("Add your comment:");
-      if (comment && comment.trim()) {
-        await this.submitCommentText(issueId, comment.trim());
+    }
+  }
+
+  public submitModalComment(issueId: string): void {
+    const textarea = document.getElementById(
+      `modal-comment-text-${issueId}`,
+    ) as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const comment = textarea.value.trim();
+    if (!comment) {
+      alert("Please enter a comment");
+      return;
+    }
+
+    this.submitCommentText(issueId, comment).then(() => {
+      // Clear the form and hide it
+      textarea.value = "";
+      const commentForm = document.getElementById(
+        `modal-comment-form-${issueId}`,
+      );
+      if (commentForm) {
+        commentForm.style.display = "none";
+      }
+
+      // Refresh the modal comments section
+      this.refreshModalComments(issueId);
+    });
+  }
+
+  public cancelModalComment(issueId: string): void {
+    const textarea = document.getElementById(
+      `modal-comment-text-${issueId}`,
+    ) as HTMLTextAreaElement;
+    const commentForm = document.getElementById(
+      `modal-comment-form-${issueId}`,
+    );
+
+    if (textarea) textarea.value = "";
+    if (commentForm) commentForm.style.display = "none";
+  }
+
+  private refreshModalComments(issueId: string): void {
+    const stored = localStorage.getItem("wukkie_issues");
+    const issues: Issue[] = stored ? JSON.parse(stored) : [];
+    const issue = issues.find((i) => i.id === issueId);
+
+    if (issue && issue.comments) {
+      const commentsContainer = document.getElementById(
+        `modal-comments-${issueId}`,
+      );
+      if (commentsContainer) {
+        commentsContainer.innerHTML = issue.comments
+          .map(
+            (comment) => `
+          <div class="comment" style="
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #007bff;
+          ">
+            <div class="comment-header" style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 8px;
+              font-size: 0.9rem;
+              color: #666;
+            ">
+              <span class="comment-author" style="font-weight: 500; color: #333;">@${this.escapeHtml(comment.author)}</span>
+              <span class="comment-time">${this.formatTimeAgo(new Date(comment.createdAt))}</span>
+            </div>
+            <div class="comment-text" style="line-height: 1.5;">${this.escapeHtml(comment.text).replace(/\n/g, "<br>")}</div>
+          </div>
+        `,
+          )
+          .join("");
       }
     }
   }
