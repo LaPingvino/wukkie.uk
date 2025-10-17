@@ -974,12 +974,16 @@ class WukkieApp {
       console.log("🔍 loadIssues() called");
       // Load both local and network issues
       await this.loadLocalIssues();
+
       if (this.atprotoManager && blueskyAuth.isAuthenticated()) {
         console.log(
-          "✅ Conditions met for network search - calling loadNetworkIssues()",
+          "✅ Conditions met for authenticated network search - calling loadNetworkIssues()",
         );
         await this.loadNetworkIssues();
         await this.loadNetworkComments();
+      } else if (!blueskyAuth.isAuthenticated()) {
+        console.log("🌐 Not authenticated - attempting public issue discovery");
+        await this.loadPublicIssues();
       } else {
         console.log("⚠️ Network search skipped:", {
           hasAtprotoManager: !!this.atprotoManager,
@@ -1102,6 +1106,179 @@ class WukkieApp {
       console.error("Failed to load network issues:", error);
       // Fall back to local issues only
       this.loadLocalIssues();
+    }
+  }
+
+  /**
+   * Load public issues for unauthenticated users using public Bluesky API
+   */
+  private async loadPublicIssues(): Promise<void> {
+    try {
+      console.log("🔍 Loading public issues from Bluesky network...");
+
+      // Use public Bluesky API endpoint for unauthenticated search
+      const publicApiUrl =
+        "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts";
+      const searchParams = new URLSearchParams({
+        q: "#wukkie",
+        limit: "20",
+        sort: "latest",
+      });
+
+      const response = await fetch(`${publicApiUrl}?${searchParams}`);
+
+      if (!response.ok) {
+        console.warn(
+          "Public API search failed:",
+          response.status,
+          response.statusText,
+        );
+        return;
+      }
+
+      const data = await response.json();
+      console.log(
+        `🔍 Found ${data.posts?.length || 0} public posts with #wukkie`,
+      );
+
+      if (!data.posts || data.posts.length === 0) {
+        console.log("📭 No public issues found");
+        return;
+      }
+
+      // Parse posts into issues
+      const publicIssues: Issue[] = [];
+
+      for (const post of data.posts) {
+        try {
+          const issue = this.parseBlueskyPostAsIssue(post);
+          if (issue) {
+            publicIssues.push(issue);
+          }
+        } catch (error) {
+          console.warn("Failed to parse public post as issue:", error);
+        }
+      }
+
+      if (publicIssues.length > 0) {
+        console.log(`✅ Parsed ${publicIssues.length} public issues`);
+
+        // Get existing local issues
+        const stored = localStorage.getItem("wukkie_issues");
+        const localIssues: Issue[] = stored ? JSON.parse(stored) : [];
+
+        // Merge with local issues (public issues go after local ones)
+        const allIssues = [...localIssues, ...publicIssues];
+
+        // Sort by creation date (newest first)
+        allIssues.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+
+        this.displayIssues(allIssues);
+        this.displayPublicIssueStats(publicIssues.length, localIssues.length);
+      } else {
+        console.log("📭 No valid public issues found after parsing");
+      }
+    } catch (error) {
+      console.error("Failed to load public issues:", error);
+      // Silently fall back to local issues only
+    }
+  }
+
+  /**
+   * Parse a Bluesky post into a Wukkie issue format
+   */
+  private parseBlueskyPostAsIssue(post: any): Issue | null {
+    try {
+      const text = post.record?.text || "";
+
+      // Must contain #wukkie and issue emoji
+      if (!text.includes("#wukkie") || !text.includes("🚨")) {
+        return null;
+      }
+
+      const lines = text.split("\n");
+      const titleLine = lines.find((line) => line.includes("🚨"));
+      const title = titleLine?.replace("🚨", "").trim();
+
+      if (!title) return null;
+
+      // Extract description (lines between title and location/hashtags)
+      const titleIndex = lines.findIndex((line) => line.includes("🚨"));
+      const locationIndex = lines.findIndex((line) => line.includes("📍"));
+      const hashtagIndex = lines.findIndex((line) => line.includes("#wukkie"));
+
+      const descriptionEnd = Math.min(
+        locationIndex === -1 ? Infinity : locationIndex,
+        hashtagIndex === -1 ? Infinity : hashtagIndex,
+      );
+
+      const description = lines
+        .slice(
+          titleIndex + 1,
+          descriptionEnd === Infinity ? undefined : descriptionEnd,
+        )
+        .join("\n")
+        .trim();
+
+      // Extract hashtags
+      const hashtags = (text.match(/#\w+/g) || []).filter(
+        (tag) => tag !== "#wukkie",
+      );
+
+      // Determine category from hashtags
+      const categoryTags = {
+        infrastructure: "#infrastructure",
+        safety: "#safety",
+        environment: "#environment",
+        transportation: "#transportation",
+      };
+
+      let category = "other";
+      for (const [cat, tag] of Object.entries(categoryTags)) {
+        if (hashtags.includes(tag)) {
+          category = cat;
+          break;
+        }
+      }
+
+      return {
+        id: `public_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title,
+        description: description || "No description provided",
+        category,
+        hashtags,
+        status: "open",
+        createdAt: post.record.createdAt || new Date().toISOString(),
+        author: post.author?.handle || "unknown",
+        blueskyUri: post.uri,
+        blueskyStatus: "posted",
+      };
+    } catch (error) {
+      console.warn("Error parsing Bluesky post:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Display statistics for public issues
+   */
+  private displayPublicIssueStats(
+    publicCount: number,
+    localCount: number,
+  ): void {
+    const statsContainer = document.getElementById("issue-stats");
+    if (statsContainer) {
+      const totalCount = publicCount + localCount;
+      statsContainer.innerHTML = `
+        <div class="issue-stats">
+          <span class="stat-item">📊 ${totalCount} issues</span>
+          ${localCount > 0 ? `<span class="stat-item">📱 ${localCount} local</span>` : ""}
+          ${publicCount > 0 ? `<span class="stat-item">🌐 ${publicCount} public</span>` : ""}
+        </div>
+      `;
     }
   }
 
