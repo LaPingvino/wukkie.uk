@@ -1011,8 +1011,11 @@ class BlueskyAuth {
           options.nsid.startsWith("app.bsky.feed.search");
 
         if (isSearchOperation) {
-          endpoint = "https://public.api.bsky.app";
-          console.log("🔍 Using public API endpoint for search:", endpoint);
+          endpoint = "https://api.bsky.app";
+          console.log(
+            "🔍 Using authenticated API endpoint for search:",
+            endpoint,
+          );
         } else {
           // Extract PDS endpoint from JWT token's 'aud' field for other operations
           try {
