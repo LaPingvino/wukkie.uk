@@ -717,8 +717,35 @@ export class ATProtoIssueManager {
       allIssues.push(...ownIssues);
       console.log(`✅ Found ${ownIssues.length} own issues`);
 
-      // Strategy 2: General hashtag search (limited by network scope)
-      const networkIssues = await this.searchByHashtag("#wukkie", 20);
+      // Strategy 2: Multi-approach network search for better coverage
+      let networkIssues: any[] = [];
+
+      // Try hashtag search first
+      console.log("🔍 Searching network with hashtag: #wukkie");
+      const hashtagResults = await this.searchByHashtag("#wukkie", 10);
+      console.log(`📊 Found ${hashtagResults.length} hashtag results`);
+      networkIssues.push(...hashtagResults);
+
+      // Try keyword search as fallback (catches posts that mention wukkie but hashtag indexing failed)
+      console.log("🔍 Searching network with keyword: wukkie");
+      const keywordResults = await this.searchByHashtag("wukkie", 10);
+      console.log(`📊 Found ${keywordResults.length} keyword results`);
+      networkIssues.push(...keywordResults);
+
+      // Remove duplicates from combined results
+      const beforeDeduplication = networkIssues.length;
+      networkIssues = networkIssues.filter(
+        (issue, index, self) =>
+          index ===
+          self.findIndex(
+            (other) =>
+              other.blueskyUri === issue.blueskyUri ||
+              (other.id && issue.id && other.id === issue.id),
+          ),
+      );
+      console.log(
+        `📊 After deduplication: ${beforeDeduplication} → ${networkIssues.length} network issues`,
+      );
 
       // Filter out duplicates (own posts already found)
       const newNetworkIssues = networkIssues.filter(
@@ -785,22 +812,80 @@ export class ATProtoIssueManager {
 
       let searchResults: any;
 
+      // Try multiple search strategies for own posts
+      let allSearchResults: any[] = [];
+
       if (this.agent) {
-        // Search for own posts specifically
-        searchResults = await this.agent.api.app.bsky.feed.searchPosts({
+        // Try hashtag search first
+        console.log(
+          `🔍 Searching own posts with hashtag: #wukkie from:${currentUser}`,
+        );
+        let hashtagResults = await this.agent.api.app.bsky.feed.searchPosts({
           q: `#wukkie from:${currentUser}`,
-          limit: 50,
+          limit: 25,
           sort: "latest",
         });
+        console.log(
+          `📊 Found ${hashtagResults.posts?.length || 0} own hashtag results`,
+        );
+        allSearchResults.push(...(hashtagResults.posts || []));
+
+        // Try keyword search as backup
+        console.log(
+          `🔍 Searching own posts with keyword: wukkie from:${currentUser}`,
+        );
+        let keywordResults = await this.agent.api.app.bsky.feed.searchPosts({
+          q: `wukkie from:${currentUser}`,
+          limit: 25,
+          sort: "latest",
+        });
+        console.log(
+          `📊 Found ${keywordResults.posts?.length || 0} own keyword results`,
+        );
+        allSearchResults.push(...(keywordResults.posts || []));
       } else if (this.xrpc) {
-        searchResults = await this.xrpc.call("app.bsky.feed.searchPosts", {
+        // Try hashtag search first
+        console.log(
+          `🔍 Searching own posts with hashtag: #wukkie from:${currentUser}`,
+        );
+        let hashtagResults = await this.xrpc.call("app.bsky.feed.searchPosts", {
           q: `#wukkie from:${currentUser}`,
-          limit: 50,
+          limit: 25,
           sort: "latest",
         });
+        console.log(
+          `📊 Found ${hashtagResults.posts?.length || 0} own hashtag results`,
+        );
+        allSearchResults.push(...(hashtagResults.posts || []));
+
+        // Try keyword search as backup
+        console.log(
+          `🔍 Searching own posts with keyword: wukkie from:${currentUser}`,
+        );
+        let keywordResults = await this.xrpc.call("app.bsky.feed.searchPosts", {
+          q: `wukkie from:${currentUser}`,
+          limit: 25,
+          sort: "latest",
+        });
+        console.log(
+          `📊 Found ${keywordResults.posts?.length || 0} own keyword results`,
+        );
+        allSearchResults.push(...(keywordResults.posts || []));
       } else {
         return [];
       }
+
+      // Remove duplicates and create searchResults object
+      const beforeDeduplication = allSearchResults.length;
+      const uniquePosts = allSearchResults.filter(
+        (post, index, self) =>
+          index === self.findIndex((other) => other.uri === post.uri),
+      );
+      console.log(
+        `📊 Own posts after deduplication: ${beforeDeduplication} → ${uniquePosts.length}`,
+      );
+
+      searchResults = { posts: uniquePosts };
 
       return this.parseSearchResults(searchResults);
     } catch (error) {
@@ -835,7 +920,13 @@ export class ATProtoIssueManager {
         return [];
       }
 
-      return this.parseSearchResults(searchResults);
+      const rawResults = searchResults.posts?.length || 0;
+      const parsedResults = this.parseSearchResults(searchResults);
+      console.log(
+        `📊 Raw results for "${hashtag}": ${rawResults}, parsed as valid Wukkie issues: ${parsedResults.length}`,
+      );
+
+      return parsedResults;
     } catch (error) {
       console.warn(`Failed to search by hashtag ${hashtag}:`, error);
       return [];
@@ -980,9 +1071,18 @@ export class ATProtoIssueManager {
       const record = post.record;
       const text = record.text || "";
 
-      // Look for Wukkie issue pattern: "🚨 New Issue: TITLE"
-      const titleMatch = text.match(/🚨 New Issue:\s*(.+?)(\n|$)/);
+      // Look for Wukkie issue patterns: "🚨 New Issue: TITLE" or just "🚨 TITLE"
+      // Also check for #wukkie hashtag to identify Wukkie posts
+      const hasWukkieTag =
+        text.includes("#wukkie") || text.toLowerCase().includes("wukkie");
+
+      let titleMatch = text.match(/🚨\s*New Issue:\s*(.+?)(\n|$)/);
       if (!titleMatch) {
+        // Try alternative format: "🚨 TITLE"
+        titleMatch = text.match(/🚨\s*(.+?)(\n|$)/);
+      }
+
+      if (!titleMatch || !hasWukkieTag) {
         return null; // Not a Wukkie issue post
       }
 
@@ -995,7 +1095,7 @@ export class ATProtoIssueManager {
       let foundLocation = false;
 
       for (const line of lines) {
-        if (line.includes("🚨 New Issue:")) {
+        if (line.includes("🚨")) {
           foundTitle = true;
           continue;
         }
