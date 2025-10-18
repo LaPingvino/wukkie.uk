@@ -319,11 +319,9 @@ class WukkieApp {
         this.showStatus(`Welcome back, @${this.session.handle}! 🎉`, "success");
       }
 
-      // Reload issues to trigger network search with authentication
-      console.log(
-        "🔄 Reloading issues after authentication to trigger network search...",
-      );
-      await this.loadIssues();
+      // Add authenticated results to existing public data
+      console.log("🔄 Adding authenticated search results to existing data...");
+      await this.loadAuthenticatedIssuesAdditively();
     } else {
       this.session = null;
       this.atprotoManager = null;
@@ -1014,6 +1012,97 @@ class WukkieApp {
     } catch (error) {
       console.error("Load issues error:", error);
     }
+  }
+
+  private async loadAuthenticatedIssuesAdditively(): Promise<void> {
+    try {
+      if (!this.atprotoManager || !blueskyAuth.isAuthenticated()) {
+        return;
+      }
+
+      // Get currently displayed issues from DOM
+      const currentDisplayedIssues = this.extractCurrentIssuesFromDOM();
+
+      // Load authenticated issues
+      const authenticatedIssues = await this.loadNetworkIssues();
+
+      if (authenticatedIssues.length === 0) {
+        console.log(
+          "🔍 No authenticated issues found, keeping existing public data",
+        );
+        return;
+      }
+
+      // Merge with existing issues, avoiding duplicates
+      const allIssues = [...currentDisplayedIssues];
+      let addedCount = 0;
+
+      for (const newIssue of authenticatedIssues) {
+        const isDuplicate = allIssues.some(
+          (existing) =>
+            existing.title === newIssue.title &&
+            existing.description === newIssue.description,
+        );
+
+        if (!isDuplicate) {
+          allIssues.push(newIssue);
+          addedCount++;
+        }
+      }
+
+      // Sort by creation date (newest first)
+      allIssues.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // Display merged results only if we have new content
+      if (addedCount > 0) {
+        this.displayIssues(allIssues);
+        this.displayIssueStats(allIssues);
+        console.log(
+          `✅ Added ${addedCount} authenticated issues to ${currentDisplayedIssues.length} existing issues`,
+        );
+      } else {
+        console.log(
+          "✅ All authenticated issues were duplicates, keeping existing display",
+        );
+      }
+    } catch (error) {
+      console.error("Load authenticated issues additively error:", error);
+    }
+  }
+
+  private extractCurrentIssuesFromDOM(): Issue[] {
+    const issues: Issue[] = [];
+    const issueElements = document.querySelectorAll(".issue-card");
+
+    issueElements.forEach((element) => {
+      const titleEl = element.querySelector(".issue-title");
+      const descEl = element.querySelector(".issue-description");
+      const authorEl = element.querySelector(".issue-author");
+
+      if (titleEl && descEl) {
+        const title = titleEl.textContent?.trim() || "";
+        const description = descEl.textContent?.trim() || "";
+        const author =
+          authorEl?.textContent?.replace("By ", "").trim() || "unknown";
+
+        issues.push({
+          id: `existing-${Date.now()}-${Math.random()}`,
+          title,
+          description,
+          author,
+          location: { lat: 0, lng: 0, geoHashtag: "", label: "" },
+          category: "infrastructure",
+          hashtags: [],
+          createdAt: new Date().toISOString(),
+          isLocal: false,
+        });
+      }
+    });
+
+    return issues;
   }
 
   private async loadNetworkIssues(): Promise<Issue[]> {
