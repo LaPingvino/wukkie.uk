@@ -1075,21 +1075,19 @@ class BlueskyAuth {
           headers,
         };
 
+        let finalUrl = url;
+
         if (method === "POST" && options.data) {
           requestInit.body = JSON.stringify(options.data);
-        }
-
-        if (method === "GET" && options.params) {
+        } else if (method === "GET" && options.params) {
           const searchParams = new URLSearchParams();
           Object.entries(options.params).forEach(([key, value]) => {
             searchParams.append(key, String(value));
           });
-          const urlWithParams = `${url}?${searchParams.toString()}`;
-          const response = await fetch(urlWithParams, requestInit);
-          return await this.handleResponse(response);
+          finalUrl = `${url}?${searchParams.toString()}`;
         }
 
-        const response = await fetch(url, requestInit);
+        const response = await fetch(finalUrl, requestInit);
         return await this.handleResponse(response);
       } catch (error) {
         // Handle DPoP nonce retry
