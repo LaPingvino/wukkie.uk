@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wukkie Layout Test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        /* Toolbar Styles */
+        .toolbar {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .toolbar-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .toolbar-btn.primary {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .toolbar-btn.primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            min-width: 250px;
+            font-size: 0.875rem;
+        }
+
+        /* Map View Styles */
+        .map-view {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 1rem 0;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-view h2 {
+            padding: 1.5rem 1.5rem 1rem 1.5rem;
+            margin: 0;
+            border-bottom: 1px solid #e5e7eb;
+            color: #111827;
+            font-size: 1.25rem;
+        }
+
+        .map-view #map {
+            height: 500px;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+
+        /* Issue Creation View Styles */
+        .issue-creation-view {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 1rem 0;
+            padding: 1.5rem;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .issue-creation-view h2 {
+            margin: 0 0 1.5rem 0;
+            color: #111827;
+            font-size: 1.5rem;
+            padding-right: 2rem;
+        }
+
+        /* Close Button Styles */
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            line-height: 1;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        .close-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        /* Hidden utility class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin: 1rem 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>Wukkie.uk</h1>
+                    <div class="tagline">Bug Tracker for the World</div>
+                </div>
+                <div>
+                    <button>Login with Bluesky</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <button id="create-issue-btn" class="toolbar-btn primary" onclick="toggleIssueCreation()">
+                ➕ Create Issue
+            </button>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search issues..." class="search-input">
+                <button id="search-btn" class="toolbar-btn">🔍 Search</button>
+            </div>
+        </div>
+
+        <!-- Full-width Map View (initially hidden) -->
+        <div id="map-view" class="map-view hidden">
+            <button class="close-btn" onclick="document.getElementById('map-view').classList.add('hidden');">×</button>
+            <h2>Location Map</h2>
+            <div id="map">🗺️ Interactive map would be here</div>
+        </div>
+
+        <!-- Issue Creation View (initially hidden) -->
+        <div id="issue-creation-view" class="issue-creation-view hidden">
+            <button class="close-btn" onclick="document.getElementById('issue-creation-view').classList.add('hidden');">×</button>
+            <h2>Report an Issue</h2>
+            <form>
+                <div class="form-group">
+                    <label for="title">Issue Title *</label>
+                    <input type="text" id="title" placeholder="e.g. Broken streetlight on Main Street">
+                </div>
+                <div class="form-group">
+                    <label for="description">Description *</label>
+                    <textarea id="description" rows="4" placeholder="Describe the issue in detail..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category">
+                        <option>Infrastructure</option>
+                        <option>Environment</option>
+                        <option>Safety</option>
+                        <option>Transport</option>
+                    </select>
+                </div>
+                <button type="submit">Report Issue</button>
+            </form>
+        </div>
+
+        <!-- Main Content -->
+        <div class="card">
+            <h2>Recent Issues</h2>
+            <div class="issue-item" style="padding: 1rem; border: 1px solid #e5e7eb; border-radius: 6px; margin: 1rem 0;">
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">
+                    <a href="#" onclick="showMap(); return false;" style="text-decoration: none; color: #3b82f6;">
+                        Broken streetlight on Dam Square
+                    </a>
+                </div>
+                <div style="color: #666; margin-bottom: 0.5rem;">
+                    The streetlight has been flickering for weeks and is completely dark now.
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin: 0.5rem 0;">
+                    <span style="background: #e5e7eb; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">#streetlight</span>
+                    <span style="background: #e5e7eb; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">#infrastructure</span>
+                </div>
+                <div style="font-size: 0.875rem; color: #666;">1 day ago • @demo.bsky.social</div>
+            </div>
+
+            <div class="issue-item" style="padding: 1rem; border: 1px solid #e5e7eb; border-radius: 6px; margin: 1rem 0;">
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">
+                    <a href="#" onclick="showMap(); return false;" style="text-decoration: none; color: #3b82f6;">
+                        Pothole on cycling path
+                    </a>
+                </div>
+                <div style="color: #666; margin-bottom: 0.5rem;">
+                    Large pothole is dangerous for cyclists. Already saw someone almost crash.
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin: 0.5rem 0;">
+                    <span style="background: #e5e7eb; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">#pothole</span>
+                    <span style="background: #e5e7eb; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">#cycling</span>
+                </div>
+                <div style="font-size: 0.875rem; color: #666;">2 days ago • @cyclist.bsky.social</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleIssueCreation() {
+            const view = document.getElementById('issue-creation-view');
+            if (view.classList.contains('hidden')) {
+                view.classList.remove('hidden');
+                view.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                view.classList.add('hidden');
+            }
+        }
+
+        function showMap() {
+            const view = document.getElementById('map-view');
+            view.classList.remove('hidden');
+            view.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Search functionality
+        document.getElementById('search-btn').addEventListener('click', function() {
+            const query = document.getElementById('search-input').value;
+            if (query.trim()) {
+                alert('Searching for: ' + query);
+            } else {
+                alert('Please enter a search term');
+            }
+        });
+
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('search-btn').click();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -372,6 +372,25 @@ class WukkieApp {
     ) as HTMLInputElement;
     locationInput?.addEventListener("input", (e) => this.parseLocationInput(e));
 
+    // Toolbar buttons
+    const createIssueBtn = document.getElementById(
+      "create-issue-btn",
+    ) as HTMLButtonElement;
+    const searchBtn = document.getElementById(
+      "search-btn",
+    ) as HTMLButtonElement;
+    const searchInput = document.getElementById(
+      "search-input",
+    ) as HTMLInputElement;
+
+    createIssueBtn?.addEventListener("click", () => this.showCreateIssueView());
+    searchBtn?.addEventListener("click", () => this.performSearch());
+    searchInput?.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        this.performSearch();
+      }
+    });
+
     // Map click handler will be set up in initMap()
   }
 
@@ -1838,15 +1857,13 @@ class WukkieApp {
 
     try {
       // Parse locations from geo hashtags
-      const locations = [];
+      const locations: any[] = [];
       for (const tag of geoHashtags) {
         try {
           const location = LocationPrivacySystem.parseGeoHashtag(tag);
           if (location) {
-            const area = LocationPrivacySystem.getLocationArea(location);
             locations.push({
               ...location,
-              area,
               tag,
             });
           }
@@ -1885,173 +1902,31 @@ class WukkieApp {
       // Add markers and bounds
       const bounds = window.L.latLngBounds([]);
 
-      locations.forEach((loc, index) => {
-        // Add area polygon if available
-        if (
-          loc.area &&
-          loc.area.coordinates &&
-          loc.area.coordinates.length > 0
-        ) {
-          const polygon = window.L.polygon(loc.area.coordinates, {
-            color: "#007cba",
-            fillColor: "#007cba",
-            fillOpacity: 0.2,
-            weight: 2,
-          }).addTo(miniMap);
-
-          bounds.extend(polygon.getBounds());
-
-          // Add popup to polygon
-          polygon.bindPopup(`
-            <div class="mini-map-popup">
-              <strong>${loc.tag}</strong><br>
-              <small>~1km precision area</small>
-            </div>
-          `);
-        } else {
-          // Fallback: add simple marker
-          const marker = window.L.marker([loc.lat, loc.lng]).addTo(miniMap);
-          bounds.extend([loc.lat, loc.lng]);
-
-          marker.bindPopup(`
-            <div class="mini-map-popup">
-              <strong>${loc.tag}</strong><br>
-              <small>Approximate location</small>
-            </div>
-          `);
-        }
-      });
-
-      // Fit map to show all locations
-      if (bounds.isValid()) {
-        miniMap.fitBounds(bounds, { padding: [10, 10] });
-      }
-
-      // Add a small control to expand map
-      const expandControl = window.L.control({ position: "topright" });
-      expandControl.onAdd = function () {
-        const div = window.L.DomUtil.create(
-          "div",
-          "leaflet-bar leaflet-control",
+      locations.forEach((loc) => {
+        // Add simple marker for location
+        const marker = window.L.marker([loc.center.lat, loc.center.lng]).addTo(
+          miniMap,
         );
-        div.innerHTML = `
-          <a href="#" title="Expand map" style="background: white; padding: 5px; text-decoration: none; color: #333;">
-            🔍
-          </a>
-        `;
-        div.onclick = (e) => {
-          e.preventDefault();
-          // Focus on the main map and show these locations
-          wukkie.showOnMap(issueId);
-        };
-        return div;
-      };
-      expandControl.addTo(miniMap);
+        bounds.extend([loc.center.lat, loc.center.lng]);
 
-      console.log(
-        `✅ Mini-map created for issue ${issueId} with ${locations.length} locations`,
-      );
-    } catch (error) {
-      console.error(`Failed to create mini-map for issue ${issueId}:`, error);
-      mapContainer.innerHTML = `
-        <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">
-          📍 Map unavailable
-        </div>
-      `;
-    }
-  }
-
-  private async createMiniMap(
-    issueId: string,
-    geoHashtags: string[],
-  ): Promise<void> {
-    const mapContainer = document.getElementById(`mini-map-${issueId}`);
-    if (!mapContainer) return;
-
-    try {
-      // Parse locations from geo hashtags
-      const locations = [];
-      for (const tag of geoHashtags) {
-        try {
-          const location = LocationPrivacySystem.parseGeoHashtag(tag);
-          if (location) {
-            const area = LocationPrivacySystem.getLocationArea(location);
-            locations.push({
-              ...location,
-              area,
-              tag,
-            });
-          }
-        } catch (error) {
-          console.warn(`Failed to parse geo hashtag ${tag}:`, error);
-        }
-      }
-
-      if (locations.length === 0) {
-        mapContainer.innerHTML = `
-          <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">
-            📍 Location data not available
+        marker.bindPopup(`
+          <div class="mini-map-popup">
+            <strong>${loc.tag}</strong><br>
+            <small>Approximate location</small>
           </div>
-        `;
-        return;
-      }
+        `);
 
-      // Clear loading message
-      mapContainer.innerHTML = "";
-
-      // Create mini-map instance
-      const miniMap = window.L.map(`mini-map-${issueId}`, {
-        zoomControl: false,
-        attributionControl: false,
-        dragging: true,
-        scrollWheelZoom: false,
-        doubleClickZoom: true,
-        touchZoom: true,
-      });
-
-      // Add tile layer
-      window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "",
-      }).addTo(miniMap);
-
-      // Add markers and bounds
-      const bounds = window.L.latLngBounds([]);
-
-      locations.forEach((loc, index) => {
-        // Add area polygon if available
-        if (
-          loc.area &&
-          loc.area.coordinates &&
-          loc.area.coordinates.length > 0
-        ) {
-          const polygon = window.L.polygon(loc.area.coordinates, {
-            color: "#007cba",
-            fillColor: "#007cba",
-            fillOpacity: 0.2,
-            weight: 2,
-          }).addTo(miniMap);
-
-          bounds.extend(polygon.getBounds());
-
-          // Add popup to polygon
-          polygon.bindPopup(`
-            <div class="mini-map-popup">
-              <strong>${loc.tag}</strong><br>
-              <small>~1km precision area</small>
-            </div>
-          `);
-        } else {
-          // Fallback: add simple marker
-          const marker = window.L.marker([loc.lat, loc.lng]).addTo(miniMap);
-          bounds.extend([loc.lat, loc.lng]);
-
-          marker.bindPopup(`
-            <div class="mini-map-popup">
-              <strong>${loc.tag}</strong><br>
-              <small>Approximate location</small>
-            </div>
-          `);
-        }
+        // Add privacy area rectangle
+        const bounds_rect = window.L.latLngBounds(
+          [loc.southWest.lat, loc.southWest.lng],
+          [loc.northEast.lat, loc.northEast.lng],
+        );
+        window.L.rectangle(bounds_rect, {
+          color: "#007cba",
+          fillColor: "#007cba",
+          fillOpacity: 0.2,
+          weight: 2,
+        }).addTo(miniMap);
       });
 
       // Fit map to show all locations
@@ -2060,7 +1935,9 @@ class WukkieApp {
       }
 
       // Add a small control to expand map
-      const expandControl = window.L.control({ position: "topright" });
+      const expandControl = new (window.L as any).Control({
+        position: "topright",
+      });
       expandControl.onAdd = function () {
         const div = window.L.DomUtil.create(
           "div",
@@ -2071,7 +1948,7 @@ class WukkieApp {
             🔍
           </a>
         `;
-        div.onclick = (e) => {
+        div.onclick = (e: Event) => {
           e.preventDefault();
           // Focus on the main map and show these locations
           wukkie.showOnMap(issueId);
@@ -2102,6 +1979,13 @@ class WukkieApp {
     if (!issue) {
       this.showStatus("Issue not found", "error");
       return;
+    }
+
+    // Show the full-width map view
+    const mapView = document.getElementById("map-view");
+    if (mapView) {
+      mapView.classList.remove("hidden");
+      mapView.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     // Extract all geo hashtags from hashtags to show on map
@@ -3385,10 +3269,92 @@ class WukkieApp {
 
     return renderedTags.join("");
   }
+
+  private showCreateIssueView(): void {
+    console.log("📝 Show create issue view");
+    const issueCreationView = document.getElementById("issue-creation-view");
+    if (issueCreationView) {
+      issueCreationView.classList.remove("hidden");
+      issueCreationView.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  private performSearch(): void {
+    const searchInput = document.getElementById(
+      "search-input",
+    ) as HTMLInputElement;
+    const query = searchInput?.value.trim();
+
+    if (!query) {
+      this.showStatus("Please enter a search term", "error");
+      return;
+    }
+
+    console.log("🔍 Performing search for:", query);
+
+    // Get all issues
+    const stored = localStorage.getItem("wukkie_issues");
+    const allIssues: Issue[] = stored ? JSON.parse(stored) : [];
+
+    // Search in title, description, hashtags, and author
+    const filteredIssues = allIssues.filter((issue) => {
+      const searchTerm = query.toLowerCase();
+      return (
+        issue.title.toLowerCase().includes(searchTerm) ||
+        issue.description.toLowerCase().includes(searchTerm) ||
+        issue.hashtags.some((tag) => tag.toLowerCase().includes(searchTerm)) ||
+        issue.author.toLowerCase().includes(searchTerm)
+      );
+    });
+
+    console.log(`Found ${filteredIssues.length} matching issues`);
+
+    // Display filtered issues
+    this.displayFilteredIssues(filteredIssues);
+
+    // Show search results status
+    const filterStatus = document.getElementById("filter-status");
+    if (filterStatus) {
+      if (filteredIssues.length > 0) {
+        filterStatus.innerHTML = `
+          <div class="filter-active">
+            🔍 Search: "${query}" (${filteredIssues.length} results)
+            <button onclick="wukkie.clearSearch()" class="clear-filter-btn">Clear Search</button>
+          </div>
+        `;
+      } else {
+        filterStatus.innerHTML = `
+          <div class="filter-active">
+            🔍 No results for "${query}"
+            <button onclick="wukkie.clearSearch()" class="clear-filter-btn">Clear Search</button>
+          </div>
+        `;
+      }
+    }
+  }
+
+  public clearSearch(): void {
+    const searchInput = document.getElementById(
+      "search-input",
+    ) as HTMLInputElement;
+    if (searchInput) {
+      searchInput.value = "";
+    }
+
+    // Reload all issues
+    this.loadIssues().catch(console.error);
+
+    // Clear filter status
+    const filterStatus = document.getElementById("filter-status");
+    if (filterStatus) {
+      filterStatus.innerHTML = "";
+    }
+  }
 }
 
 // Initialize app when DOM is loaded
 console.log("🟢 [DEBUG] DOM readyState:", document.readyState);
+
 let wukkie: WukkieApp;
 
 if (document.readyState === "loading") {
