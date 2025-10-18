@@ -1041,7 +1041,7 @@ class WukkieApp {
 
       if (!this.atprotoManager) {
         console.log("⚠️ ATProto manager not available");
-        return;
+        return [];
       }
 
       // Set user handle for personalized search
