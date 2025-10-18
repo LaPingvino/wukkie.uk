@@ -1001,40 +1001,53 @@ class BlueskyAuth {
 
     while (retryCount <= maxRetries) {
       try {
-        // Extract PDS endpoint from JWT token's 'aud' field or use stored PDS
-        let pdsEndpoint = "https://bsky.social"; // fallback
-        try {
-          // Try to decode JWT to get the audience (PDS endpoint)
-          const tokenParts = this.authState.session.accessJwt.split(".");
-          if (tokenParts.length === 3) {
-            const payload = JSON.parse(atob(tokenParts[1]));
-            if (payload.aud) {
-              let audienceUrl = payload.aud;
-              console.log("🎯 JWT audience field:", audienceUrl);
+        // For search operations, use public API endpoint
+        // For other operations, use PDS endpoint from JWT token
+        let endpoint = "https://bsky.social"; // fallback
 
-              // If the audience is a DID, we need to resolve it to HTTP URL
-              if (audienceUrl.startsWith("did:")) {
-                console.log("🔄 DID detected, converting to HTTP URL...");
-                // Extract hostname from DID (e.g., did:web:lionsmane.us-east.host.bsky.network)
-                if (audienceUrl.startsWith("did:web:")) {
-                  const hostname = audienceUrl.replace("did:web:", "");
-                  audienceUrl = `https://${hostname}`;
-                  console.log("✅ Converted DID to HTTP URL:", audienceUrl);
-                } else {
-                  console.log("⚠️ Unknown DID format, using fallback");
-                  audienceUrl = "https://bsky.social";
+        const isSearchOperation =
+          options.nsid.includes("searchPosts") ||
+          options.nsid.includes("search") ||
+          options.nsid.startsWith("app.bsky.feed.search");
+
+        if (isSearchOperation) {
+          endpoint = "https://public.api.bsky.app";
+          console.log("🔍 Using public API endpoint for search:", endpoint);
+        } else {
+          // Extract PDS endpoint from JWT token's 'aud' field for other operations
+          try {
+            // Try to decode JWT to get the audience (PDS endpoint)
+            const tokenParts = this.authState.session.accessJwt.split(".");
+            if (tokenParts.length === 3) {
+              const payload = JSON.parse(atob(tokenParts[1]));
+              if (payload.aud) {
+                let audienceUrl = payload.aud;
+                console.log("🎯 JWT audience field:", audienceUrl);
+
+                // If the audience is a DID, we need to resolve it to HTTP URL
+                if (audienceUrl.startsWith("did:")) {
+                  console.log("🔄 DID detected, converting to HTTP URL...");
+                  // Extract hostname from DID (e.g., did:web:lionsmane.us-east.host.bsky.network)
+                  if (audienceUrl.startsWith("did:web:")) {
+                    const hostname = audienceUrl.replace("did:web:", "");
+                    audienceUrl = `https://${hostname}`;
+                    console.log("✅ Converted DID to HTTP URL:", audienceUrl);
+                  } else {
+                    console.log("⚠️ Unknown DID format, using fallback");
+                    audienceUrl = "https://bsky.social";
+                  }
                 }
-              }
 
-              pdsEndpoint = audienceUrl;
-              console.log("🎯 Using PDS endpoint:", pdsEndpoint);
+                endpoint = audienceUrl;
+                console.log("🎯 Using PDS endpoint:", endpoint);
+              }
             }
+          } catch (e) {
+            console.log("⚠️ Could not decode JWT, using fallback PDS");
           }
-        } catch (e) {
-          console.log("⚠️ Could not decode JWT, using fallback PDS");
         }
 
-        const url = `${pdsEndpoint}/xrpc/${options.nsid}`;
+        const url = `${endpoint}/xrpc/${options.nsid}`;
         const method = options.type.toUpperCase();
 
         // Create DPoP proof for API request (use stored nonce if available)

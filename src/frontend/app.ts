@@ -779,7 +779,7 @@ class WukkieApp {
       hashtags: parsedHashtags,
       status: "open",
       createdAt: editingId
-        ? this.getIssueById(editingId)?.createdAt || new Date().toISOString()
+        ? this.findIssueById(editingId)?.createdAt || new Date().toISOString()
         : new Date().toISOString(),
       author: this.session.handle,
       postToBluesky: postToBluesky,
@@ -885,7 +885,8 @@ class WukkieApp {
           priority: "medium", // Default priority
           status: "open",
           location: privacyLocation,
-          hashtags: issue.hashtags,
+          hashtags: geoHashtags,
+          author: issue.author,
         };
 
       if (issue.postToBluesky && this.atprotoManager) {
@@ -1009,27 +1010,9 @@ class WukkieApp {
 
       // Display merged results
       this.displayIssues(allIssues);
-      this.displayIssueStats(localIssues.length, networkIssues.length);
+      this.displayIssueStats(allIssues);
     } catch (error) {
       console.error("Load issues error:", error);
-    }
-  }
-
-  private displayIssueStats(localCount: number, networkCount: number): void {
-    const statsEl = document.getElementById("issue-stats");
-    if (statsEl) {
-      const total = localCount + networkCount;
-      let statsHTML = `📊 ${total} issue${total !== 1 ? "s" : ""}`;
-
-      if (networkCount > 0) {
-        statsHTML += ` <span style="color: #1976d2;">🌐 ${networkCount} public</span>`;
-      }
-
-      if (localCount > 0) {
-        statsHTML += ` <span style="color: #666;">📝 ${localCount} local</span>`;
-      }
-
-      statsEl.innerHTML = statsHTML;
     }
   }
 
@@ -1057,7 +1040,6 @@ class WukkieApp {
       // Use enhanced multi-strategy search
       const networkIssues = await this.atprotoManager.searchIssues({
         hashtags: ["#wukkie"],
-        limit: 50,
       });
 
       console.log(
@@ -1086,7 +1068,12 @@ class WukkieApp {
           description: wissue.description,
           category: wissue.category,
           hashtags: wissue.hashtags,
-          status: wissue.status,
+          status:
+            wissue.status === "in_progress"
+              ? "in-progress"
+              : wissue.status === "closed"
+                ? "resolved"
+                : wissue.status,
           createdAt: wissue.createdAt,
           author,
           blueskyUri: wissue.blueskyUri,
@@ -1094,50 +1081,10 @@ class WukkieApp {
         };
       });
 
-      // Get existing local issues
-      const stored = localStorage.getItem("wukkie_issues");
-      const localIssues: Issue[] = stored ? JSON.parse(stored) : [];
-
-      // Merge local and network issues, avoiding duplicates
-      const allIssues = [...localIssues];
-      convertedIssues.forEach((networkIssue) => {
-        // Check if this issue already exists locally (by blueskyUri or id)
-        const existsLocally = localIssues.some(
-          (local) =>
-            local.blueskyUri === networkIssue.blueskyUri ||
-            local.id === networkIssue.id,
-        );
-
-        if (!existsLocally) {
-          allIssues.push(networkIssue);
-        }
-      });
-
-      // Enhanced sorting: own issues first, then by recency
-      const currentUserHandle = this.session?.handle;
-      allIssues.sort((a, b) => {
-        // Prioritize own posts
-        const aIsOwn = a.author === currentUserHandle;
-        const bIsOwn = b.author === currentUserHandle;
-
-        if (aIsOwn && !bIsOwn) return -1;
-        if (!aIsOwn && bIsOwn) return 1;
-
-        // Then sort by creation date (newest first)
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      });
-
-      console.log(
-        `📊 Total merged issues: ${allIssues.length} (${localIssues.length} local, ${convertedIssues.length} network)`,
-      );
-      this.displayIssues(allIssues);
-      this.displayIssueStats(allIssues);
+      return convertedIssues;
     } catch (error) {
       console.error("Failed to load network issues:", error);
-      // Fall back to local issues only
-      this.loadLocalIssues();
+      return [];
     }
   }
 
@@ -1177,17 +1124,17 @@ class WukkieApp {
             response.statusText,
           );
         }
-        return;
+        return [];
       }
 
-      const data = await response.json();
+      const data: any = await response.json();
       console.log(
         `🔍 Found ${data.posts?.length || 0} public posts with #wukkie`,
       );
 
       if (!data.posts || data.posts.length === 0) {
         console.log("📭 No public issues found");
-        return;
+        return [];
       }
 
       // Parse posts into issues
@@ -1251,15 +1198,19 @@ class WukkieApp {
       }
 
       const lines = text.split("\n");
-      const titleLine = lines.find((line) => line.includes("🚨"));
+      const titleLine = lines.find((line: string) => line.includes("🚨"));
       const title = titleLine?.replace("🚨", "").trim();
 
       if (!title) return null;
 
       // Extract description (lines between title and location/hashtags)
-      const titleIndex = lines.findIndex((line) => line.includes("🚨"));
-      const locationIndex = lines.findIndex((line) => line.includes("📍"));
-      const hashtagIndex = lines.findIndex((line) => line.includes("#wukkie"));
+      const titleIndex = lines.findIndex((line: string) => line.includes("🚨"));
+      const locationIndex = lines.findIndex((line: string) =>
+        line.includes("📍"),
+      );
+      const hashtagIndex = lines.findIndex((line: string) =>
+        line.includes("#wukkie"),
+      );
 
       const descriptionEnd = Math.min(
         locationIndex === -1 ? Infinity : locationIndex,
@@ -1276,7 +1227,7 @@ class WukkieApp {
 
       // Extract hashtags
       const hashtags = (text.match(/#\w+/g) || []).filter(
-        (tag) => tag !== "#wukkie",
+        (tag: string) => tag !== "#wukkie",
       );
 
       // Determine category from hashtags
@@ -1399,7 +1350,7 @@ class WukkieApp {
     } catch (error) {
       console.error("Failed to load network issues:", error);
     }
-    return [];
+    return;
   }
 
   private async fetchCommentsForIssue(blueskyUri: string): Promise<Comment[]> {
@@ -2039,13 +1990,13 @@ class WukkieApp {
     document.addEventListener("keydown", handleKeyPress);
   }
 
-  private findIssueInDisplayedContent(issueId: string): Issue | null {
+  private findIssueInDisplayedContent(issueId: string): Issue | undefined {
     // This is a helper method to extract issue data from displayed content
     // when we need to show details of public issues that aren't in localStorage
     const issueElement = document
       .querySelector(`[onclick*="${issueId}"]`)
       ?.closest(".issue-item");
-    if (!issueElement) return null;
+    if (!issueElement) return undefined;
 
     try {
       const titleElement =
@@ -2080,7 +2031,7 @@ class WukkieApp {
       } as Issue;
     } catch (error) {
       console.warn("Error extracting issue data:", error);
-      return null;
+      return undefined;
     }
   }
 
@@ -2312,7 +2263,7 @@ class WukkieApp {
 
           // Find the WukkieIssue format for ATProto manager
           const wukkieIssue = {
-            id: issue.id,
+            id: issue.id || "",
             title: issue.title,
             description: issue.description,
             category: issue.category,
@@ -2324,9 +2275,13 @@ class WukkieApp {
                 "#geo000000",
               label: "Issue location",
               precision: 5,
+              plusCode: "8FVC2222+22",
+              centerLat: 0,
+              centerLng: 0,
             },
             hashtags: issue.hashtags,
             createdAt: issue.createdAt,
+            author: issue.author,
             blueskyUri: issue.blueskyUri,
           };
 
@@ -2364,7 +2319,7 @@ class WukkieApp {
       return;
     }
 
-    const issue = this.getIssueById(issueId);
+    const issue = this.findIssueById(issueId);
     if (!issue) {
       this.showStatus("Issue not found", "error");
       return;
@@ -2393,7 +2348,7 @@ class WukkieApp {
       return;
     }
 
-    const issue = this.getIssueById(issueId);
+    const issue = this.findIssueById(issueId);
     if (!issue) {
       this.showStatus("Issue not found", "error");
       return;
@@ -2435,7 +2390,7 @@ class WukkieApp {
   public editIssue(issueId: string): void {
     console.log("Edit issue:", issueId);
 
-    const issue = this.getIssueById(issueId);
+    const issue = this.findIssueById(issueId);
     if (!issue) {
       this.showStatus("Issue not found", "error");
       return;
@@ -2467,7 +2422,7 @@ class WukkieApp {
       postToBlueskyCheckbox.checked = issue.blueskyStatus !== "local-only";
     }
     // Extract all geo hashtags from hashtags for editing
-    const geoHashtags = issue.hashtags.filter((tag) =>
+    const geoHashtags = issue.hashtags.filter((tag: string) =>
       LocationPrivacySystem.isValidGeoHashtag(tag),
     );
     if (locationInput && geoHashtags.length > 0) {
@@ -2628,14 +2583,14 @@ class WukkieApp {
   /**
    * Get issue by ID from local storage
    */
-  private getIssueById(issueId: string): Issue | null {
+  private findIssueById(id: string): Issue | undefined {
     try {
       const stored = localStorage.getItem("wukkie_issues");
       const issues: Issue[] = stored ? JSON.parse(stored) : [];
-      return issues.find((issue) => issue.id === issueId) || null;
+      return issues.find((issue) => issue.id === id);
     } catch (error) {
       console.error("Error getting issue by ID:", error);
-      return null;
+      return undefined;
     }
   }
 

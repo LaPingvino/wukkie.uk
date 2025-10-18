@@ -1,4 +1,4 @@
-import { AtpAgent, BskyAgent, RichText, XrpcClient } from "@atproto/api";
+import { AtpAgent, BskyAgent, RichText } from "@atproto/api";
 import {
   LocationPrivacySystem,
   PrivacyLocation,
@@ -16,6 +16,7 @@ export interface WukkieIssue {
   hashtags: string[];
   media?: Blob[];
   createdAt: string;
+  author: string;
   blueskyUri?: string; // Link to Bluesky post
   blueskyReplyUri?: string; // For threaded discussions
 }
@@ -126,7 +127,7 @@ export const WUKKIE_LEXICON = {
 
 export class ATProtoIssueManager {
   private agent: BskyAgent | null;
-  private xrpc: XrpcClient | null;
+  private xrpc: any | null;
   private readonly baseUrl: string;
   private userDid: string | null;
   private userHandle: string | null;
@@ -136,7 +137,7 @@ export class ATProtoIssueManager {
 
   constructor(
     agent: BskyAgent | null = null,
-    xrpcOrBaseUrl?: XrpcClient | string,
+    xrpcOrBaseUrl?: any | string,
     baseUrl: string = "https://wukkie.uk",
     userDid?: string,
   ) {
@@ -159,7 +160,7 @@ export class ATProtoIssueManager {
     }
   }
 
-  private getClient(): BskyAgent | XrpcClient {
+  private getClient(): BskyAgent | any {
     if (this.agent) {
       return this.agent;
     } else if (this.xrpc) {
@@ -273,9 +274,9 @@ export class ATProtoIssueManager {
       );
     }
 
-    // Prepare the record
-    const record = {
-      $type: "app.bsky.feed.post",
+    // Create the record with proper typing
+    const record: any = {
+      $type: "app.bsky.feed.post" as const,
       text: rt.text,
       facets: rt.facets,
       createdAt: new Date().toISOString(),
@@ -683,9 +684,9 @@ export class ATProtoIssueManager {
 
       // Merge local and network, avoiding duplicates
       const allIssues = [...localIssues];
-      networkIssues.forEach((networkIssue) => {
+      networkIssues.forEach((networkIssue: WukkieIssue) => {
         const existsLocally = localIssues.some(
-          (local) =>
+          (local: WukkieIssue) =>
             local.blueskyUri === networkIssue.blueskyUri ||
             local.id === networkIssue.id,
         );
@@ -1015,7 +1016,7 @@ export class ATProtoIssueManager {
 
       // Extract hashtags
       const hashtags = (text.match(/#\w+/g) || []).filter(
-        (tag) => tag !== "#wukkie",
+        (tag: string) => tag !== "#wukkie",
       );
 
       // Extract geo hashtag
@@ -1031,7 +1032,8 @@ export class ATProtoIssueManager {
         "community",
       ];
       const category =
-        hashtags.find((tag) => categoryTags.includes(tag.slice(1))) || "other";
+        hashtags.find((tag: string) => categoryTags.includes(tag.slice(1))) ||
+        "other";
 
       return {
         id: `network_${post.uri.split("/").pop()}`,
@@ -1044,10 +1046,14 @@ export class ATProtoIssueManager {
           geoHashtag: geoHashtag,
           label: `Network location ${geoHashtag}`,
           precision: 5,
+          plusCode: "8FVC2222+22",
+          centerLat: 0,
+          centerLng: 0,
         },
         hashtags: hashtags,
         createdAt:
           post.indexedAt || record.createdAt || new Date().toISOString(),
+        author: post.author?.handle || "unknown-user",
         blueskyUri: post.uri,
       };
     } catch (error) {
