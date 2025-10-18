@@ -1602,10 +1602,36 @@ class WukkieApp {
             <button class="action-btn" onclick="wukkie.likeIssue('${issue.id}')">👍 <span id="likes-${issue.id}">${issue.likes || 0}</span></button>
             <button class="action-btn" onclick="wukkie.commentOnIssue('${issue.id}')">💬 <span id="comments-${issue.id}">${issue.comments ? issue.comments.length : 0}</span></button>
             ${issue.comments && issue.comments.length > 0 ? `<button class="action-btn" onclick="wukkie.toggleComments('${issue.id}')">👁️ Show Comments</button>` : ""}
-            ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length > 0 ? `<button class="action-btn" onclick="wukkie.showOnMap('${issue.id}')">📍 ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length > 1 ? `View ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length} Locations` : "View Location"}</button>` : ""}
+
             <button class="action-btn edit-btn" onclick="wukkie.editIssue('${issue.id}')">✏️ Edit</button>
             ${retryButtons}
           </div>
+          ${
+            issue.hashtags.filter((tag) =>
+              LocationPrivacySystem.isValidGeoHashtag(tag),
+            ).length > 0
+              ? `
+          <div class="issue-mini-map" id="mini-map-${issue.id}" style="height: 200px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd;">
+            <div class="mini-map-loading" style="height: 100%; display: flex; align-items: center; justify-content: center; color: #666;">
+              📍 Loading ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length > 1 ? `${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length} locations` : "location"}...
+            </div>
+          </div>
+          `
+              : ""
+          }
+          ${
+            issue.hashtags.filter((tag) =>
+              LocationPrivacySystem.isValidGeoHashtag(tag),
+            ).length > 0
+              ? `
+          <div class="issue-mini-map" id="mini-map-${issue.id}" style="height: 200px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd;">
+            <div class="mini-map-loading" style="height: 100%; display: flex; align-items: center; justify-content: center; color: #666;">
+              📍 Loading ${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length > 1 ? `${issue.hashtags.filter((tag) => LocationPrivacySystem.isValidGeoHashtag(tag)).length} locations` : "location"}...
+            </div>
+          </div>
+          `
+              : ""
+          }
           ${
             issue.comments && issue.comments.length > 0
               ? `
@@ -1634,6 +1660,9 @@ class WukkieApp {
     // Wait for all hashtag processing to complete
     const issueHtmlArray = await Promise.all(issueHtmlPromises);
     issuesList.innerHTML = issueHtmlArray.join("");
+
+    // Initialize mini-maps for issues with geo hashtags
+    this.initializeMiniMaps(issues);
 
     // Update filter status
     this.updateFilterStatus(issues.length);
@@ -1785,6 +1814,285 @@ class WukkieApp {
 
   // Public methods for button handlers
 
+  private async initializeMiniMaps(issues: Issue[]): Promise<void> {
+    // Wait for DOM to update
+    setTimeout(async () => {
+      for (const issue of issues) {
+        const geoHashtags = issue.hashtags.filter((tag) =>
+          LocationPrivacySystem.isValidGeoHashtag(tag),
+        );
+
+        if (geoHashtags.length > 0) {
+          await this.createMiniMap(issue.id, geoHashtags);
+        }
+      }
+    }, 100);
+  }
+
+  private async createMiniMap(
+    issueId: string,
+    geoHashtags: string[],
+  ): Promise<void> {
+    const mapContainer = document.getElementById(`mini-map-${issueId}`);
+    if (!mapContainer) return;
+
+    try {
+      // Parse locations from geo hashtags
+      const locations = [];
+      for (const tag of geoHashtags) {
+        try {
+          const location = LocationPrivacySystem.parseGeoHashtag(tag);
+          if (location) {
+            const area = LocationPrivacySystem.getLocationArea(location);
+            locations.push({
+              ...location,
+              area,
+              tag,
+            });
+          }
+        } catch (error) {
+          console.warn(`Failed to parse geo hashtag ${tag}:`, error);
+        }
+      }
+
+      if (locations.length === 0) {
+        mapContainer.innerHTML = `
+          <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">
+            📍 Location data not available
+          </div>
+        `;
+        return;
+      }
+
+      // Clear loading message
+      mapContainer.innerHTML = "";
+
+      // Create mini-map instance
+      const miniMap = window.L.map(`mini-map-${issueId}`, {
+        zoomControl: false,
+        attributionControl: false,
+        dragging: true,
+        scrollWheelZoom: false,
+        doubleClickZoom: true,
+        touchZoom: true,
+      });
+
+      // Add tile layer
+      window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "",
+      }).addTo(miniMap);
+
+      // Add markers and bounds
+      const bounds = window.L.latLngBounds([]);
+
+      locations.forEach((loc, index) => {
+        // Add area polygon if available
+        if (
+          loc.area &&
+          loc.area.coordinates &&
+          loc.area.coordinates.length > 0
+        ) {
+          const polygon = window.L.polygon(loc.area.coordinates, {
+            color: "#007cba",
+            fillColor: "#007cba",
+            fillOpacity: 0.2,
+            weight: 2,
+          }).addTo(miniMap);
+
+          bounds.extend(polygon.getBounds());
+
+          // Add popup to polygon
+          polygon.bindPopup(`
+            <div class="mini-map-popup">
+              <strong>${loc.tag}</strong><br>
+              <small>~1km precision area</small>
+            </div>
+          `);
+        } else {
+          // Fallback: add simple marker
+          const marker = window.L.marker([loc.lat, loc.lng]).addTo(miniMap);
+          bounds.extend([loc.lat, loc.lng]);
+
+          marker.bindPopup(`
+            <div class="mini-map-popup">
+              <strong>${loc.tag}</strong><br>
+              <small>Approximate location</small>
+            </div>
+          `);
+        }
+      });
+
+      // Fit map to show all locations
+      if (bounds.isValid()) {
+        miniMap.fitBounds(bounds, { padding: [10, 10] });
+      }
+
+      // Add a small control to expand map
+      const expandControl = window.L.control({ position: "topright" });
+      expandControl.onAdd = function () {
+        const div = window.L.DomUtil.create(
+          "div",
+          "leaflet-bar leaflet-control",
+        );
+        div.innerHTML = `
+          <a href="#" title="Expand map" style="background: white; padding: 5px; text-decoration: none; color: #333;">
+            🔍
+          </a>
+        `;
+        div.onclick = (e) => {
+          e.preventDefault();
+          // Focus on the main map and show these locations
+          wukkie.showOnMap(issueId);
+        };
+        return div;
+      };
+      expandControl.addTo(miniMap);
+
+      console.log(
+        `✅ Mini-map created for issue ${issueId} with ${locations.length} locations`,
+      );
+    } catch (error) {
+      console.error(`Failed to create mini-map for issue ${issueId}:`, error);
+      mapContainer.innerHTML = `
+        <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">
+          📍 Map unavailable
+        </div>
+      `;
+    }
+  }
+
+  private async createMiniMap(
+    issueId: string,
+    geoHashtags: string[],
+  ): Promise<void> {
+    const mapContainer = document.getElementById(`mini-map-${issueId}`);
+    if (!mapContainer) return;
+
+    try {
+      // Parse locations from geo hashtags
+      const locations = [];
+      for (const tag of geoHashtags) {
+        try {
+          const location = LocationPrivacySystem.parseGeoHashtag(tag);
+          if (location) {
+            const area = LocationPrivacySystem.getLocationArea(location);
+            locations.push({
+              ...location,
+              area,
+              tag,
+            });
+          }
+        } catch (error) {
+          console.warn(`Failed to parse geo hashtag ${tag}:`, error);
+        }
+      }
+
+      if (locations.length === 0) {
+        mapContainer.innerHTML = `
+          <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">
+            📍 Location data not available
+          </div>
+        `;
+        return;
+      }
+
+      // Clear loading message
+      mapContainer.innerHTML = "";
+
+      // Create mini-map instance
+      const miniMap = window.L.map(`mini-map-${issueId}`, {
+        zoomControl: false,
+        attributionControl: false,
+        dragging: true,
+        scrollWheelZoom: false,
+        doubleClickZoom: true,
+        touchZoom: true,
+      });
+
+      // Add tile layer
+      window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "",
+      }).addTo(miniMap);
+
+      // Add markers and bounds
+      const bounds = window.L.latLngBounds([]);
+
+      locations.forEach((loc, index) => {
+        // Add area polygon if available
+        if (
+          loc.area &&
+          loc.area.coordinates &&
+          loc.area.coordinates.length > 0
+        ) {
+          const polygon = window.L.polygon(loc.area.coordinates, {
+            color: "#007cba",
+            fillColor: "#007cba",
+            fillOpacity: 0.2,
+            weight: 2,
+          }).addTo(miniMap);
+
+          bounds.extend(polygon.getBounds());
+
+          // Add popup to polygon
+          polygon.bindPopup(`
+            <div class="mini-map-popup">
+              <strong>${loc.tag}</strong><br>
+              <small>~1km precision area</small>
+            </div>
+          `);
+        } else {
+          // Fallback: add simple marker
+          const marker = window.L.marker([loc.lat, loc.lng]).addTo(miniMap);
+          bounds.extend([loc.lat, loc.lng]);
+
+          marker.bindPopup(`
+            <div class="mini-map-popup">
+              <strong>${loc.tag}</strong><br>
+              <small>Approximate location</small>
+            </div>
+          `);
+        }
+      });
+
+      // Fit map to show all locations
+      if (bounds.isValid()) {
+        miniMap.fitBounds(bounds, { padding: [10, 10] });
+      }
+
+      // Add a small control to expand map
+      const expandControl = window.L.control({ position: "topright" });
+      expandControl.onAdd = function () {
+        const div = window.L.DomUtil.create(
+          "div",
+          "leaflet-bar leaflet-control",
+        );
+        div.innerHTML = `
+          <a href="#" title="Expand map" style="background: white; padding: 5px; text-decoration: none; color: #333;">
+            🔍
+          </a>
+        `;
+        div.onclick = (e) => {
+          e.preventDefault();
+          // Focus on the main map and show these locations
+          wukkie.showOnMap(issueId);
+        };
+        return div;
+      };
+      expandControl.addTo(miniMap);
+
+      console.log(
+        `✅ Mini-map created for issue ${issueId} with ${locations.length} locations`,
+      );
+    } catch (error) {
+      console.error(`Failed to create mini-map for issue ${issueId}:`, error);
+      mapContainer.innerHTML = `
+        <div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #999;">
+          📍 Map unavailable
+        </div>
+      `;
+    }
+  }
+
   public showOnMap(issueId: string): void {
     console.log("🗺️ Show issue on map:", issueId);
     const stored = localStorage.getItem("wukkie_issues");
@@ -1904,29 +2212,11 @@ class WukkieApp {
       return;
     }
 
-    // Remove any existing modal first
-    const existingModal = document.querySelector(".issue-modal-overlay");
-    if (existingModal) {
-      existingModal.remove();
+    // Remove any existing detailed view first
+    const existingDetail = document.getElementById("issue-detail-view");
+    if (existingDetail) {
+      existingDetail.remove();
     }
-
-    // Create modal for detailed issue view
-    const modal = document.createElement("div");
-    modal.className = "issue-modal-overlay";
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 20px;
-      box-sizing: border-box;
-    `;
 
     const timeAgo = this.formatTimeAgo(new Date(issue.createdAt));
 
@@ -1957,126 +2247,98 @@ class WukkieApp {
       `;
     }
 
-    modal.innerHTML = `
-      <div class="issue-modal" style="
-        background: white;
-        border-radius: 12px;
-        padding: 24px;
-        max-width: 600px;
-        width: 100%;
-        max-height: 80vh;
-        overflow-y: auto;
-        position: relative;
-      ">
-        <button class="close-modal" style="
-          position: absolute;
-          top: 16px;
-          right: 16px;
-          background: none;
-          border: none;
-          font-size: 24px;
-          cursor: pointer;
-          color: #666;
-          line-height: 1;
-        ">×</button>
-
-        <h2 style="margin: 0 0 16px 0; padding-right: 32px;">${this.escapeHtml(issue.title)}</h2>
-
-        <div class="issue-meta" style="margin-bottom: 16px; color: #666; font-size: 0.9rem;">
-          <div>By @${this.escapeHtml(issue.author)} • ${timeAgo}</div>
-          <div>Category: ${this.escapeHtml(issue.category)}</div>
-        </div>
-
-        ${blueskySection}
-
-        <div class="issue-description" style="margin: 16px 0; line-height: 1.6;">
-          ${this.escapeHtml(issue.description).replace(/\n/g, "<br>")}
-        </div>
-
-        <div class="issue-hashtags" style="margin: 16px 0;">
-          ${await this.renderHashtagsWithTooltips(issue.hashtags)}
-        </div>
-
-        <div class="issue-actions" style="margin: 20px 0; display: flex; gap: 8px; flex-wrap: wrap;">
-          <button onclick="wukkie.likeIssueInModal('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">👍 <span id="modal-likes-${issue.id}">${issue.likes || 0}</span></button>
-          <button onclick="wukkie.showCommentFormInModal('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">💬 Add Comment</button>
-          ${issue.hashtags.filter((tag) => tag.startsWith("#geo")).length > 0 ? `<button onclick="wukkie.showOnMap('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">📍 View on Map</button>` : ""}
-          <button onclick="wukkie.editIssue('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">✏️ Edit</button>
-        </div>
-
-        <!-- Comment Form Container (initially hidden) -->
-        <div id="modal-comment-form-${issue.id}" style="display: none; margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
-          <h5 style="margin: 0 0 12px 0;">Add Comment</h5>
-          <textarea id="modal-comment-text-${issue.id}" placeholder="Write your comment..." style="width: 100%; min-height: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; font-family: inherit; box-sizing: border-box;"></textarea>
-          <div style="margin-top: 12px; display: flex; gap: 8px;">
-            <button onclick="wukkie.submitModalComment('${issue.id}')" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Post Comment</button>
-            <button onclick="wukkie.cancelModalComment('${issue.id}')" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
-          </div>
-        </div>
-
-        ${
-          issue.comments && issue.comments.length > 0
-            ? `
-          <div class="comments-section" style="margin-top: 24px; border-top: 1px solid #eee; padding-top: 20px;">
-            <h3 style="margin: 0 0 16px 0; font-size: 1.1rem;">Comments (${issue.comments.length})</h3>
-            <div id="modal-comments-${issue.id}" style="display: block;">
-              ${issue.comments
-                .map(
-                  (comment) => `
-                <div class="comment" style="
-                  margin-bottom: 16px;
-                  padding: 12px;
-                  background: #f8f9fa;
-                  border-radius: 8px;
-                  border-left: 3px solid #007bff;
-                ">
-                  <div class="comment-header" style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 8px;
-                    font-size: 0.9rem;
-                    color: #666;
-                  ">
-                    <span class="comment-author" style="font-weight: 500; color: #333;">@${this.escapeHtml(comment.author)}</span>
-                    <span class="comment-time">${this.formatTimeAgo(new Date(comment.createdAt))}</span>
-                  </div>
-                  <div class="comment-text" style="line-height: 1.5;">${this.escapeHtml(comment.text).replace(/\n/g, "<br>")}</div>
-                </div>
-              `,
-                )
-                .join("")}
-            </div>
-          </div>
-        `
-            : ""
-        }
-      </div>
+    // Create inline detailed view
+    const detailView = document.createElement("div");
+    detailView.id = "issue-detail-view";
+    detailView.style.cssText = `
+      background: #f8f9fa;
+      border: 2px solid #007bff;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      position: relative;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     `;
 
-    // Add modal to page
-    document.body.appendChild(modal);
+    detailView.innerHTML = `
+      <button class="close-detail" style="
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+        line-height: 1;
+      " onclick="document.getElementById('issue-detail-view').remove();">×</button>
 
-    // Close modal handlers
-    const closeBtn = modal.querySelector(".close-modal") as HTMLButtonElement;
-    closeBtn.onclick = () => {
-      document.body.removeChild(modal);
-    };
+      <h2 style="margin: 0 0 16px 0; padding-right: 32px; color: #007bff;">${this.escapeHtml(issue.title)}</h2>
 
-    modal.onclick = (e) => {
-      if (e.target === modal) {
-        document.body.removeChild(modal);
+      <div class="issue-meta" style="margin-bottom: 16px; color: #666; font-size: 0.9rem;">
+        <div>By @${this.escapeHtml(issue.author)} • ${timeAgo}</div>
+        <div>Category: ${this.escapeHtml(issue.category)}</div>
+      </div>
+
+      ${blueskySection}
+
+      <div class="issue-description" style="margin: 16px 0; line-height: 1.6; background: white; padding: 16px; border-radius: 8px;">
+        ${this.escapeHtml(issue.description).replace(/\n/g, "<br>")}
+      </div>
+
+      <div class="issue-hashtags" style="margin: 16px 0;">
+        ${await this.renderHashtagsWithTooltips(issue.hashtags)}
+      </div>
+
+      <div class="issue-actions" style="margin: 20px 0; display: flex; gap: 8px; flex-wrap: wrap;">
+        <button onclick="wukkie.likeIssueInModal('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">👍 <span id="modal-likes-${issue.id}">${issue.likes || 0}</span></button>
+        <button onclick="wukkie.showCommentFormInModal('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">💬 Add Comment</button>
+        ${issue.hashtags.filter((tag) => tag.startsWith("#geo")).length > 0 ? `<button onclick="wukkie.showOnMap('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">📍 View on Map</button>` : ""}
+        <button onclick="wukkie.editIssue('${issue.id}')" style="padding: 8px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer;">✏️ Edit</button>
+      </div>
+
+      <!-- Comment Form Container (initially hidden) -->
+      <div id="modal-comment-form-${issue.id}" style="display: none; margin-top: 16px; padding: 16px; background: white; border-radius: 8px; border: 1px solid #ddd;">
+        <h5 style="margin: 0 0 12px 0;">Add Comment</h5>
+        <textarea id="modal-comment-text-${issue.id}" placeholder="Write your comment..." style="width: 100%; min-height: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical; font-family: inherit; box-sizing: border-box;"></textarea>
+        <div style="margin-top: 12px; display: flex; gap: 8px;">
+          <button onclick="wukkie.submitModalComment('${issue.id}')" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Post Comment</button>
+          <button onclick="wukkie.cancelModalComment('${issue.id}')" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Existing Comments -->
+      ${
+        issue.comments && issue.comments.length > 0
+          ? `
+      <div class="issue-comments" style="margin-top: 20px;">
+        <h4>Comments (${issue.comments.length})</h4>
+        ${issue.comments
+          .map(
+            (comment) => `
+          <div class="comment" style="margin: 12px 0; padding: 12px; background: white; border-radius: 8px; border: 1px solid #eee;">
+            <div class="comment-header" style="margin-bottom: 8px; color: #666; font-size: 0.9rem;">
+              <span class="comment-author">@${comment.author}</span>
+              <span class="comment-time"> • ${this.formatTimeAgo(new Date(comment.createdAt))}</span>
+            </div>
+            <div class="comment-text">${comment.text}</div>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>
+      `
+          : ""
       }
-    };
+    `;
 
-    // Close on Escape key
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        document.body.removeChild(modal);
-        document.removeEventListener("keydown", handleKeyPress);
-      }
-    };
-    document.addEventListener("keydown", handleKeyPress);
+    // Insert before the issues list
+    const issuesList = document.getElementById("issues-list");
+    if (issuesList) {
+      issuesList.parentNode?.insertBefore(detailView, issuesList);
+      // Scroll to the detailed view
+      detailView.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }
 
   private findIssueInDisplayedContent(issueId: string): Issue | undefined {
