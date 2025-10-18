@@ -15,6 +15,6 @@
   "response_types": [
     "code"
   ],
-  "scope": "atproto repo:* rpc:com.atproto.repo.createRecord?aud=* rpc:com.atproto.repo.putRecord?aud=* rpc:com.atproto.repo.deleteRecord?aud=* rpc:com.atproto.repo.listRecords?aud=* rpc:com.atproto.repo.getRecord?aud=* rpc:com.atproto.server.getSession?aud=* blob:*/*",
+  "scope": "atproto repo:* rpc:com.atproto.repo.createRecord?aud=* rpc:com.atproto.repo.putRecord?aud=* rpc:com.atproto.repo.deleteRecord?aud=* rpc:com.atproto.repo.listRecords?aud=* rpc:com.atproto.repo.getRecord?aud=* rpc:com.atproto.server.getSession?aud=* rpc:app.bsky.feed.searchPosts?aud=* blob:*/*",
   "token_endpoint_auth_method": "none"
 }

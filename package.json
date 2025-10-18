@@ -63,6 +63,7 @@
         "rpc:com.atproto.repo.listRecords?aud=*": "RPC permission to list/query records on any ATProto service",
         "rpc:com.atproto.repo.getRecord?aud=*": "RPC permission to retrieve specific records on any ATProto service",
         "rpc:com.atproto.server.getSession?aud=*": "RPC permission to get session information on any ATProto service (needed for auth)",
+        "rpc:app.bsky.feed.searchPosts?aud=*": "RPC permission to search for posts on any Bluesky service (needed for network issue discovery)",
         "blob:*/*": "Permission to upload any MIME type of blob/file (images, videos, etc.)"
       },
       "scopeSyntax": "Format: 'permission:resource?param=value&param2=value2' - case sensitive, uses subset of ASCII",
@@ -75,7 +76,7 @@
       "warningForFutureDevelopers": "⚠️  DO NOT REVERT TO 'atproto transition:generic' - causes authentication failures. Use these granular permissions.",
       "troubleshooting": "If you get 'Bad token scope' errors, verify these exact scope strings are being used in both package.json and client-metadata.json"
     },
-    "scopes": "atproto repo:* rpc:com.atproto.repo.createRecord?aud=* rpc:com.atproto.repo.putRecord?aud=* rpc:com.atproto.repo.deleteRecord?aud=* rpc:com.atproto.repo.listRecords?aud=* rpc:com.atproto.repo.getRecord?aud=* rpc:com.atproto.server.getSession?aud=* blob:*/*",
+    "scopes": "atproto repo:* rpc:com.atproto.repo.createRecord?aud=* rpc:com.atproto.repo.putRecord?aud=* rpc:com.atproto.repo.deleteRecord?aud=* rpc:com.atproto.repo.listRecords?aud=* rpc:com.atproto.repo.getRecord?aud=* rpc:com.atproto.server.getSession?aud=* rpc:app.bsky.feed.searchPosts?aud=* blob:*/*",
     "clientName": "Wukkie.uk - Bug Tracker for the World",
     "description": "OAuth configuration for Bluesky/ATProto integration with granular permissions (updated Jan 2025)"
   },
