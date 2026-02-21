@@ -1,7 +1,0 @@
-name = "wukkie"
-main = "dist/worker.js"
-compatibility_date = "2024-12-15"
-compatibility_flags = ["nodejs_compat"]
-
-[vars]
-ENVIRONMENT = "production"
