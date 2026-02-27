@@ -7,18 +7,11 @@
     "unredacted.org"
   ],
   "allowCustomHomeservers": true,
-
   "featuredCommunities": {
     "openAsDefault": false,
     "spaces": [],
-    "rooms": [
-      "#cinny:matrix.org"
-    ],
+    "rooms": ["#cinny:matrix.org"],
     "servers": ["matrix.org"]
   },
-
-  "hashRouter": {
-    "enabled": false,
-    "basename": "/"
-  }
+  "hashRouter": { "enabled": false, "basename": "/" }
 }
