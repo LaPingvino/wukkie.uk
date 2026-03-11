@@ -1,1 +1,5 @@
-{"name":"wukkie-cinny","version":"1.0.0","scripts":{"build":"echo no build"}}
+{
+  "name": "wukkie-cinny",
+  "version": "1.0.0",
+  "scripts": { "build": "echo 'Pre-built static site — no build needed'" }
+}

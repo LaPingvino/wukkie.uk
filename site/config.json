@@ -1,7 +1,17 @@
 {
   "defaultHomeserver": 0,
-  "homeserverList": ["matrix.org","converser.eu","mozilla.org","unredacted.org"],
+  "homeserverList": [
+    "matrix.org",
+    "converser.eu",
+    "mozilla.org",
+    "unredacted.org"
+  ],
   "allowCustomHomeservers": true,
-  "featuredCommunities": {"openAsDefault":false,"spaces":[],"rooms":["#cinny:matrix.org"],"servers":["matrix.org"]},
-  "hashRouter": {"enabled":false,"basename":"/"}
+  "featuredCommunities": {
+    "openAsDefault": false,
+    "spaces": [],
+    "rooms": ["#cinny:matrix.org"],
+    "servers": ["matrix.org"]
+  },
+  "hashRouter": { "enabled": false, "basename": "/" }
 }
