@@ -1,6 +1,6 @@
 {
   "name": "wukkie",
-  "compatibility_date": "2026-04-18",
+  "compatibility_date": "2026-04-19",
   "assets": {
     "directory": "site",
     "not_found_handling": "single-page-application"
