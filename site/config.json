@@ -10,8 +10,8 @@
   "featuredCommunities": {
     "openAsDefault": false,
     "spaces": [],
-    "rooms": ["#cinny:matrix.org"],
-    "servers": ["matrix.org"]
+    "rooms": ["#wally:chat.kiefte.eu"],
+    "servers": ["chat.kiefte.eu"]
   },
   "hashRouter": { "enabled": false, "basename": "/" }
 }
