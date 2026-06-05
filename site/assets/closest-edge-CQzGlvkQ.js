@@ -28,14 +28,13 @@ var r = { top: function(e2, t2) {
   return Math.abs(e2.bottom - t2.y);
 }, left: function(e2, t2) {
   return Math.abs(t2.x - e2.left);
-} }, i = Symbol(`closestEdge`);
+} }, i = /* @__PURE__ */ Symbol(`closestEdge`);
 function a(t2, a2) {
-  var _a;
-  var o2 = a2.element, s = a2.input, c = a2.allowedEdges, l = { x: s.clientX, y: s.clientY }, u = o2.getBoundingClientRect(), d = ((_a = c.map(function(e2) {
+  var o2 = a2.element, s = a2.input, c = a2.allowedEdges, l = { x: s.clientX, y: s.clientY }, u = o2.getBoundingClientRect(), d = c.map(function(e2) {
     return { edge: e2, value: r[e2](u, l) };
   }).sort(function(e2, t3) {
     return e2.value - t3.value;
-  })[0]) == null ? void 0 : _a.edge) ?? null;
+  })[0]?.edge ?? null;
   return n(n({}, t2), {}, e({}, i, d));
 }
 function o(e2) {

@@ -7,13 +7,11 @@ function e(t2) {
   }, e(t2);
 }
 function t(t2, n2) {
-  if (e(t2) != `object` || !t2)
-    return t2;
+  if (e(t2) != `object` || !t2) return t2;
   var r2 = t2[Symbol.toPrimitive];
   if (r2 !== void 0) {
     var i = r2.call(t2, n2 || `default`);
-    if (e(i) != `object`)
-      return i;
+    if (e(i) != `object`) return i;
     throw TypeError(`@@toPrimitive must return a primitive value.`);
   }
   return (n2 === `string` ? String : Number)(t2);

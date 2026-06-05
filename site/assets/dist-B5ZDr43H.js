@@ -7,10 +7,8 @@ function i(n2) {
   let i2 = [], a2 = String(n2).trim();
   return a2[0] !== `M` && a2[0] !== `m` || a2.replace(t, (t2, n3, a3) => {
     let o2 = r(a3), s2 = n3.toLowerCase(), c2 = n3;
-    if (s2 === `m` && o2.length > 2 && (i2.push([c2, ...o2.splice(0, 2)]), s2 = `l`, c2 = c2 === `m` ? `l` : `L`), o2.length < e[s2])
-      return ``;
-    for (i2.push([c2, ...o2.splice(0, e[s2])]); o2.length >= e[s2] && o2.length && e[s2]; )
-      i2.push([c2, ...o2.splice(0, e[s2])]);
+    if (s2 === `m` && o2.length > 2 && (i2.push([c2, ...o2.splice(0, 2)]), s2 = `l`, c2 = c2 === `m` ? `l` : `L`), o2.length < e[s2]) return ``;
+    for (i2.push([c2, ...o2.splice(0, e[s2])]); o2.length >= e[s2] && o2.length && e[s2]; ) i2.push([c2, ...o2.splice(0, e[s2])]);
     return ``;
   }), i2;
 }
@@ -93,8 +91,7 @@ function l(e3, t2) {
         break;
       case `a`:
       case `A`:
-        if (F = t2[P], N === null)
-          throw Error(`This should never happen`);
+        if (F = t2[P], N === null) throw Error(`This should never happen`);
         w === `a` ? (n2 += F[6], r2 += F[7]) : (n2 = F[6], r2 = F[7]), b = F[1], x = F[2], p2 = F[3] * Math.PI / 180, l2 = !!F[4], u2 = !!F[5], d2 = { x: n2, y: r2 }, f2 = { x: (N.x - d2.x) / 2, y: (N.y - d2.y) / 2 }, a(f2, -p2), m = f2.x * f2.x / (b * b) + f2.y * f2.y / (x * x), m > 1 && (m = Math.sqrt(m), b *= m, x *= m), T = { x: b * f2.y / x, y: -(x * f2.x) / b }, h = b * b * x * x, g = b * b * f2.y * f2.y + x * x * f2.x * f2.x, u2 === l2 ? s(T, -Math.sqrt((h - g) / g) || 0) : s(T, Math.sqrt((h - g) / g) || 0), c2 = Math.atan2((f2.y - T.y) / x, (f2.x - T.x) / b), i2 = Math.atan2(-(f2.y + T.y) / x, -(f2.x + T.x) / b), a(T, p2), o(T, (d2.x + N.x) / 2, (d2.y + N.y) / 2), e3.save(), e3.translate(T.x, T.y), e3.rotate(p2), e3.scale(b, x), e3.arc(0, 0, 1, c2, i2, !u2), e3.restore();
         break;
       case `C`:
@@ -148,14 +145,11 @@ function l(e3, t2) {
 }
 function u(e3, t2, n2, r2, i2 = 0) {
   if (typeof i2 == `number` && (i2 = [i2]), Array.isArray(i2)) {
-    if (i2.length === 0 || i2.length > 4)
-      throw RangeError(`Failed to execute 'roundRect' on '${this.constructor.name}': ${i2.length} radii provided. Between one and four radii are necessary.`);
+    if (i2.length === 0 || i2.length > 4) throw RangeError(`Failed to execute 'roundRect' on '${this.constructor.name}': ${i2.length} radii provided. Between one and four radii are necessary.`);
     i2.forEach((e4) => {
-      if (e4 < 0)
-        throw RangeError(`Failed to execute 'roundRect' on '${this.constructor.name}': Radius value ${e4} is negative.`);
+      if (e4 < 0) throw RangeError(`Failed to execute 'roundRect' on '${this.constructor.name}': Radius value ${e4} is negative.`);
     });
-  } else
-    return;
+  } else return;
   if (i2.length === 1 && i2[0] === 0) {
     this.rect(e3, t2, n2, r2);
     return;
@@ -164,8 +158,7 @@ function u(e3, t2, n2, r2, i2 = 0) {
   i2.length === 2 && (s2 = Math.min(a2, i2[1]), l2 = s2), i2.length === 3 && (s2 = Math.min(a2, i2[1]), l2 = s2, c2 = Math.min(a2, i2[2])), i2.length === 4 && (s2 = Math.min(a2, i2[1]), c2 = Math.min(a2, i2[2]), l2 = Math.min(a2, i2[3])), this.moveTo(e3, t2 + r2 - l2), this.arcTo(e3, t2, e3 + o2, t2, o2), this.arcTo(e3 + n2, t2, e3 + n2, t2 + s2, s2), this.arcTo(e3 + n2, t2 + r2, e3 + n2 - c2, t2 + r2, c2), this.arcTo(e3, t2 + r2, e3, t2 + r2 - l2, l2), this.closePath();
 }
 function d(e3) {
-  if (!e3)
-    return;
+  if (!e3) return;
   let t2 = e3.prototype.clip, n2 = e3.prototype.fill, r2 = e3.prototype.stroke, i2 = e3.prototype.isPointInPath;
   e3.prototype.clip = function(...e4) {
     if (e4[0] instanceof c) {

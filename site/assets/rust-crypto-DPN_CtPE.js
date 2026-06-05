@@ -14,15 +14,13 @@ var Ee = e({ Attachment: () => De, BackupDecryptionKey: () => w, BackupKeys: () 
   static decrypt(e87) {
     V(e87, $e);
     let t2 = Q.attachment_decrypt(e87.__wbg_ptr);
-    if (t2[3])
-      throw X(t2[2]);
+    if (t2[3]) throw X(t2[2]);
     var n2 = H(t2[0], t2[1]).slice();
     return Q.__wbindgen_free(t2[0], t2[1] * 1, 1), n2;
   }
   static encrypt(e87) {
     let t2 = q(e87, Q.__wbindgen_malloc), n2 = Z, r2 = Q.attachment_encrypt(t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return $e.__wrap(r2[0]);
   }
 };
@@ -49,8 +47,7 @@ var w = class e2 {
     try {
       let s2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), c2 = Z, l2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), u2 = Z, d2 = Y(n2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), f2 = Z, p2 = Q.backupdecryptionkey_decryptV1(this.__wbg_ptr, s2, c2, l2, u2, d2, f2);
       var a2 = p2[0], o2 = p2[1];
-      if (p2[3])
-        throw a2 = 0, o2 = 0, X(p2[2]);
+      if (p2[3]) throw a2 = 0, o2 = 0, X(p2[2]);
       return r2 = a2, i2 = o2, W(a2, o2);
     } finally {
       Q.__wbindgen_free(r2, i2, 1);
@@ -58,8 +55,7 @@ var w = class e2 {
   }
   static fromBase64(t2) {
     let n2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), r2 = Z, i2 = Q.backupdecryptionkey_fromBase64(n2, r2);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return e2.__wrap(i2[0]);
   }
   get megolmV1PublicKey() {
@@ -473,8 +469,7 @@ var E = class e12 {
   }
   constructor(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.curve25519publickey_new(t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return this.__wbg_ptr = r2[0], fs.register(this, this.__wbg_ptr, this), this;
   }
   toBase64() {
@@ -503,14 +498,12 @@ var Le = class e13 {
   }
   static fromBase64(t2) {
     let n2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), r2 = Z, i2 = Q.curve25519secretkey_fromBase64(n2, r2);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return e13.__wrap(i2[0]);
   }
   static fromUint8Array(t2) {
     let n2 = q(t2, Q.__wbindgen_malloc), r2 = Z, i2 = Q.curve25519secretkey_fromUint8Array(n2, r2);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return e13.__wrap(i2[0]);
   }
   static new() {
@@ -665,8 +658,7 @@ var O = class e17 {
   }
   static createKeyFromArray(t2) {
     let n2 = Q.dehydrateddevicekey_createKeyFromArray(t2);
-    if (n2[2])
-      throw X(n2[1]);
+    if (n2[2]) throw X(n2[1]);
     return e17.__wrap(n2[0]);
   }
   static createRandomKey() {
@@ -752,8 +744,7 @@ var Ue = class e19 {
   }
   getKey(e87) {
     let t2 = Q.device_getKey(this.__wbg_ptr, e87);
-    if (t2[2])
-      throw X(t2[1]);
+    if (t2[2]) throw X(t2[1]);
     return t2[0] === 0 ? void 0 : We.__wrap(t2[0]);
   }
   isBlacklisted() {
@@ -786,8 +777,7 @@ var Ue = class e19 {
   requestVerification(e87) {
     var t2 = K(e87) ? 0 : J(e87, Q.__wbindgen_malloc), n2 = Z;
     let r2 = Q.device_requestVerification(this.__wbg_ptr, t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return X(r2[0]);
   }
   setLocalTrust(e87) {
@@ -924,8 +914,7 @@ var qe = class e23 {
   }
   constructor(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.devicekeyid_new(t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return this.__wbg_ptr = r2[0], ws.register(this, this.__wbg_ptr, this), this;
   }
   toString() {
@@ -965,8 +954,7 @@ var Ye = class {
   constructor(e87, t2) {
     var n2 = K(e87) ? 0 : J(e87, Q.__wbindgen_malloc), r2 = Z, i2 = K(t2) ? 0 : J(t2, Q.__wbindgen_malloc), a2 = Z;
     let o2 = Q.devicelists_new(n2, r2, i2, a2);
-    if (o2[2])
-      throw X(o2[1]);
+    if (o2[2]) throw X(o2[1]);
     return this.__wbg_ptr = o2[0], Ts.register(this, this.__wbg_ptr, this), this;
   }
 };
@@ -982,15 +970,13 @@ var Xe = class {
   }
   establish_inbound_channel(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.ecies_establish_inbound_channel(this.__wbg_ptr, t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return ot.__wrap(r2[0]);
   }
   establish_outbound_channel(e87, t2) {
     V(e87, E);
     let n2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), r2 = Z, i2 = Q.ecies_establish_outbound_channel(this.__wbg_ptr, e87.__wbg_ptr, n2, r2);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return Ct.__wrap(i2[0]);
   }
   constructor() {
@@ -1044,8 +1030,7 @@ var Ze = class e25 {
   }
   constructor(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.ed25519signature_new(t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return this.__wbg_ptr = r2[0], Os.register(this, this.__wbg_ptr, this), this;
   }
   toBase64() {
@@ -1107,8 +1092,7 @@ var $e = class e27 {
   }
   constructor(e87, t2) {
     let n2 = q(e87, Q.__wbindgen_malloc), r2 = Z, i2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), a2 = Z, o2 = Q.encryptedattachment_new(n2, r2, i2, a2);
-    if (o2[2])
-      throw X(o2[1]);
+    if (o2[2]) throw X(o2[1]);
     return this.__wbg_ptr = o2[0], As.register(this, this.__wbg_ptr, this), this;
   }
 };
@@ -1264,8 +1248,7 @@ var j = class e29 {
     try {
       let a2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), o2 = Z, s2 = Q.establishedecies_decrypt(this.__wbg_ptr, a2, o2);
       var r2 = s2[0], i2 = s2[1];
-      if (s2[3])
-        throw r2 = 0, i2 = 0, X(s2[2]);
+      if (s2[3]) throw r2 = 0, i2 = 0, X(s2[2]);
       return t2 = r2, n2 = i2, W(r2, i2);
     } finally {
       Q.__wbindgen_free(t2, n2, 1);
@@ -1306,8 +1289,7 @@ var rt = class {
   }
   constructor(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.eventid_new(t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return this.__wbg_ptr = r2[0], Ps.register(this, this.__wbg_ptr, this), this;
   }
   get serverName() {
@@ -1663,16 +1645,14 @@ var vt = class {
     let i2 = J(e87, Q.__wbindgen_malloc), a2 = Z;
     V(n2, L);
     let o2 = Q.migration_migrateMegolmSessions(i2, a2, t2, n2.__wbg_ptr, K(r2) ? 0 : B(r2));
-    if (o2[2])
-      throw X(o2[1]);
+    if (o2[2]) throw X(o2[1]);
     return X(o2[0]);
   }
   static migrateOlmSessions(e87, t2, n2, r2) {
     let i2 = J(e87, Q.__wbindgen_malloc), a2 = Z;
     V(n2, L);
     let o2 = Q.migration_migrateOlmSessions(i2, a2, t2, n2.__wbg_ptr, K(r2) ? 0 : B(r2));
-    if (o2[2])
-      throw X(o2[1]);
+    if (o2[2]) throw X(o2[1]);
     return X(o2[0]);
   }
 };
@@ -1791,8 +1771,7 @@ var xt = class e43 {
     try {
       let o2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), s2 = Z, c2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), l2 = Z, u2 = Q.olmmachine_decryptExportedRoomKeys(o2, s2, c2, l2);
       var i2 = u2[0], a2 = u2[1];
-      if (u2[3])
-        throw i2 = 0, a2 = 0, X(u2[2]);
+      if (u2[3]) throw i2 = 0, a2 = 0, X(u2[2]);
       return n2 = i2, r2 = a2, W(i2, a2);
     } finally {
       Q.__wbindgen_free(n2, r2, 1);
@@ -1802,8 +1781,7 @@ var xt = class e43 {
     let r2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), i2 = Z;
     V(t2, P), V(n2, Be);
     let a2 = Q.olmmachine_decryptRoomEvent(this.__wbg_ptr, r2, i2, t2.__wbg_ptr, n2.__wbg_ptr);
-    if (a2[2])
-      throw X(a2[1]);
+    if (a2[2]) throw X(a2[1]);
     return X(a2[0]);
   }
   dehydratedDevices() {
@@ -1829,8 +1807,7 @@ var xt = class e43 {
   }
   enableBackupV1(e87, t2) {
     let n2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), r2 = Z, i2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), a2 = Z, o2 = Q.olmmachine_enableBackupV1(this.__wbg_ptr, n2, r2, i2, a2);
-    if (o2[2])
-      throw X(o2[1]);
+    if (o2[2]) throw X(o2[1]);
     return X(o2[0]);
   }
   static encryptExportedRoomKeys(e87, t2, n2) {
@@ -1838,8 +1815,7 @@ var xt = class e43 {
     try {
       let s2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), c2 = Z, l2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), u2 = Z, d2 = Q.olmmachine_encryptExportedRoomKeys(s2, c2, l2, u2, n2);
       var a2 = d2[0], o2 = d2[1];
-      if (d2[3])
-        throw a2 = 0, o2 = 0, X(d2[2]);
+      if (d2[3]) throw a2 = 0, o2 = 0, X(d2[2]);
       return r2 = a2, i2 = o2, W(a2, o2);
     } finally {
       Q.__wbindgen_free(r2, i2, 1);
@@ -1848,15 +1824,13 @@ var xt = class e43 {
   encryptRoomEvent(e87, t2, n2) {
     V(e87, P);
     let r2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), i2 = Z, a2 = Y(n2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), o2 = Z, s2 = Q.olmmachine_encryptRoomEvent(this.__wbg_ptr, e87.__wbg_ptr, r2, i2, a2, o2);
-    if (s2[2])
-      throw X(s2[1]);
+    if (s2[2]) throw X(s2[1]);
     return X(s2[0]);
   }
   encryptStateEvent(e87, t2, n2, r2) {
     V(e87, P);
     let i2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), a2 = Z, o2 = Y(n2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), s2 = Z, c2 = Y(r2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), l2 = Z, u2 = Q.olmmachine_encryptStateEvent(this.__wbg_ptr, e87.__wbg_ptr, i2, a2, o2, s2, c2, l2);
-    if (u2[2])
-      throw X(u2[1]);
+    if (u2[2]) throw X(u2[1]);
     return X(u2[0]);
   }
   exportCrossSigningKeys() {
@@ -1894,8 +1868,7 @@ var xt = class e43 {
     let n2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), r2 = Z;
     V(t2, P);
     let i2 = Q.olmmachine_getRoomEventEncryptionInfo(this.__wbg_ptr, n2, r2, t2.__wbg_ptr);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return X(i2[0]);
   }
   getRoomSettings(e87) {
@@ -1911,8 +1884,7 @@ var xt = class e43 {
   getVerification(e87, t2) {
     V(e87, R);
     let n2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), r2 = Z, i2 = Q.olmmachine_getVerification(this.__wbg_ptr, e87.__wbg_ptr, n2, r2);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return X(i2[0]);
   }
   getVerificationRequest(e87, t2) {
@@ -1932,8 +1904,7 @@ var xt = class e43 {
   }
   importBackedUpRoomKeys(e87, t2, n2) {
     let r2 = Y(n2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), i2 = Z, a2 = Q.olmmachine_importBackedUpRoomKeys(this.__wbg_ptr, e87, K(t2) ? 0 : B(t2), r2, i2);
-    if (a2[2])
-      throw X(a2[1]);
+    if (a2[2]) throw X(a2[1]);
     return X(a2[0]);
   }
   importCrossSigningKeys(e87, t2, n2) {
@@ -1942,14 +1913,12 @@ var xt = class e43 {
   }
   importExportedRoomKeys(e87, t2) {
     let n2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), r2 = Z, i2 = Q.olmmachine_importExportedRoomKeys(this.__wbg_ptr, n2, r2, t2);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return X(i2[0]);
   }
   importRoomKeys(e87, t2) {
     let n2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), r2 = Z, i2 = Q.olmmachine_importRoomKeys(this.__wbg_ptr, n2, r2, t2);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return X(i2[0]);
   }
   importSecretsBundle(e87) {
@@ -1976,14 +1945,12 @@ var xt = class e43 {
   }
   markRequestAsSent(e87, t2, n2) {
     let r2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), i2 = Z, a2 = Y(n2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), o2 = Z, s2 = Q.olmmachine_markRequestAsSent(this.__wbg_ptr, r2, i2, t2, a2, o2);
-    if (s2[2])
-      throw X(s2[1]);
+    if (s2[2]) throw X(s2[1]);
     return X(s2[0]);
   }
   constructor() {
     let e87 = Q.olmmachine_new();
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return this.__wbg_ptr = e87[0], Ys.register(this, this.__wbg_ptr, this), this;
   }
   outgoingRequests() {
@@ -1995,16 +1962,14 @@ var xt = class e43 {
   }
   queryKeysForUsers(e87) {
     let t2 = J(e87, Q.__wbindgen_malloc), n2 = Z, r2 = Q.olmmachine_queryKeysForUsers(this.__wbg_ptr, t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return dt.__wrap(r2[0]);
   }
   receiveRoomKeyBundle(e87, t2) {
     V(e87, nn);
     var n2 = e87.__destroy_into_raw();
     let r2 = q(t2, Q.__wbindgen_malloc), i2 = Z, a2 = Q.olmmachine_receiveRoomKeyBundle(this.__wbg_ptr, n2, r2, i2);
-    if (a2[2])
-      throw X(a2[1]);
+    if (a2[2]) throw X(a2[1]);
     return X(a2[0]);
   }
   receiveSyncChanges(e87, t2, n2, r2, i2) {
@@ -2013,16 +1978,14 @@ var xt = class e43 {
     let s2 = 0;
     K(i2) || (V(i2, Be), s2 = i2.__destroy_into_raw());
     let c2 = Q.olmmachine_receiveSyncChanges(this.__wbg_ptr, a2, o2, t2.__wbg_ptr, n2, K(r2) ? 0 : B(r2), s2);
-    if (c2[2])
-      throw X(c2[1]);
+    if (c2[2]) throw X(c2[1]);
     return X(c2[0]);
   }
   receiveVerificationEvent(e87, t2) {
     let n2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), r2 = Z;
     V(t2, P);
     let i2 = Q.olmmachine_receiveVerificationEvent(this.__wbg_ptr, n2, r2, t2.__wbg_ptr);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return X(i2[0]);
   }
   registerDevicesUpdatedCallback(e87) {
@@ -2081,8 +2044,7 @@ var xt = class e43 {
     V(i2, T);
     var l2 = i2.__destroy_into_raw();
     let u2 = Q.olmmachine_shareRoomKeyBundleData(this.__wbg_ptr, e87.__wbg_ptr, t2.__wbg_ptr, a2, o2, s2, c2, l2);
-    if (u2[2])
-      throw X(u2[1]);
+    if (u2[2]) throw X(u2[1]);
     return X(u2[0]);
   }
   sign(e87) {
@@ -2094,8 +2056,7 @@ var xt = class e43 {
   }
   trackedUsers() {
     let e87 = Q.olmmachine_trackedUsers(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   updateTrackedUsers(e87) {
@@ -2108,8 +2069,7 @@ var xt = class e43 {
   }
   verifyBackup(e87) {
     let t2 = Q.olmmachine_verifyBackup(this.__wbg_ptr, e87);
-    if (t2[2])
-      throw X(t2[1]);
+    if (t2[2]) throw X(t2[1]);
     return X(t2[0]);
   }
 };
@@ -2141,8 +2101,7 @@ var St = class e44 {
     try {
       let i2 = Q.otheruseridentity_masterKey(this.__wbg_ptr);
       var n2 = i2[0], r2 = i2[1];
-      if (i2[3])
-        throw n2 = 0, r2 = 0, X(i2[2]);
+      if (i2[3]) throw n2 = 0, r2 = 0, X(i2[2]);
       return e87 = n2, t2 = r2, W(n2, r2);
     } finally {
       Q.__wbindgen_free(e87, t2, 1);
@@ -2155,8 +2114,7 @@ var St = class e44 {
     V(e87, P), V(t2, rt);
     var r2 = K(n2) ? 0 : J(n2, Q.__wbindgen_malloc), i2 = Z;
     let a2 = Q.otheruseridentity_requestVerification(this.__wbg_ptr, e87.__wbg_ptr, t2.__wbg_ptr, r2, i2);
-    if (a2[2])
-      throw X(a2[1]);
+    if (a2[2]) throw X(a2[1]);
     return mn.__wrap(a2[0]);
   }
   get selfSigningKey() {
@@ -2164,8 +2122,7 @@ var St = class e44 {
     try {
       let i2 = Q.otheruseridentity_selfSigningKey(this.__wbg_ptr);
       var n2 = i2[0], r2 = i2[1];
-      if (i2[3])
-        throw n2 = 0, r2 = 0, X(i2[2]);
+      if (i2[3]) throw n2 = 0, r2 = 0, X(i2[2]);
       return e87 = n2, t2 = r2, W(n2, r2);
     } finally {
       Q.__wbindgen_free(e87, t2, 1);
@@ -2177,8 +2134,7 @@ var St = class e44 {
       var r2 = K(e87) ? 0 : J(e87, Q.__wbindgen_malloc), i2 = Z;
       let s2 = Q.otheruseridentity_verificationRequestContent(this.__wbg_ptr, r2, i2);
       var a2 = s2[0], o2 = s2[1];
-      if (s2[3])
-        throw a2 = 0, o2 = 0, X(s2[2]);
+      if (s2[3]) throw a2 = 0, o2 = 0, X(s2[2]);
       return t2 = a2, n2 = o2, W(a2, o2);
     } finally {
       Q.__wbindgen_free(t2, n2, 1);
@@ -2256,8 +2212,7 @@ var wt = class e46 {
     try {
       let i2 = Q.ownuseridentity_masterKey(this.__wbg_ptr);
       var n2 = i2[0], r2 = i2[1];
-      if (i2[3])
-        throw n2 = 0, r2 = 0, X(i2[2]);
+      if (i2[3]) throw n2 = 0, r2 = 0, X(i2[2]);
       return e87 = n2, t2 = r2, W(n2, r2);
     } finally {
       Q.__wbindgen_free(e87, t2, 1);
@@ -2266,8 +2221,7 @@ var wt = class e46 {
   requestVerification(e87) {
     var t2 = K(e87) ? 0 : J(e87, Q.__wbindgen_malloc), n2 = Z;
     let r2 = Q.ownuseridentity_requestVerification(this.__wbg_ptr, t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return X(r2[0]);
   }
   get selfSigningKey() {
@@ -2275,8 +2229,7 @@ var wt = class e46 {
     try {
       let i2 = Q.ownuseridentity_selfSigningKey(this.__wbg_ptr);
       var n2 = i2[0], r2 = i2[1];
-      if (i2[3])
-        throw n2 = 0, r2 = 0, X(i2[2]);
+      if (i2[3]) throw n2 = 0, r2 = 0, X(i2[2]);
       return e87 = n2, t2 = r2, W(n2, r2);
     } finally {
       Q.__wbindgen_free(e87, t2, 1);
@@ -2290,8 +2243,7 @@ var wt = class e46 {
     try {
       let i2 = Q.ownuseridentity_userSigningKey(this.__wbg_ptr);
       var n2 = i2[0], r2 = i2[1];
-      if (i2[3])
-        throw n2 = 0, r2 = 0, X(i2[2]);
+      if (i2[3]) throw n2 = 0, r2 = 0, X(i2[2]);
       return e87 = n2, t2 = r2, W(n2, r2);
     } finally {
       Q.__wbindgen_free(e87, t2, 1);
@@ -2456,8 +2408,7 @@ var Dt = class e49 {
   decrypt(e87) {
     V(e87, M);
     let t2 = Q.pkdecryption_decrypt(this.__wbg_ptr, e87.__wbg_ptr);
-    if (t2[3])
-      throw X(t2[2]);
+    if (t2[3]) throw X(t2[2]);
     var n2 = H(t2[0], t2[1]).slice();
     return Q.__wbindgen_free(t2[0], t2[1] * 1, 1), n2;
   }
@@ -2467,8 +2418,7 @@ var Dt = class e49 {
       V(e87, M);
       let a2 = Q.pkdecryption_decryptString(this.__wbg_ptr, e87.__wbg_ptr);
       var r2 = a2[0], i2 = a2[1];
-      if (a2[3])
-        throw r2 = 0, i2 = 0, X(a2[2]);
+      if (a2[3]) throw r2 = 0, i2 = 0, X(a2[2]);
       return t2 = r2, n2 = i2, W(r2, i2);
     } finally {
       Q.__wbindgen_free(t2, n2, 1);
@@ -2507,14 +2457,12 @@ var Ot = class e50 {
   }
   encrypt(e87) {
     let t2 = q(e87, Q.__wbindgen_malloc), n2 = Z, r2 = Q.pkencryption_encrypt(this.__wbg_ptr, t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return M.__wrap(r2[0]);
   }
   encryptString(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.pkencryption_encryptString(this.__wbg_ptr, t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return M.__wrap(r2[0]);
   }
   static fromKey(t2) {
@@ -2549,8 +2497,7 @@ var M = class e51 {
   static fromBase64(t2) {
     V(t2, Ae);
     let n2 = Q.pkmessage_fromBase64(t2.__wbg_ptr);
-    if (n2[2])
-      throw X(n2[1]);
+    if (n2[2]) throw X(n2[1]);
     return e51.__wrap(n2[0]);
   }
   static fromParts(t2, n2, r2) {
@@ -2628,8 +2575,7 @@ var Mt = class e54 {
   }
   cancel() {
     let e87 = Q.qr_cancel(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   cancelInfo() {
@@ -2638,14 +2584,12 @@ var Mt = class e54 {
   }
   cancelWithCode(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.qr_cancelWithCode(this.__wbg_ptr, t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return X(r2[0]);
   }
   confirmScanning() {
     let e87 = Q.qr_confirmScanning(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   get flowId() {
@@ -2682,8 +2626,7 @@ var Mt = class e54 {
   }
   reciprocate() {
     let e87 = Q.qr_reciprocate(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   reciprocated() {
@@ -2701,14 +2644,12 @@ var Mt = class e54 {
   }
   toBytes() {
     let e87 = Q.qr_toBytes(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   toQrCode() {
     let e87 = Q.qr_toQrCode(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return Nt.__wrap(e87[0]);
   }
   get userId() {
@@ -2735,8 +2676,7 @@ var Nt = class e55 {
   }
   renderIntoBuffer() {
     let e87 = Q.qrcode_renderIntoBuffer(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
 };
@@ -2756,14 +2696,12 @@ var Pt = class e56 {
   }
   static fromBase64(t2) {
     let n2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), r2 = Z, i2 = Q.qrcodedata_fromBase64(n2, r2);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return e56.__wrap(i2[0]);
   }
   static fromBytes(t2) {
     let n2 = q(t2, Q.__wbindgen_malloc), r2 = Z, i2 = Q.qrcodedata_fromBytes(n2, r2);
-    if (i2[2])
-      throw X(i2[1]);
+    if (i2[2]) throw X(i2[1]);
     return e56.__wrap(i2[0]);
   }
   get intentData() {
@@ -2779,16 +2717,14 @@ var Pt = class e56 {
     let i2 = Y(t2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), a2 = Z;
     var o2 = K(n2) ? 0 : Y(n2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), s2 = Z;
     let c2 = Q.qrcodedata_new(r2, i2, a2, o2, s2);
-    if (c2[2])
-      throw X(c2[1]);
+    if (c2[2]) throw X(c2[1]);
     return this.__wbg_ptr = c2[0], cc.register(this, this.__wbg_ptr, this), this;
   }
   static newMsc4388(t2, n2, r2, i2) {
     V(t2, E);
     var a2 = t2.__destroy_into_raw();
     let o2 = Y(n2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), s2 = Z, c2 = Y(r2, Q.__wbindgen_malloc, Q.__wbindgen_realloc), l2 = Z, u2 = Q.qrcodedata_newMsc4388(a2, o2, s2, c2, l2, i2);
-    if (u2[2])
-      throw X(u2[1]);
+    if (u2[2]) throw X(u2[1]);
     return e56.__wrap(u2[0]);
   }
   get publicKey() {
@@ -2866,8 +2802,7 @@ var Lt = class e58 {
   }
   static fromBytes(t2) {
     let n2 = Q.qrcodescan_fromBytes(t2);
-    if (n2[2])
-      throw X(n2[1]);
+    if (n2[2]) throw X(n2[1]);
     return e58.__wrap(n2[0]);
   }
 };
@@ -2911,8 +2846,7 @@ var P = class e60 {
   }
   constructor(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.roomid_new(t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return this.__wbg_ptr = r2[0], fc.register(this, this.__wbg_ptr, this), this;
   }
   toString() {
@@ -3183,8 +3117,7 @@ var Kt = class e68 {
   }
   accept() {
     let e87 = Q.sas_accept(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   canBePresented() {
@@ -3192,8 +3125,7 @@ var Kt = class e68 {
   }
   cancel() {
     let e87 = Q.sas_cancel(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   cancelInfo() {
@@ -3202,8 +3134,7 @@ var Kt = class e68 {
   }
   cancelWithCode(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.sas_cancelWithCode(this.__wbg_ptr, t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return X(r2[0]);
   }
   confirm() {
@@ -3301,8 +3232,7 @@ var qt = class e69 {
   }
   static from_json(t2) {
     let n2 = Q.secretsbundle_from_json(t2);
-    if (n2[2])
-      throw X(n2[1]);
+    if (n2[2]) throw X(n2[1]);
     return e69.__wrap(n2[0]);
   }
   get masterKey() {
@@ -3325,8 +3255,7 @@ var qt = class e69 {
   }
   to_json() {
     let e87 = Q.secretsbundle_to_json(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   get userSigningKey() {
@@ -3367,8 +3296,7 @@ var Jt = class e70 {
   }
   constructor(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.servername_new(t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return this.__wbg_ptr = r2[0], Sc.register(this, this.__wbg_ptr, this), this;
   }
   get port() {
@@ -3511,8 +3439,7 @@ var tn = class e75 {
   }
   asJSON() {
     let e87 = Q.signatures_asJSON(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   clear() {
@@ -3718,24 +3645,20 @@ var cn = class {
   }
   constructor(e87) {
     let t2 = Q.tracing_new(e87);
-    if (t2[2])
-      throw X(t2[1]);
+    if (t2[2]) throw X(t2[1]);
     return this.__wbg_ptr = t2[0], Nc.register(this, this.__wbg_ptr, this), this;
   }
   set minLevel(e87) {
     let t2 = Q.tracing_set_minLevel(this.__wbg_ptr, e87);
-    if (t2[1])
-      throw X(t2[0]);
+    if (t2[1]) throw X(t2[0]);
   }
   turnOff() {
     let e87 = Q.tracing_turnOff(this.__wbg_ptr);
-    if (e87[1])
-      throw X(e87[0]);
+    if (e87[1]) throw X(e87[0]);
   }
   turnOn() {
     let e87 = Q.tracing_turnOn(this.__wbg_ptr);
-    if (e87[1])
-      throw X(e87[0]);
+    if (e87[1]) throw X(e87[0]);
   }
 };
 Symbol.dispose && (cn.prototype[Symbol.dispose] = cn.prototype.free);
@@ -3849,8 +3772,7 @@ var R = class e84 {
   }
   constructor(e87) {
     let t2 = Y(e87, Q.__wbindgen_malloc, Q.__wbindgen_realloc), n2 = Z, r2 = Q.userid_new(t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return this.__wbg_ptr = r2[0], Lc.register(this, this.__wbg_ptr, this), this;
   }
   get serverName() {
@@ -3884,20 +3806,17 @@ var mn = class e85 {
   }
   accept() {
     let e87 = Q.verificationrequest_accept(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   acceptWithMethods(e87) {
     let t2 = J(e87, Q.__wbindgen_malloc), n2 = Z, r2 = Q.verificationrequest_acceptWithMethods(this.__wbg_ptr, t2, n2);
-    if (r2[2])
-      throw X(r2[1]);
+    if (r2[2]) throw X(r2[1]);
     return X(r2[0]);
   }
   cancel() {
     let e87 = Q.verificationrequest_cancel(this.__wbg_ptr);
-    if (e87[2])
-      throw X(e87[1]);
+    if (e87[2]) throw X(e87[1]);
     return X(e87[0]);
   }
   get cancelInfo() {
@@ -3944,8 +3863,7 @@ var mn = class e85 {
   }
   get ourSupportedMethods() {
     let e87 = Q.verificationrequest_ourSupportedMethods(this.__wbg_ptr);
-    if (e87[3])
-      throw X(e87[2]);
+    if (e87[3]) throw X(e87[2]);
     let t2;
     return e87[0] !== 0 && (t2 = Hc(e87[0], e87[1]).slice(), Q.__wbindgen_free(e87[0], e87[1] * 4, 4)), t2;
   }
@@ -3966,8 +3884,7 @@ var mn = class e85 {
       var o2 = K(r2) ? 0 : J(r2, Q.__wbindgen_malloc), s2 = Z;
       let u2 = Q.verificationrequest_request(e87.__wbg_ptr, t2.__wbg_ptr, n2.__wbg_ptr, o2, s2);
       var c2 = u2[0], l2 = u2[1];
-      if (u2[3])
-        throw c2 = 0, l2 = 0, X(u2[2]);
+      if (u2[3]) throw c2 = 0, l2 = 0, X(u2[2]);
       return i2 = c2, a2 = l2, W(c2, l2);
     } finally {
       Q.__wbindgen_free(i2, a2, 1);
@@ -3985,8 +3902,7 @@ var mn = class e85 {
   }
   get theirSupportedMethods() {
     let e87 = Q.verificationrequest_theirSupportedMethods(this.__wbg_ptr);
-    if (e87[3])
-      throw X(e87[2]);
+    if (e87[3]) throw X(e87[2]);
     let t2;
     return e87[0] !== 0 && (t2 = Hc(e87[0], e87[1]).slice(), Q.__wbindgen_free(e87[0], e87[1] * 4, 4)), t2;
   }
@@ -5011,13 +4927,11 @@ function Jo(e87, t2, n2) {
 }
 function Yo(e87, t2, n2) {
   let r2 = Q.wasm_bindgen__convert__closures_____invoke__h6cc6e60feaea7523(e87, t2, n2);
-  if (r2[1])
-    throw X(r2[0]);
+  if (r2[1]) throw X(r2[0]);
 }
 function Xo(e87, t2, n2) {
   let r2 = Q.wasm_bindgen__convert__closures_____invoke__h6cc6e60feaea7523_2(e87, t2, n2);
-  if (r2[1])
-    throw X(r2[0]);
+  if (r2[1]) throw X(r2[0]);
 }
 function Zo(e87, t2, n2, r2) {
   Q.wasm_bindgen__convert__closures_____invoke__h33afbfdbaf3c68e2(e87, t2, n2, r2);
@@ -5216,18 +5130,15 @@ function B(e87) {
   return Q.__wbindgen_externrefs.set(t2, e87), t2;
 }
 function V(e87, t2) {
-  if (!(e87 instanceof t2))
-    throw Error(`expected instance of ${t2.name}`);
+  if (!(e87 instanceof t2)) throw Error(`expected instance of ${t2.name}`);
 }
 var Bc = typeof FinalizationRegistry > `u` ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((e87) => Q.__wbindgen_destroy_closure(e87.a, e87.b));
 function Vc(e87) {
   let t2 = typeof e87;
-  if (t2 == `number` || t2 == `boolean` || e87 == null)
-    return `${e87}`;
-  if (t2 == `string`)
-    return `"${e87}"`;
+  if (t2 == `number` || t2 == `boolean` || e87 == null) return `${e87}`;
+  if (t2 == `string`) return `"${e87}"`;
   if (t2 == `symbol`) {
     let t3 = e87.description;
     return t3 == null ? `Symbol` : `Symbol(${t3})`;
@@ -5239,29 +5150,24 @@ function Vc(e87) {
   if (Array.isArray(e87)) {
     let t3 = e87.length, n3 = `[`;
     t3 > 0 && (n3 += Vc(e87[0]));
-    for (let r3 = 1; r3 < t3; r3++)
-      n3 += `, ` + Vc(e87[r3]);
+    for (let r3 = 1; r3 < t3; r3++) n3 += `, ` + Vc(e87[r3]);
     return n3 += `]`, n3;
   }
   let n2 = /\[object ([^\]]+)\]/.exec(toString.call(e87)), r2;
-  if (n2 && n2.length > 1)
-    r2 = n2[1];
-  else
-    return toString.call(e87);
-  if (r2 == `Object`)
-    try {
-      return `Object(` + JSON.stringify(e87) + `)`;
-    } catch {
-      return `Object`;
-    }
+  if (n2 && n2.length > 1) r2 = n2[1];
+  else return toString.call(e87);
+  if (r2 == `Object`) try {
+    return `Object(` + JSON.stringify(e87) + `)`;
+  } catch {
+    return `Object`;
+  }
   return e87 instanceof Error ? `${e87.name}: ${e87.message}
 ${e87.stack}` : r2;
 }
 function Hc(e87, t2) {
   e87 >>>= 0;
   let n2 = U(), r2 = [];
-  for (let i2 = e87; i2 < e87 + 4 * t2; i2 += 4)
-    r2.push(Q.__wbindgen_externrefs.get(n2.getUint32(i2, true)));
+  for (let i2 = e87; i2 < e87 + 4 * t2; i2 += 4) r2.push(Q.__wbindgen_externrefs.get(n2.getUint32(i2, true)));
   return Q.__externref_drop_slice(e87, t2), r2;
 }
 function Uc(e87, t2) {
@@ -5331,8 +5237,7 @@ function Y(e87, t2, n2) {
   let r2 = e87.length, i2 = t2(r2, 1) >>> 0, a2 = Jc(), o2 = 0;
   for (; o2 < r2; o2++) {
     let t3 = e87.charCodeAt(o2);
-    if (t3 > 127)
-      break;
+    if (t3 > 127) break;
     a2[i2 + o2] = t3;
   }
   if (o2 !== r2) {
@@ -5371,11 +5276,10 @@ async function il(e87) {
   tl(t2.exports), t2.exports.__wbindgen_start();
 }
 async function al(e87 = nl) {
-  rl || (rl = il(e87)), await rl;
+  rl ||= il(e87), await rl;
 }
-var ol = t(n((e87, t2) => {
-  for (var n2 = /[\\\"\x00-\x1F]/g, r2 = {}, i2 = 0; i2 < 32; ++i2)
-    r2[String.fromCharCode(i2)] = `\\U` + (`0000` + i2.toString(16)).slice(-4).toUpperCase();
+var ol = t(n(((e87, t2) => {
+  for (var n2 = /[\\\"\x00-\x1F]/g, r2 = {}, i2 = 0; i2 < 32; ++i2) r2[String.fromCharCode(i2)] = `\\U` + (`0000` + i2.toString(16)).slice(-4).toUpperCase();
   r2[`\b`] = `\\b`, r2[`	`] = `\\t`, r2[`
 `] = `\\n`, r2[`\f`] = `\\f`, r2[`\r`] = `\\r`, r2[`"`] = `\\"`, r2[`\\`] = `\\\\`;
   function a2(e88) {
@@ -5398,8 +5302,7 @@ var ol = t(n((e87, t2) => {
     }
   }
   function s2(e88) {
-    for (var t3 = `[`, n3 = ``, r3 = 0; r3 < e88.length; ++r3)
-      n3 += t3, t3 = `,`, n3 += o2(e88[r3]);
+    for (var t3 = `[`, n3 = ``, r3 = 0; r3 < e88.length; ++r3) n3 += t3, t3 = `,`, n3 += o2(e88[r3]);
     return t3 == `,` ? n3 + `]` : `[]`;
   }
   function c2(e88) {
@@ -5412,15 +5315,14 @@ var ol = t(n((e87, t2) => {
     return t3 == `,` ? n3 + `}` : `{}`;
   }
   t2.exports = { stringify: o2 };
-})(), 1), sl = class {
+}))(), 1), sl = class {
   constructor(e87, t2, n2, r2, i2, a2) {
     this.prefixedLogger = e87, this.olmMachine = t2, this.keyClaimManager = n2, this.outgoingRequestManager = r2, this.room = i2, this.encryptionSettings = a2, C(this, `lazyLoadedMembersResolved`, false), C(this, `currentEncryptionPromise`, Promise.resolve());
     var o2 = i2.getJoinedMembers();
     this.olmMachine.updateTrackedUsers(o2.map((e88) => new R(e88.userId))).catch((e88) => this.prefixedLogger.error(`Error initializing tracked users`, e88));
   }
   onCryptoEvent(e87) {
-    if (JSON.stringify(this.encryptionSettings) != JSON.stringify(e87))
-      throw Error(`Cannot reconfigure an active RoomEncryptor`);
+    if (JSON.stringify(this.encryptionSettings) != JSON.stringify(e87)) throw Error(`Cannot reconfigure an active RoomEncryptor`);
   }
   onRoomMembership(e87) {
     (e87.membership == a.Join || e87.membership == a.Invite && this.room.shouldEncryptForInvitedMembers()) && this.olmMachine.updateTrackedUsers([new R(e87.userId)]).catch((e88) => {
@@ -5447,8 +5349,7 @@ var ol = t(n((e87, t2) => {
   ensureEncryptionSession(e87, t2, n2) {
     var r2 = this;
     return h(function* () {
-      if (r2.encryptionSettings.algorithm !== `m.megolm.v1.aes-sha2`)
-        throw Error(`Cannot encrypt in ${r2.room.roomId} for unsupported algorithm '${r2.encryptionSettings.algorithm}'`);
+      if (r2.encryptionSettings.algorithm !== `m.megolm.v1.aes-sha2`) throw Error(`Cannot encrypt in ${r2.room.roomId} for unsupported algorithm '${r2.encryptionSettings.algorithm}'`);
       e87.debug(`Starting encryption`);
       var i2 = yield r2.room.getEncryptionTargetMembers();
       r2.lazyLoadedMembersResolved ? (e87.debug(`Processing outgoing requests in background`), r2.outgoingRequestManager.doProcessOutgoingRequests()) : (yield b(e87, `loadMembersIfNeeded: updateTrackedUsers`, h(function* () {
@@ -5472,9 +5373,7 @@ var ol = t(n((e87, t2) => {
       }
       yield b(e87, `shareRoomKey`, h(function* () {
         var e88 = yield r2.olmMachine.shareRoomKey(new P(r2.room.roomId), a2, o2);
-        if (e88)
-          for (var t3 of e88)
-            yield r2.outgoingRequestManager.outgoingRequestProcessor.makeOutgoingRequest(t3);
+        if (e88) for (var t3 of e88) yield r2.outgoingRequestManager.outgoingRequestProcessor.makeOutgoingRequest(t3);
       }));
     })();
   }
@@ -5522,10 +5421,8 @@ var ll = `/_matrix/client/unstable/org.matrix.msc3814.v1`, ul = `org.matrix.msc3
         yield e87.http.authedRequest(m.Get, `/dehydrated_device`, void 0, void 0, { prefix: ll });
       } catch (e88) {
         var t2 = e88;
-        if (t2.errcode === `M_UNRECOGNIZED`)
-          return false;
-        if (t2.errcode === `M_NOT_FOUND`)
-          return true;
+        if (t2.errcode === `M_UNRECOGNIZED`) return false;
+        if (t2.errcode === `M_NOT_FOUND`) return true;
         throw e88;
       }
       return true;
@@ -5536,12 +5433,11 @@ var ll = `/_matrix/client/unstable/org.matrix.msc3814.v1`, ul = `org.matrix.msc3
     return h(function* () {
       var n2 = e87.length > 0 && e87[0] !== void 0 ? e87[0] : {};
       if (typeof n2 == `boolean` && (n2 = { createNewKey: n2 }), !(n2.onlyIfKeyCached && !(yield t2.olmMachine.dehydratedDevices().getDehydratedDeviceKey()))) {
-        if (t2.stop(), n2.rehydrate !== false)
-          try {
-            yield t2.rehydrateDeviceIfAvailable();
-          } catch (e88) {
-            t2.logger.info(`dehydration: Error rehydrating device:`, e88), t2.emit(S.RehydrationError, e88.message);
-          }
+        if (t2.stop(), n2.rehydrate !== false) try {
+          yield t2.rehydrateDeviceIfAvailable();
+        } catch (e88) {
+          t2.logger.info(`dehydration: Error rehydrating device:`, e88), t2.emit(S.RehydrationError, e88.message);
+        }
         n2.createNewKey && (yield t2.resetKey()), yield t2.scheduleDeviceDehydration();
       }
     })();
@@ -5563,11 +5459,9 @@ var ll = `/_matrix/client/unstable/org.matrix.msc3814.v1`, ul = `org.matrix.msc3
     var t2 = this;
     return h(function* () {
       var n2 = yield t2.olmMachine.dehydratedDevices().getDehydratedDeviceKey();
-      if (n2)
-        return n2;
+      if (n2) return n2;
       var r2 = yield t2.secretStorage.get(ul);
-      if (r2 === void 0)
-        return e87 ? yield t2.resetKey() : null;
+      if (r2 === void 0) return e87 ? yield t2.resetKey() : null;
       var i2 = oe(r2);
       try {
         var a2 = O.createKeyFromArray(i2);
@@ -5581,15 +5475,13 @@ var ll = `/_matrix/client/unstable/org.matrix.msc3814.v1`, ul = `org.matrix.msc3
     var e87 = this;
     return h(function* () {
       var t2 = yield e87.getKey(false);
-      if (!t2)
-        return false;
+      if (!t2) return false;
       var n2;
       try {
         n2 = yield e87.http.authedRequest(m.Get, `/dehydrated_device`, void 0, void 0, { prefix: ll });
       } catch (t3) {
         var r2 = t3;
-        if (r2.errcode === `M_NOT_FOUND` || r2.errcode === `M_UNRECOGNIZED`)
-          return e87.logger.info(`dehydration: No dehydrated device`), false;
+        if (r2.errcode === `M_NOT_FOUND` || r2.errcode === `M_UNRECOGNIZED`) return e87.logger.info(`dehydration: No dehydrated device`), false;
         throw r2;
       }
       e87.logger.info(`dehydration: dehydrated device found`), e87.emit(S.RehydrationStarted);
@@ -5597,8 +5489,7 @@ var ll = `/_matrix/client/unstable/org.matrix.msc3814.v1`, ul = `org.matrix.msc3
       e87.logger.info(`dehydration: device rehydrated`);
       for (var a2 = void 0, o2 = 0, s2 = 0, c2 = le(`/dehydrated_device/$device_id/events`, { $device_id: n2.device_id }); ; ) {
         var l2 = yield e87.http.authedRequest(m.Post, c2, void 0, a2 ? { next_batch: a2 } : {}, { prefix: ll });
-        if (l2.events.length === 0)
-          break;
+        if (l2.events.length === 0) break;
         o2 += l2.events.length, a2 = l2.next_batch;
         var u2 = yield i2.receiveEvents(JSON.stringify(l2.events));
         s2 += u2.length, e87.emit(S.RehydrationProgress, s2, o2);
@@ -5626,7 +5517,7 @@ var ll = `/_matrix/client/unstable/org.matrix.msc3814.v1`, ul = `org.matrix.msc3
     })();
   }
   stop() {
-    this.intervalId && (this.intervalId = (clearInterval(this.intervalId), void 0));
+    this.intervalId &&= (clearInterval(this.intervalId), void 0);
   }
   delete() {
     var e87 = this;
@@ -5636,8 +5527,7 @@ var ll = `/_matrix/client/unstable/org.matrix.msc3814.v1`, ul = `org.matrix.msc3
         yield e87.http.authedRequest(m.Delete, `/dehydrated_device`, void 0, {}, { prefix: ll });
       } catch (e88) {
         var t2 = e88;
-        if (t2.errcode === `M_UNRECOGNIZED` || t2.errcode === `M_NOT_FOUND`)
-          return;
+        if (t2.errcode === `M_UNRECOGNIZED` || t2.errcode === `M_NOT_FOUND`) return;
         throw e88;
       }
     })();
@@ -5672,18 +5562,12 @@ var hl = class {
     var n2 = this;
     return h(function* () {
       var r2;
-      if (e87 instanceof ft)
-        r2 = yield n2.requestWithRetry(m.Post, `/_matrix/client/v3/keys/upload`, {}, e87.body);
-      else if (e87 instanceof dt)
-        r2 = yield n2.requestWithRetry(m.Post, `/_matrix/client/v3/keys/query`, {}, e87.body);
-      else if (e87 instanceof ut)
-        r2 = yield n2.requestWithRetry(m.Post, `/_matrix/client/v3/keys/claim`, {}, e87.body);
-      else if (e87 instanceof $t)
-        r2 = yield n2.requestWithRetry(m.Post, `/_matrix/client/v3/keys/signatures/upload`, {}, e87.body);
-      else if (e87 instanceof lt)
-        r2 = yield n2.requestWithRetry(m.Put, `/_matrix/client/v3/room_keys/keys`, { version: e87.version }, e87.body);
-      else if (e87 instanceof an)
-        r2 = yield n2.sendToDeviceRequest(e87);
+      if (e87 instanceof ft) r2 = yield n2.requestWithRetry(m.Post, `/_matrix/client/v3/keys/upload`, {}, e87.body);
+      else if (e87 instanceof dt) r2 = yield n2.requestWithRetry(m.Post, `/_matrix/client/v3/keys/query`, {}, e87.body);
+      else if (e87 instanceof ut) r2 = yield n2.requestWithRetry(m.Post, `/_matrix/client/v3/keys/claim`, {}, e87.body);
+      else if (e87 instanceof $t) r2 = yield n2.requestWithRetry(m.Post, `/_matrix/client/v3/keys/signatures/upload`, {}, e87.body);
+      else if (e87 instanceof lt) r2 = yield n2.requestWithRetry(m.Put, `/_matrix/client/v3/room_keys/keys`, { version: e87.version }, e87.body);
+      else if (e87 instanceof an) r2 = yield n2.sendToDeviceRequest(e87);
       else if (e87 instanceof Wt) {
         var i2 = `/_matrix/client/v3/rooms/${encodeURIComponent(e87.room_id)}/send/${encodeURIComponent(e87.event_type)}/${encodeURIComponent(e87.txn_id)}`;
         r2 = yield n2.requestWithRetry(m.Put, i2, {}, e87.body);
@@ -5694,30 +5578,23 @@ var hl = class {
         var a2 = ll + `/dehydrated_device`;
         yield n2.rawJsonRequest(m.Put, a2, {}, e87.body);
         return;
-      } else
-        n2.logger.warn(`Unsupported outgoing message`, Object.getPrototypeOf(e87)), r2 = ``;
-      if (e87.id)
-        try {
-          yield b(n2.logger, `Mark Request as sent ${e87.type}`, h(function* () {
-            yield n2.olmMachine.markRequestAsSent(e87.id, e87.type, r2);
-          }));
-        } catch (e88) {
-          if (e88 instanceof Error && (e88.message === `Attempt to use a moved value` || e88.message === `null pointer passed to rust`))
-            n2.logger.debug(`Ignoring error '${e88.message}': client is likely shutting down`);
-          else
-            throw e88;
-        }
-      else
-        n2.logger.trace(`Outgoing request type:${e87.type} does not have an ID`);
+      } else n2.logger.warn(`Unsupported outgoing message`, Object.getPrototypeOf(e87)), r2 = ``;
+      if (e87.id) try {
+        yield b(n2.logger, `Mark Request as sent ${e87.type}`, h(function* () {
+          yield n2.olmMachine.markRequestAsSent(e87.id, e87.type, r2);
+        }));
+      } catch (e88) {
+        if (e88 instanceof Error && (e88.message === `Attempt to use a moved value` || e88.message === `null pointer passed to rust`)) n2.logger.debug(`Ignoring error '${e88.message}': client is likely shutting down`);
+        else throw e88;
+      }
+      else n2.logger.trace(`Outgoing request type:${e87.type} does not have an ID`);
     })();
   }
   sendToDeviceRequest(e87) {
     var t2 = this;
     return h(function* () {
       var n2 = JSON.parse(e87.body), r2 = [];
-      for (var [i2, a2] of Object.entries(n2.messages))
-        for (var [o2, c2] of Object.entries(a2))
-          r2.push(`${i2}/${o2} (msgid ${c2[s]})`);
+      for (var [i2, a2] of Object.entries(n2.messages)) for (var [o2, c2] of Object.entries(a2)) r2.push(`${i2}/${o2} (msgid ${c2[s]})`);
       t2.logger.info(`Sending batch of to-device messages. type=${e87.event_type} txnid=${e87.txn_id}`, r2);
       var l2 = `/_matrix/client/v3/sendToDevice/${encodeURIComponent(e87.event_type)}/` + encodeURIComponent(e87.txn_id);
       return yield t2.requestWithRetry(m.Put, l2, {}, e87.body);
@@ -5726,9 +5603,8 @@ var hl = class {
   makeRequestWithUIA(e87, t2, n2, r2, i2) {
     var a2 = this;
     return h(function* () {
-      if (!i2)
-        return yield a2.requestWithRetry(e87, t2, n2, r2);
-      var o2 = JSON.parse(r2), s2 = yield i2(function() {
+      if (!i2) return yield a2.requestWithRetry(e87, t2, n2, r2);
+      var o2 = JSON.parse(r2), s2 = yield i2((function() {
         var r3 = h(function* (r4) {
           var i3 = ml({}, o2);
           r4 !== null && (i3.auth = r4);
@@ -5738,23 +5614,21 @@ var hl = class {
         return function(e88) {
           return r3.apply(this, arguments);
         };
-      }());
+      })());
       return JSON.stringify(s2);
     })();
   }
   requestWithRetry(e87, t2, n2, r2) {
     var i2 = this;
     return h(function* () {
-      for (var a2 = 0; ; )
-        try {
-          return yield i2.rawJsonRequest(e87, t2, n2, r2);
-        } catch (e88) {
-          a2++;
-          var o2 = c(e88, a2, true);
-          if (o2 < 0)
-            throw e88;
-          yield fe(o2);
-        }
+      for (var a2 = 0; ; ) try {
+        return yield i2.rawJsonRequest(e87, t2, n2, r2);
+      } catch (e88) {
+        a2++;
+        var o2 = c(e88, a2, true);
+        if (o2 < 0) throw e88;
+        yield fe(o2);
+      }
     })();
   }
   rawJsonRequest(e87, t2, n2, r2) {
@@ -5778,8 +5652,7 @@ var hl = class {
   ensureSessionsForUsersInner(e87, t2) {
     var n2 = this;
     return h(function* () {
-      if (n2.stopped)
-        throw Error(`Cannot ensure Olm sessions: shutting down`);
+      if (n2.stopped) throw Error(`Cannot ensure Olm sessions: shutting down`);
       e87.info(`Checking for missing Olm sessions`);
       var r2 = yield n2.olmMachine.getMissingSessions(t2.map((e88) => e88.clone()));
       r2 && (e87.info(`Making /keys/claim request`), yield n2.outgoingRequestProcessor.makeOutgoingRequest(r2)), e87.info(`Olm sessions prepared`);
@@ -5788,15 +5661,13 @@ var hl = class {
 };
 function _l(e87, t2) {
   var n2 = /* @__PURE__ */ new Map();
-  for (var [r2, i2] of e87.keys.entries())
-    n2.set(r2.toString(), i2.toBase64());
+  for (var [r2, i2] of e87.keys.entries()) n2.set(r2.toString(), i2.toBase64());
   var a2 = ge.Unverified;
   e87.isBlacklisted() ? a2 = ge.Blocked : e87.isVerified() && (a2 = ge.Verified);
   var o2 = /* @__PURE__ */ new Map(), s2 = e87.signatures.get(t2);
   if (s2) {
     var c2 = /* @__PURE__ */ new Map();
-    for (var [l2, u2] of s2.entries())
-      u2.isValid() && u2.signature && c2.set(l2, u2.signature.toBase64());
+    for (var [l2, u2] of s2.entries()) u2.isValid() && u2.signature && c2.set(l2, u2.signature.toBase64());
     o2.set(t2.toString(), c2);
   }
   var d2 = e87.algorithms, f2 = /* @__PURE__ */ new Set();
@@ -5819,11 +5690,8 @@ function vl(e87) {
   }));
 }
 function yl(e87) {
-  var _a2;
-  var t2 = new Map(Object.entries(e87.keys)), n2 = (_a2 = e87.unsigned) == null ? void 0 : _a2.device_display_name, r2 = /* @__PURE__ */ new Map();
-  if (e87.signatures)
-    for (var i2 in e87.signatures)
-      r2.set(i2, new Map(Object.entries(e87.signatures[i2])));
+  var t2 = new Map(Object.entries(e87.keys)), n2 = e87.unsigned?.device_display_name, r2 = /* @__PURE__ */ new Map();
+  if (e87.signatures) for (var i2 in e87.signatures) r2.set(i2, new Map(Object.entries(e87.signatures[i2])));
   return new ne({ deviceId: e87.device_id, userId: e87.user_id, keys: t2, algorithms: e87.algorithms, verified: ge.Unverified, signatures: r2, displayName: n2 });
 }
 var bl = class {
@@ -5838,13 +5706,11 @@ var bl = class {
         return;
       }
       var n2 = yield t2.olmMachine.crossSigningStatus(), r2 = yield t2.secretStorage.get(`m.cross_signing.master`), i2 = yield t2.secretStorage.get(`m.cross_signing.self_signing`), a2 = yield t2.secretStorage.get(`m.cross_signing.user_signing`), o2 = !!(r2 && i2 && a2), s2 = n2.hasMaster && n2.hasUserSigning && n2.hasSelfSigning;
-      if (t2.logger.debug(`bootstrapCrossSigning: starting`, { setupNewCrossSigning: e87.setupNewCrossSigning, olmDeviceHasMaster: n2.hasMaster, olmDeviceHasUserSigning: n2.hasUserSigning, olmDeviceHasSelfSigning: n2.hasSelfSigning, privateKeysInSecretStorage: o2 }), s2)
-        (yield t2.secretStorage.hasKey()) ? o2 ? t2.logger.debug(`bootstrapCrossSigning: Olm device has private keys and they are saved in secret storage; doing nothing`) : (t2.logger.debug(`bootstrapCrossSigning: Olm device has private keys: exporting to secret storage`), yield t2.exportCrossSigningKeysToStorage()) : t2.logger.warn(`bootstrapCrossSigning: Olm device has private keys, but secret storage is not yet set up; doing nothing for now.`);
+      if (t2.logger.debug(`bootstrapCrossSigning: starting`, { setupNewCrossSigning: e87.setupNewCrossSigning, olmDeviceHasMaster: n2.hasMaster, olmDeviceHasUserSigning: n2.hasUserSigning, olmDeviceHasSelfSigning: n2.hasSelfSigning, privateKeysInSecretStorage: o2 }), s2) (yield t2.secretStorage.hasKey()) ? o2 ? t2.logger.debug(`bootstrapCrossSigning: Olm device has private keys and they are saved in secret storage; doing nothing`) : (t2.logger.debug(`bootstrapCrossSigning: Olm device has private keys: exporting to secret storage`), yield t2.exportCrossSigningKeysToStorage()) : t2.logger.warn(`bootstrapCrossSigning: Olm device has private keys, but secret storage is not yet set up; doing nothing for now.`);
       else if (o2) {
         t2.logger.debug(`bootstrapCrossSigning: Cross-signing private keys not found locally, but they are available in secret storage, reading storage and caching locally`);
         var c2 = yield t2.olmMachine.importCrossSigningKeys(r2, i2, a2);
-        if (!c2.hasMaster || !c2.hasSelfSigning || !c2.hasUserSigning)
-          throw Error(`importCrossSigningKeys failed to import the keys`);
+        if (!c2.hasMaster || !c2.hasSelfSigning || !c2.hasUserSigning) throw Error(`importCrossSigningKeys failed to import the keys`);
         var l2 = yield t2.olmMachine.getDevice(t2.olmMachine.userId, t2.olmMachine.deviceId);
         try {
           var u2 = yield l2.verify();
@@ -5852,8 +5718,7 @@ var bl = class {
         } finally {
           l2.free();
         }
-      } else
-        t2.logger.debug(`bootstrapCrossSigning: Cross-signing private keys not found locally or in secret storage, creating new keys`), yield t2.resetCrossSigning(e87.authUploadDeviceSigningKeys);
+      } else t2.logger.debug(`bootstrapCrossSigning: Cross-signing private keys not found locally or in secret storage, creating new keys`), yield t2.resetCrossSigning(e87.authUploadDeviceSigningKeys);
       t2.logger.debug(`bootstrapCrossSigning: complete`);
     })();
   }
@@ -5862,8 +5727,7 @@ var bl = class {
     return h(function* () {
       var n2 = yield t2.olmMachine.bootstrapCrossSigning(true);
       (yield t2.secretStorage.hasKey()) ? (t2.logger.debug(`resetCrossSigning: exporting private keys to secret storage`), yield t2.exportCrossSigningKeysToStorage()) : t2.logger.warn(`resetCrossSigning: Secret storage is not yet set up; not exporting keys to secret storage yet.`), t2.logger.debug(`resetCrossSigning: publishing public keys to server`);
-      for (var r2 of [n2.uploadKeysRequest, n2.uploadSigningKeysRequest, n2.uploadSignaturesRequest])
-        r2 && (yield t2.outgoingRequestProcessor.makeOutgoingRequest(r2, e87));
+      for (var r2 of [n2.uploadKeysRequest, n2.uploadSigningKeysRequest, n2.uploadSignaturesRequest]) r2 && (yield t2.outgoingRequestProcessor.makeOutgoingRequest(r2, e87));
     })();
   }
   exportCrossSigningKeysToStorage() {
@@ -5888,11 +5752,8 @@ function Cl(e87, t2) {
 function wl() {
   return wl = h(function* (e87, t2) {
     var n2 = yield e87.getDefaultKeyId();
-    if (!n2)
-      return false;
-    for (var r2 of t2)
-      if (!(n2 in ((yield e87.isStored(r2)) || {})))
-        return false;
+    if (!n2) return false;
+    for (var r2 of t2) if (!(n2 in ((yield e87.isStored(r2)) || {}))) return false;
     return true;
   }), wl.apply(this, arguments);
 }
@@ -5901,8 +5762,7 @@ var Tl = class extends o {
     super(), this.logger = e87, this.olmMachine = t2, this.inner = n2, this.outgoingRequestProcessor = r2, this.supportedVerificationMethods = i2, C(this, `reEmitter`, void 0), C(this, `_accepting`, false), C(this, `_cancelling`, false), C(this, `_verifier`, void 0), this.reEmitter = new se(this);
     var a2 = new WeakRef(this);
     n2.registerChangesCallback(h(function* () {
-      var _a2;
-      return (_a2 = a2.deref()) == null ? void 0 : _a2.onChange();
+      return a2.deref()?.onChange();
     }));
   }
   onChange() {
@@ -5916,8 +5776,7 @@ var Tl = class extends o {
     return this.inner.flowId;
   }
   get roomId() {
-    var _a2;
-    return (_a2 = this.inner.roomId) == null ? void 0 : _a2.toString();
+    return this.inner.roomId?.toString();
   }
   get initiatedByMe() {
     return this.inner.weStarted();
@@ -5926,15 +5785,13 @@ var Tl = class extends o {
     return this.inner.otherUserId.toString();
   }
   get otherDeviceId() {
-    var _a2;
-    return (_a2 = this.inner.otherDeviceId) == null ? void 0 : _a2.toString();
+    return this.inner.otherDeviceId?.toString();
   }
   getOtherDevice() {
     var e87 = this;
     return h(function* () {
       var t2 = e87.inner.otherDeviceId;
-      if (t2)
-        return yield e87.olmMachine.getDevice(e87.inner.otherUserId, t2, 5);
+      if (t2) return yield e87.olmMachine.getDevice(e87.inner.otherUserId, t2, 5);
     })();
   }
   get isSelfVerification() {
@@ -5949,8 +5806,7 @@ var Tl = class extends o {
       case z.Ready:
         return this._accepting ? i.Requested : i.Ready;
       case z.Transitioned:
-        if (!this._verifier)
-          throw Error(`VerificationRequest: inner phase == Transitioned but no verifier!`);
+        if (!this._verifier) throw Error(`VerificationRequest: inner phase == Transitioned but no verifier!`);
         return this._verifier.verificationPhase;
       case z.Done:
         return i.Done;
@@ -5960,8 +5816,7 @@ var Tl = class extends o {
     throw Error(`Unknown verification phase ${e87}`);
   }
   get pending() {
-    if (this.inner.isPassive())
-      return false;
+    if (this.inner.isPassive()) return false;
     var e87 = this.phase;
     return e87 !== i.Done && e87 !== i.Cancelled;
   }
@@ -5978,23 +5833,20 @@ var Tl = class extends o {
     throw Error(`not implemented`);
   }
   get chosenMethod() {
-    if (this.phase !== i.Started)
-      return null;
+    if (this.phase !== i.Started) return null;
     var e87 = this.inner.getVerification();
     return e87 instanceof Kt ? x.Sas : e87 instanceof Mt ? x.Reciprocate : null;
   }
   otherPartySupportsMethod(e87) {
     var t2 = this.inner.theirSupportedMethods;
-    if (t2 === void 0)
-      return false;
+    if (t2 === void 0) return false;
     var n2 = kl[e87];
     return t2.some((e88) => e88 === n2);
   }
   accept() {
     var e87 = this;
     return h(function* () {
-      if (e87.inner.phase() !== z.Requested || e87._accepting)
-        throw Error(`Cannot accept a verification request in phase ${e87.phase}`);
+      if (e87.inner.phase() !== z.Requested || e87._accepting) throw Error(`Cannot accept a verification request in phase ${e87.phase}`);
       e87._accepting = true;
       try {
         var t2 = e87.inner.acceptWithMethods(e87.supportedVerificationMethods.map(Al));
@@ -6025,17 +5877,14 @@ var Tl = class extends o {
   startVerification(e87) {
     var t2 = this;
     return h(function* () {
-      if (e87 !== x.Sas)
-        throw Error(`Unsupported verification method ${e87}`);
-      if (!(yield t2.getOtherDevice()))
-        throw Error(`startVerification(): other device is unknown`);
+      if (e87 !== x.Sas) throw Error(`Unsupported verification method ${e87}`);
+      if (!(yield t2.getOtherDevice())) throw Error(`startVerification(): other device is unknown`);
       var n2 = yield t2.inner.startSas();
       if (n2) {
         var [, r2] = n2;
         yield t2.outgoingRequestProcessor.makeOutgoingRequest(r2);
       }
-      if (!t2._verifier)
-        throw Error(`Still no verifier after startSas() call`);
+      if (!t2._verifier) throw Error(`Still no verifier after startSas() call`);
       return t2._verifier;
     })();
   }
@@ -6043,8 +5892,7 @@ var Tl = class extends o {
     var t2 = this;
     return h(function* () {
       var n2 = Lt.fromBytes(e87), r2 = yield t2.inner.scanQrCode(n2);
-      if (!t2._verifier)
-        throw Error(`Still no verifier after scanQrCode() call`);
+      if (!t2._verifier) throw Error(`Still no verifier after scanQrCode() call`);
       var i2 = r2.reciprocate();
       return i2 && (yield t2.outgoingRequestProcessor.makeOutgoingRequest(i2)), t2._verifier;
     })();
@@ -6058,34 +5906,28 @@ var Tl = class extends o {
   generateQRCode() {
     var e87 = this;
     return h(function* () {
-      if (!(yield e87.getOtherDevice()))
-        throw Error(`generateQRCode(): other device is unknown`);
+      if (!(yield e87.getOtherDevice())) throw Error(`generateQRCode(): other device is unknown`);
       var t2 = yield e87.inner.generateQrCode();
-      if (t2)
-        return t2.toBytes();
+      if (t2) return t2.toBytes();
     })();
   }
   get cancellationCode() {
-    var _a2;
-    return ((_a2 = this.inner.cancelInfo) == null ? void 0 : _a2.cancelCode()) ?? null;
+    return this.inner.cancelInfo?.cancelCode() ?? null;
   }
   get cancellingUserId() {
     var e87 = this.inner.cancelInfo;
-    if (e87)
-      return e87.cancelledbyUs() ? this.olmMachine.userId.toString() : this.inner.otherUserId.toString();
+    if (e87) return e87.cancelledbyUs() ? this.olmMachine.userId.toString() : this.inner.otherUserId.toString();
   }
 }, El = class extends o {
   constructor(e87, t2) {
     super(), this.inner = e87, this.outgoingRequestProcessor = t2, C(this, `completionDeferred`, void 0), this.completionDeferred = Promise.withResolvers();
     var n2 = new WeakRef(this);
     e87.registerChangesCallback(h(function* () {
-      var _a2;
-      return (_a2 = n2.deref()) == null ? void 0 : _a2.onChange();
+      return n2.deref()?.onChange();
     })), this.completionDeferred.promise.catch(() => null);
   }
   onChange() {
-    if (this.inner.isDone())
-      console.warn(`[sdk][verify] verifier onChange: DONE`), this.completionDeferred.resolve(void 0);
+    if (this.inner.isDone()) console.warn(`[sdk][verify] verifier onChange: DONE`), this.completionDeferred.resolve(void 0);
     else if (this.inner.isCancelled()) {
       var e87 = this.inner.cancelInfo();
       console.warn(`[sdk][verify] verifier onChange: CANCELLED by ${e87.cancelledbyUs() ? `US` : `THEM`} code=${e87.cancelCode()} reason=${e87.reason()}`), this.completionDeferred.reject(Error(`Verification cancelled by ${e87.cancelledbyUs() ? `us` : `them`} with code ${e87.cancelCode()}: ${e87.reason()}`));
@@ -6172,22 +6014,20 @@ var Tl = class extends o {
     var e87 = this;
     if (super.onChange(), this.callbacks === null) {
       var t2 = this.inner.emoji(), n2 = this.inner.decimals();
-      if (t2 === void 0 && n2 === void 0)
-        return;
+      if (t2 === void 0 && n2 === void 0) return;
       var r2 = {};
-      t2 && (r2.emoji = t2.map((e88) => [e88.symbol, e88.description])), n2 && (r2.decimal = [n2[0], n2[1], n2[2]]), this.callbacks = { sas: r2, confirm: function() {
+      t2 && (r2.emoji = t2.map((e88) => [e88.symbol, e88.description])), n2 && (r2.decimal = [n2[0], n2[1], n2[2]]), this.callbacks = { sas: r2, confirm: (function() {
         var t3 = h(function* () {
           console.warn(`[sdk][verify] ShowSasCallbacks.confirm() called`);
           var t4 = yield e87.inner.confirm();
           console.warn(`[sdk][verify] confirm() produced ${t4.length} outgoing request(s)`);
-          for (var n4 of t4)
-            yield e87.outgoingRequestProcessor.makeOutgoingRequest(n4);
+          for (var n4 of t4) yield e87.outgoingRequestProcessor.makeOutgoingRequest(n4);
         });
         function n3() {
           return t3.apply(this, arguments);
         }
         return n3;
-      }(), mismatch: () => {
+      })(), mismatch: () => {
         console.warn(`[sdk][verify] ShowSasCallbacks.mismatch() called \u2014 JS-originated m.mismatched_sas`, Error(`mismatch() call site`).stack);
         var e88 = this.inner.cancelWithCode(`m.mismatched_sas`);
         e88 && this.outgoingRequestProcessor.makeOutgoingRequest(e88);
@@ -6209,16 +6049,14 @@ var Tl = class extends o {
       this.inner = e87;
       var t2 = new WeakRef(this);
       e87.registerChangesCallback(h(function* () {
-        var _a2;
-        return (_a2 = t2.deref()) == null ? void 0 : _a2.onChange();
+        return t2.deref()?.onChange();
       })), this.sendAccept(), this.onChange();
     }
   }
 }, kl = { [x.Sas]: pn.SasV1, [x.ScanQrCode]: pn.QrCodeScanV1, [x.ShowQrCode]: pn.QrCodeShowV1, [x.Reciprocate]: pn.ReciprocateV1 };
 function Al(e87) {
   var t2 = kl[e87];
-  if (t2 === void 0)
-    throw Error(`Unknown verification method ${e87}`);
+  if (t2 === void 0) throw Error(`Unknown verification method ${e87}`);
   return t2;
 }
 function jl(e87) {
@@ -6259,15 +6097,14 @@ var Ml = class extends o {
   isKeyBackupTrusted(e87) {
     var t2 = this;
     return h(function* () {
-      var _a2;
-      var n2 = yield t2.olmMachine.verifyBackup(e87), r2 = (_a2 = yield t2.olmMachine.getBackupKeys()) == null ? void 0 : _a2.decryptionKey;
+      var n2 = yield t2.olmMachine.verifyBackup(e87), r2 = (yield t2.olmMachine.getBackupKeys())?.decryptionKey;
       return { matchesDecryptionKey: !!r2 && t2.backupInfoMatchesBackupDecryptionKey(e87, r2), trusted: n2.trusted() };
     })();
   }
   checkKeyBackupAndEnable(e87) {
-    return !e87 && this.checkedForBackup ? Promise.resolve(null) : (this.keyBackupCheckInProgress || (this.keyBackupCheckInProgress = this.doCheckKeyBackup().finally(() => {
+    return !e87 && this.checkedForBackup ? Promise.resolve(null) : (this.keyBackupCheckInProgress ||= this.doCheckKeyBackup().finally(() => {
       this.keyBackupCheckInProgress = null;
-    })), this.keyBackupCheckInProgress);
+    }), this.keyBackupCheckInProgress);
   }
   handleBackupSecretReceived(e87) {
     var t2 = this;
@@ -6278,8 +6115,7 @@ var Ml = class extends o {
       } catch (e88) {
         return t2.logger.warn(`handleBackupSecretReceived: Error checking for latest key backup`, e88), false;
       }
-      if (!((n2 = r2) != null && n2.version))
-        return t2.logger.warn(`handleBackupSecretReceived: Received a backup decryption key, but there is no trusted server-side key backup`), false;
+      if (!((n2 = r2) != null && n2.version)) return t2.logger.warn(`handleBackupSecretReceived: Received a backup decryption key, but there is no trusted server-side key backup`), false;
       try {
         var i2 = w.fromBase64(e87);
         return t2.backupInfoMatchesBackupDecryptionKey(r2, i2) ? (t2.logger.info(`handleBackupSecretReceived: A valid backup decryption key has been received and stored in cache.`), yield t2.saveBackupDecryptionKey(i2, r2.version), true) : (t2.logger.warn(`handleBackupSecretReceived: Private decryption key does not match the public key of the current remote backup.`), false);
@@ -6336,8 +6172,7 @@ var Ml = class extends o {
       }
       e87.checkedForBackup = true, t2 && !t2.version && (e87.logger.warn(`active backup lacks a useful 'version'; ignoring it`), t2 = void 0), e87.serverBackupInfo = t2;
       var n2 = yield e87.getActiveBackupVersion();
-      if (!t2)
-        return n2 === null ? e87.logger.debug(`No key backup present on server: not enabling key backup`) : (e87.logger.debug(`No key backup present on server: disabling key backup`), yield e87.disableKeyBackup()), null;
+      if (!t2) return n2 === null ? e87.logger.debug(`No key backup present on server: not enabling key backup`) : (e87.logger.debug(`No key backup present on server: disabling key backup`), yield e87.disableKeyBackup()), null;
       var r2 = yield e87.isKeyBackupTrusted(t2);
       return !r2.matchesDecryptionKey && !r2.trusted ? n2 === null ? e87.logger.debug(`Key backup present on server but not trusted: not enabling key backup`) : (e87.logger.debug(`Key backup present on server but not trusted: disabling key backup`), yield e87.disableKeyBackup()) : n2 === null ? (e87.logger.debug(`Found usable key backup v${t2.version}: enabling key backups`), yield e87.enableKeyBackup(t2)) : n2 === t2.version ? e87.logger.debug(`Backup version ${t2.version} still current`) : (e87.logger.debug(`On backup version ${n2} but found version ${t2.version}: switching.`), yield e87.disableKeyBackup(), yield e87.enableKeyBackup(t2)), { backupInfo: t2, trustInfo: r2 };
     })();
@@ -6384,15 +6219,13 @@ var Ml = class extends o {
             return;
           }
           try {
-            if (yield t2.outgoingRequestProcessor.makeOutgoingRequest(s2), i2 = 0, t2.stopped)
-              break;
-            if (!o2 && a2 === null)
-              try {
-                var c2 = yield t2.olmMachine.roomKeyCounts();
-                a2 = c2.total - c2.backedUp;
-              } catch (e88) {
-                t2.logger.error(`Backup: Failed to get key counts from rust crypto-sdk`, e88);
-              }
+            if (yield t2.outgoingRequestProcessor.makeOutgoingRequest(s2), i2 = 0, t2.stopped) break;
+            if (!o2 && a2 === null) try {
+              var c2 = yield t2.olmMachine.roomKeyCounts();
+              a2 = c2.total - c2.backedUp;
+            } catch (e88) {
+              t2.logger.error(`Backup: Failed to get key counts from rust crypto-sdk`, e88);
+            }
             if (a2 !== null) {
               t2.emit(S.KeyBackupSessionsRemaining, a2);
               var l2 = t2.keysCountInBatch(s2);
@@ -6410,16 +6243,15 @@ var Ml = class extends o {
                 }
                 t2.emit(S.KeyBackupFailed, e88.data.errcode), t2.backupKeysLoopRunning = false, t2.checkKeyBackupAndEnable(true);
                 return;
-              } else if (e88.isRateLimitError())
-                try {
-                  var d2 = e88.getRetryAfterMs();
-                  if (d2 && d2 > 0) {
-                    yield fe(d2);
-                    continue;
-                  }
-                } catch (e89) {
-                  t2.logger.warn(`Backup: An error occurred while retrieving a rate-limit retry delay`, e89);
+              } else if (e88.isRateLimitError()) try {
+                var d2 = e88.getRetryAfterMs();
+                if (d2 && d2 > 0) {
+                  yield fe(d2);
+                  continue;
                 }
+              } catch (e89) {
+                t2.logger.warn(`Backup: An error occurred while retrieving a rate-limit retry delay`, e89);
+              }
             }
             yield fe(1e3 * 2 ** Math.min(i2 - 1, 4));
           }
@@ -6452,9 +6284,7 @@ var Ml = class extends o {
   deleteAllKeyBackupVersions() {
     var e87 = this;
     return h(function* () {
-      var _a2, _b;
-      for (var t2 = ((_a2 = yield e87.requestKeyBackupVersion()) == null ? void 0 : _a2.version) ?? null; t2 != null; )
-        yield e87.deleteKeyBackupVersion(t2), t2 = ((_b = yield e87.requestKeyBackupVersion()) == null ? void 0 : _b.version) ?? null;
+      for (var t2 = (yield e87.requestKeyBackupVersion())?.version ?? null; t2 != null; ) yield e87.deleteKeyBackupVersion(t2), t2 = (yield e87.requestKeyBackupVersion())?.version ?? null;
     })();
   }
   deleteKeyBackupVersion(e87) {
@@ -6483,15 +6313,14 @@ var Ml = class extends o {
     return h(function* () {
       var a2, o2 = 200, s2 = Ll(e87), c2 = 0, l2 = 0;
       r2 == null || (a2 = r2.progressCallback) == null || a2.call(r2, { total: s2, successes: c2, stage: te.LoadKeys, failures: l2 });
-      var u2 = function() {
+      var u2 = (function() {
         var e88 = h(function* (e89) {
           var a3, o3 = [], u3 = function* (t3) {
             (yield n2.decryptSessions(e89.get(t3))).forEach((e90) => {
               e90.room_id = t3, o3.push(e90);
             });
           };
-          for (var d3 of e89.keys())
-            yield* u3(d3);
+          for (var d3 of e89.keys()) yield* u3(d3);
           try {
             yield i2.importBackedUpRoomKeys(o3, t2), c2 += o3.length;
           } catch (e90) {
@@ -6502,21 +6331,19 @@ var Ml = class extends o {
         return function(t3) {
           return e88.apply(this, arguments);
         };
-      }(), d2 = 0, f2 = /* @__PURE__ */ new Map();
-      for (var [p2, m2] of Object.entries(e87.rooms))
-        if (m2.sessions) {
-          f2.set(p2, {});
-          for (var [ee2, ne2] of Object.entries(m2.sessions)) {
-            var re2 = f2.get(p2);
-            re2[ee2] = ne2, d2 += 1, d2 >= o2 && (yield u2(f2), f2 = /* @__PURE__ */ new Map(), f2.set(p2, {}), d2 = 0);
-          }
+      })(), d2 = 0, f2 = /* @__PURE__ */ new Map();
+      for (var [p2, m2] of Object.entries(e87.rooms)) if (m2.sessions) {
+        f2.set(p2, {});
+        for (var [ee2, ne2] of Object.entries(m2.sessions)) {
+          var re2 = f2.get(p2);
+          re2[ee2] = ne2, d2 += 1, d2 >= o2 && (yield u2(f2), f2 = /* @__PURE__ */ new Map(), f2.set(p2, {}), d2 = 0);
         }
+      }
       return d2 > 0 && (yield u2(f2)), { total: s2, imported: c2 };
     })();
   }
   backupInfoMatchesBackupDecryptionKey(e87, t2) {
-    var _a2;
-    return e87.algorithm === `m.megolm_backup.v1.curve25519-aes-sha2` ? ((_a2 = e87.auth_data) == null ? void 0 : _a2.public_key) === t2.megolmV1PublicKey.publicKeyBase64 : (this.logger.warn(`backupMatchesPrivateKey: Unsupported backup algorithm`, e87.algorithm), false);
+    return e87.algorithm === `m.megolm_backup.v1.curve25519-aes-sha2` ? e87.auth_data?.public_key === t2.megolmV1PublicKey.publicKeyBase64 : (this.logger.warn(`backupMatchesPrivateKey: Unsupported backup algorithm`, e87.algorithm), false);
   }
 }, Nl = class {
   constructor(e87, t2) {
@@ -6526,13 +6353,12 @@ var Ml = class extends o {
     var t2 = this;
     return h(function* () {
       var n2 = [];
-      for (var [r2, i2] of Object.entries(e87))
-        try {
-          var a2 = JSON.parse(t2.decryptionKey.decryptV1(i2.session_data.ephemeral, i2.session_data.mac, i2.session_data.ciphertext));
-          a2.session_id = r2, n2.push(a2);
-        } catch (e88) {
-          t2.logger.debug(`Failed to decrypt megolm session from backup`, e88, i2);
-        }
+      for (var [r2, i2] of Object.entries(e87)) try {
+        var a2 = JSON.parse(t2.decryptionKey.decryptV1(i2.session_data.ephemeral, i2.session_data.mac, i2.session_data.ciphertext));
+        a2.session_id = r2, n2.push(a2);
+      } catch (e88) {
+        t2.logger.debug(`Failed to decrypt megolm session from backup`, e88, i2);
+      }
       return n2;
     })();
   }
@@ -6549,8 +6375,7 @@ function Fl() {
       var n2 = t2 ? le(`/room_keys/version/$version`, { $version: t2 }) : `/room_keys/version`;
       return yield e87.authedRequest(m.Get, n2, void 0, void 0, { prefix: de.V3 });
     } catch (e88) {
-      if (e88.errcode === `M_NOT_FOUND`)
-        return null;
+      if (e88.errcode === `M_NOT_FOUND`) return null;
       throw e88;
     }
   }), Fl.apply(this, arguments);
@@ -6560,8 +6385,7 @@ function Il(e87, t2) {
 }
 function Ll(e87) {
   var t2 = 0;
-  for (var { sessions: n2 } of Object.values(e87.rooms))
-    t2 += Object.keys(n2).length;
+  for (var { sessions: n2 } of Object.values(e87.rooms)) t2 += Object.keys(n2).length;
   return t2;
 }
 var Rl = class {
@@ -6572,7 +6396,7 @@ var Rl = class {
     this.stopped = true;
   }
   doProcessOutgoingRequests() {
-    this.nextLoopDeferred || (this.nextLoopDeferred = Promise.withResolvers());
+    this.nextLoopDeferred ||= Promise.withResolvers();
     var e87 = this.nextLoopDeferred.promise;
     return this.outgoingRequestLoopRunning || this.outgoingRequestLoop().catch((e88) => {
       this.logger.error(`Uncaught error in outgoing request loop`, e88);
@@ -6581,8 +6405,7 @@ var Rl = class {
   outgoingRequestLoop() {
     var e87 = this;
     return h(function* () {
-      if (e87.outgoingRequestLoopRunning)
-        throw Error(`Cannot run two outgoing request loops`);
+      if (e87.outgoingRequestLoopRunning) throw Error(`Cannot run two outgoing request loops`);
       e87.outgoingRequestLoopRunning = true;
       try {
         for (; !e87.stopped && e87.nextLoopDeferred; ) {
@@ -6600,8 +6423,7 @@ var Rl = class {
     return h(function* () {
       if (!e87.stopped) {
         var t2 = yield e87.olmMachine.outgoingRequests(), n2 = function* (t3) {
-          if (e87.stopped)
-            return { v: void 0 };
+          if (e87.stopped) return { v: void 0 };
           try {
             yield b(e87.logger, `Make outgoing request ${t3.type}`, h(function* () {
               yield e87.outgoingRequestProcessor.makeOutgoingRequest(t3);
@@ -6610,15 +6432,13 @@ var Rl = class {
             e87.logger.error(`Failed to process outgoing request ${t3.type}: ${n3}`);
           }
         }, r2;
-        for (var i2 of t2)
-          if (r2 = yield* n2(i2), r2)
-            return r2.v;
+        for (var i2 of t2) if (r2 = yield* n2(i2), r2) return r2.v;
       }
     })();
   }
-}, zl = 5e3, $ = function(e87) {
+}, zl = 5e3, $ = (function(e87) {
   return e87.MISSING_DECRYPTION_KEY = `MISSING_DECRYPTION_KEY`, e87.NETWORK_ERROR = `NETWORK_ERROR`, e87.STOPPED = `STOPPED`, e87;
-}($ || {}), Bl = class extends Error {
+})($ || {}), Bl = class extends Error {
   constructor(e87) {
     super(`Failed to get key from backup: ${e87}`), this.code = e87, this.name = `KeyDownloadError`;
   }
@@ -6700,8 +6520,7 @@ var Rl = class {
                 return;
               }
               var r2 = yield e87.queryKeyBackup(t2.roomId, t2.megolmSessionId, n2);
-              if (e87.stopped)
-                return;
+              if (e87.stopped) return;
               try {
                 yield e87.decryptAndImport(t2, r2, n2);
               } catch (n3) {
@@ -6709,20 +6528,18 @@ var Rl = class {
               }
               e87.queuedRequests.shift();
             } catch (n3) {
-              if (n3 instanceof Bl)
-                switch (n3.code) {
-                  case $.MISSING_DECRYPTION_KEY:
-                    e87.markAsNotFoundInBackup(t2.megolmSessionId), e87.queuedRequests.shift();
-                    break;
-                  case $.NETWORK_ERROR:
-                    yield fe(zl);
-                    break;
-                  case $.STOPPED:
-                    e87.downloadLoopRunning = false;
-                    return;
-                }
-              else
-                n3 instanceof Vl && (yield fe(n3.retryMillis));
+              if (n3 instanceof Bl) switch (n3.code) {
+                case $.MISSING_DECRYPTION_KEY:
+                  e87.markAsNotFoundInBackup(t2.megolmSessionId), e87.queuedRequests.shift();
+                  break;
+                case $.NETWORK_ERROR:
+                  yield fe(zl);
+                  break;
+                case $.STOPPED:
+                  e87.downloadLoopRunning = false;
+                  return;
+              }
+              else n3 instanceof Vl && (yield fe(n3.retryMillis));
             }
           }
         } finally {
@@ -6734,17 +6551,14 @@ var Rl = class {
   queryKeyBackup(e87, t2, n2) {
     var i2 = this;
     return h(function* () {
-      if (i2.logger.debug(`Checking key backup for session ${t2}`), i2.stopped)
-        throw new Bl($.STOPPED);
+      if (i2.logger.debug(`Checking key backup for session ${t2}`), i2.stopped) throw new Bl($.STOPPED);
       try {
         var a2 = yield i2.requestRoomKeyFromBackup(n2.backupVersion, e87, t2);
         return i2.logger.debug(`Got key from backup for sessionId:${t2}`), a2;
       } catch (e88) {
-        if (i2.stopped)
-          throw new Bl($.STOPPED);
+        if (i2.stopped) throw new Bl($.STOPPED);
         if (i2.logger.info(`No luck requesting key backup for session ${t2}: ${e88}`), e88 instanceof r) {
-          if (e88.data.errcode == `M_NOT_FOUND`)
-            throw new Bl($.MISSING_DECRYPTION_KEY);
+          if (e88.data.errcode == `M_NOT_FOUND`) throw new Bl($.MISSING_DECRYPTION_KEY);
           if (e88.isRateLimitError()) {
             var o2;
             try {
@@ -6763,20 +6577,16 @@ var Rl = class {
     var r2 = this;
     return h(function* () {
       var i2 = { [e87.megolmSessionId]: t2 }, a2 = yield n2.decryptor.decryptSessions(i2);
-      for (var o2 of a2)
-        o2.room_id = e87.roomId;
+      for (var o2 of a2) o2.room_id = e87.roomId;
       yield r2.backupManager.importBackedUpRoomKeys(a2, n2.backupVersion);
     })();
   }
   getOrCreateBackupConfiguration() {
     var e87 = this;
     return h(function* () {
-      if (e87.configuration)
-        return e87.configuration;
-      if (e87.hasConfigurationProblem)
-        return null;
-      if (e87.currentBackupVersionCheck != null)
-        return e87.logger.debug(`Already checking server version, use current promise`), yield e87.currentBackupVersionCheck;
+      if (e87.configuration) return e87.configuration;
+      if (e87.hasConfigurationProblem) return null;
+      if (e87.currentBackupVersionCheck != null) return e87.logger.debug(`Already checking server version, use current promise`), yield e87.currentBackupVersionCheck;
       e87.currentBackupVersionCheck = e87.internalCheckFromServer();
       try {
         return yield e87.currentBackupVersionCheck;
@@ -6794,28 +6604,21 @@ var Rl = class {
       } catch (t3) {
         return e87.logger.debug(`Backup: error while checking server version: ${t3}`), e87.hasConfigurationProblem = true, null;
       }
-      if (e87.logger.debug(`Got current backup version from server: ${n2 == null ? void 0 : n2.version}`), (n2 == null ? void 0 : n2.algorithm) != `m.megolm_backup.v1.curve25519-aes-sha2`)
-        return e87.logger.info(`Unsupported algorithm ${n2 == null ? void 0 : n2.algorithm}`), e87.hasConfigurationProblem = true, null;
-      if (!((t2 = n2) != null && t2.version))
-        return e87.logger.info(`No current key backup`), e87.hasConfigurationProblem = true, null;
+      if (e87.logger.debug(`Got current backup version from server: ${n2?.version}`), n2?.algorithm != `m.megolm_backup.v1.curve25519-aes-sha2`) return e87.logger.info(`Unsupported algorithm ${n2?.algorithm}`), e87.hasConfigurationProblem = true, null;
+      if (!((t2 = n2) != null && t2.version)) return e87.logger.info(`No current key backup`), e87.hasConfigurationProblem = true, null;
       var r2 = yield e87.backupManager.getActiveBackupVersion();
-      if (r2 == null || n2.version != r2)
-        return e87.logger.info(`The current backup version on the server (${n2.version}) is not trusted. Version we are currently backing up to: ${r2}`), e87.hasConfigurationProblem = true, null;
+      if (r2 == null || n2.version != r2) return e87.logger.info(`The current backup version on the server (${n2.version}) is not trusted. Version we are currently backing up to: ${r2}`), e87.hasConfigurationProblem = true, null;
       var i2 = yield e87.getBackupDecryptionKey();
-      if (!(i2 != null && i2.decryptionKey))
-        return e87.logger.debug(`Not checking key backup for session (no decryption key)`), e87.hasConfigurationProblem = true, null;
-      if (r2 != i2.backupVersion)
-        return e87.logger.debug(`Version for which we have a decryption key (${i2.backupVersion}) doesn't match the version we are backing up to (${r2})`), e87.hasConfigurationProblem = true, null;
-      if (n2.auth_data.public_key != i2.decryptionKey.megolmV1PublicKey.publicKeyBase64)
-        return e87.logger.debug(`Key backup on server does not match our decryption key`), e87.hasConfigurationProblem = true, null;
+      if (!(i2 != null && i2.decryptionKey)) return e87.logger.debug(`Not checking key backup for session (no decryption key)`), e87.hasConfigurationProblem = true, null;
+      if (r2 != i2.backupVersion) return e87.logger.debug(`Version for which we have a decryption key (${i2.backupVersion}) doesn't match the version we are backing up to (${r2})`), e87.hasConfigurationProblem = true, null;
+      if (n2.auth_data.public_key != i2.decryptionKey.megolmV1PublicKey.publicKeyBase64) return e87.logger.debug(`Key backup on server does not match our decryption key`), e87.hasConfigurationProblem = true, null;
       var a2 = e87.backupManager.createBackupDecryptor(i2.decryptionKey);
       return e87.hasConfigurationProblem = false, e87.configuration = { decryptor: a2, backupVersion: r2 }, e87.configuration;
     })();
   }
 };
 function Ul(e87, t2) {
-  if (!e87.private_key_salt || !e87.private_key_iterations)
-    throw Error(`Salt and/or iterations not found: this backup cannot be restored with a passphrase`);
+  if (!e87.private_key_salt || !e87.private_key_iterations) throw Error(`Salt and/or iterations not found: this backup cannot be restored with a passphrase`);
   return re(t2, e87.private_key_salt, e87.private_key_iterations, e87.private_key_bits);
 }
 function Wl(e87, t2) {
@@ -6844,8 +6647,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     super(), this.logger = e87, this.olmMachine = t2, this.http = n2, this.userId = r2, this.secretStorage = a2, this.cryptoCallbacks = o2, C(this, `RECOVERY_KEY_DERIVATION_ITERATIONS`, 5e5), C(this, `_trustCrossSignedDevices`, true), C(this, `deviceIsolationMode`, new Ce(false)), C(this, `stopped`, false), C(this, `roomEncryptors`, {}), C(this, `eventDecryptor`, void 0), C(this, `keyClaimManager`, void 0), C(this, `outgoingRequestProcessor`, void 0), C(this, `crossSigningIdentity`, void 0), C(this, `backupManager`, void 0), C(this, `outgoingRequestsManager`, void 0), C(this, `perSessionBackupDownloader`, void 0), C(this, `dehydratedDeviceManager`, void 0), C(this, `reemitter`, new se(this)), C(this, `globalBlacklistUnverifiedDevices`, false), C(this, `_supportedVerificationMethods`, Kl), this.outgoingRequestProcessor = new hl(e87, t2, n2), this.outgoingRequestsManager = new Rl(this.logger, t2, this.outgoingRequestProcessor), this.keyClaimManager = new gl(t2, this.outgoingRequestProcessor), this.backupManager = new Ml(e87, t2, n2, this.outgoingRequestProcessor), this.perSessionBackupDownloader = new Hl(this.logger, this.olmMachine, this.http, this.backupManager), this.dehydratedDeviceManager = new fl(this.logger, t2, n2, this.outgoingRequestProcessor, a2), this.eventDecryptor = new Jl(this.logger, t2, this.perSessionBackupDownloader), this.reemitter.reEmit(this.backupManager, [S.KeyBackupStatus, S.KeyBackupSessionsRemaining, S.KeyBackupFailed, S.KeyBackupDecryptionKeyCached]), this.reemitter.reEmit(this.dehydratedDeviceManager, [S.DehydratedDeviceCreated, S.DehydratedDeviceUploaded, S.RehydrationStarted, S.RehydrationProgress, S.RehydrationCompleted, S.RehydrationError, S.DehydrationKeyCached, S.DehydratedDeviceRotationError]), this.crossSigningIdentity = new bl(e87, t2, this.outgoingRequestProcessor, a2), this.checkKeyBackupAndEnable();
   }
   getOlmMachineOrThrow() {
-    if (this.stopped)
-      throw new xe();
+    if (this.stopped) throw new xe();
     return this.olmMachine;
   }
   set globalErrorOnUnknownDevices(e87) {
@@ -6860,29 +6662,24 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var n2 = this;
     return h(function* () {
       var t3 = e87.getRoomId(), r2 = n2.roomEncryptors[t3];
-      if (!r2)
-        throw Error(`Cannot encrypt event in unconfigured room ${t3}`);
+      if (!r2) throw Error(`Cannot encrypt event in unconfigured room ${t3}`);
       yield r2.encryptEvent(e87, n2.globalBlacklistUnverifiedDevices, n2.deviceIsolationMode);
     })();
   }
   decryptEvent(e87) {
     var t2 = this;
     return h(function* () {
-      if (!e87.getRoomId())
-        throw Error(`to-device event was not decrypted in preprocessToDeviceMessages`);
+      if (!e87.getRoomId()) throw Error(`to-device event was not decrypted in preprocessToDeviceMessages`);
       return yield t2.eventDecryptor.attemptEventDecryption(e87, t2.deviceIsolationMode);
     })();
   }
   getBackupDecryptor(e87, t2) {
     var n2 = this;
     return h(function* () {
-      if (!(t2 instanceof Uint8Array))
-        throw Error(`getBackupDecryptor: expects Uint8Array`);
-      if ((e87 == null ? void 0 : e87.algorithm) != `m.megolm_backup.v1.curve25519-aes-sha2`)
-        throw Error(`getBackupDecryptor: Unsupported algorithm ${e87 == null ? void 0 : e87.algorithm}`);
+      if (!(t2 instanceof Uint8Array)) throw Error(`getBackupDecryptor: expects Uint8Array`);
+      if (e87?.algorithm != `m.megolm_backup.v1.curve25519-aes-sha2`) throw Error(`getBackupDecryptor: Unsupported algorithm ${e87?.algorithm}`);
       var r2 = w.fromBase64(_e(t2));
-      if (!Il(r2, e87))
-        throw Error(`getBackupDecryptor: key backup on server does not match the decryption key`);
+      if (!Il(r2, e87)) throw Error(`getBackupDecryptor: key backup on server does not match the decryption key`);
       return n2.backupManager.createBackupDecryptor(r2);
     })();
   }
@@ -6926,8 +6723,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
   isEncryptionEnabledInRoom(e87) {
     var t2 = this;
     return h(function* () {
-      var _a2;
-      return !!((_a2 = yield t2.olmMachine.getRoomSettings(new P(e87))) == null ? void 0 : _a2.algorithm);
+      return !!(yield t2.olmMachine.getRoomSettings(new P(e87)))?.algorithm;
     })();
   }
   getOwnDeviceKeys() {
@@ -6942,8 +6738,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     t2 && t2.prepareForEncryption(this.globalBlacklistUnverifiedDevices, this.deviceIsolationMode);
   }
   forceDiscardSession(e87) {
-    var _a2;
-    return (_a2 = this.roomEncryptors[e87]) == null ? void 0 : _a2.forceDiscardSession();
+    return this.roomEncryptors[e87]?.forceDiscardSession();
   }
   exportRoomKeys() {
     var e87 = this;
@@ -6973,25 +6768,22 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
   userHasCrossSigningKeys() {
     var e87 = arguments, t2 = this;
     return h(function* () {
-      var _a2;
       var n2 = e87.length > 0 && e87[0] !== void 0 ? e87[0] : t2.userId, r2 = e87.length > 1 && e87[1] !== void 0 ? e87[1] : false, i2 = yield t2.olmMachine.trackedUsers(), a2;
-      for (var o2 of i2)
-        if (n2 === o2.toString()) {
-          a2 = o2;
-          break;
-        }
+      for (var o2 of i2) if (n2 === o2.toString()) {
+        a2 = o2;
+        break;
+      }
       if (a2 !== void 0) {
         if (n2 === t2.userId) {
           var s2 = t2.olmMachine.queryKeysForUsers([a2.clone()]);
           yield t2.outgoingRequestProcessor.makeOutgoingRequest(s2);
         }
         var c2 = yield t2.olmMachine.getIdentity(a2);
-        return c2 == null ? void 0 : c2.free(), c2 !== void 0;
+        return c2?.free(), c2 !== void 0;
       } else if (r2) {
-        var l2 = (_a2 = (yield t2.downloadDeviceList(/* @__PURE__ */ new Set([n2]))).master_keys) == null ? void 0 : _a2[n2];
+        var l2 = (yield t2.downloadDeviceList(/* @__PURE__ */ new Set([n2]))).master_keys?.[n2];
         return l2 ? !!Object.values(l2.keys)[0] : false;
-      } else
-        return false;
+      } else return false;
     })();
   }
   getUserDeviceInfo(e87) {
@@ -7000,8 +6792,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
       var r2 = t2.length > 1 && t2[1] !== void 0 ? t2[1] : false, i2 = /* @__PURE__ */ new Map(), a2 = yield n2.getOlmMachineOrThrow().trackedUsers(), o2 = /* @__PURE__ */ new Set();
       a2.forEach((e88) => o2.add(e88.toString()));
       var s2 = /* @__PURE__ */ new Set();
-      for (var c2 of e87)
-        o2.has(c2) ? i2.set(c2, yield n2.getUserDevices(c2)) : s2.add(c2);
+      for (var c2 of e87) o2.has(c2) ? i2.set(c2, yield n2.getUserDevices(c2)) : s2.add(c2);
       if (r2 && s2.size >= 1) {
         var l2 = yield n2.downloadDeviceList(s2);
         Object.entries(l2.device_keys).forEach((e88) => {
@@ -7045,8 +6836,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var n2 = arguments, r2 = this;
     return h(function* () {
       var i2 = n2.length > 2 && n2[2] !== void 0 ? n2[2] : true, a2 = yield r2.olmMachine.getDevice(new R(e87), new k(t2));
-      if (!a2)
-        throw Error(`Unknown device ${e87}|${t2}`);
+      if (!a2) throw Error(`Unknown device ${e87}|${t2}`);
       try {
         yield a2.setLocalTrust(i2 ? pt.Verified : pt.Unset);
       } finally {
@@ -7058,8 +6848,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var t2 = this;
     return h(function* () {
       var n2 = yield t2.olmMachine.getDevice(new R(t2.userId), new k(e87));
-      if (!n2)
-        throw Error(`Unknown device ${e87}`);
+      if (!n2) throw Error(`Unknown device ${e87}`);
       try {
         var r2 = yield n2.verify();
         yield t2.outgoingRequestProcessor.makeOutgoingRequest(r2);
@@ -7072,8 +6861,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var n2 = this;
     return h(function* () {
       var r2 = yield n2.olmMachine.getDevice(new R(e87), new k(t2));
-      if (!r2)
-        return null;
+      if (!r2) return null;
       try {
         return new me({ signedByOwner: r2.isCrossSignedByOwner(), crossSigningVerified: r2.isCrossSigningTrusted(), localVerified: r2.isLocallyTrusted(), trustCrossSignedDevices: n2._trustCrossSignedDevices });
       } finally {
@@ -7085,8 +6873,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var t2 = this;
     return h(function* () {
       var n2 = yield t2.getOlmMachineOrThrow().getIdentity(new R(e87));
-      if (n2 === void 0)
-        return new we(false, false, false);
+      if (n2 === void 0) return new we(false, false, false);
       var r2 = n2.isVerified(), i2 = n2.wasPreviouslyVerified(), a2 = n2 instanceof St ? n2.identityNeedsUserApproval() : false;
       return n2.free(), new we(r2, i2, false, a2);
     })();
@@ -7095,10 +6882,8 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var t2 = this;
     return h(function* () {
       var n2 = yield t2.getOlmMachineOrThrow().getIdentity(new R(e87));
-      if (n2 === void 0)
-        throw Error(`Cannot pin identity of unknown user`);
-      if (n2 instanceof wt)
-        throw Error(`Cannot pin identity of own user`);
+      if (n2 === void 0) throw Error(`Cannot pin identity of unknown user`);
+      if (n2 instanceof wt) throw Error(`Cannot pin identity of own user`);
       yield n2.pinCurrentMasterKey();
     })();
   }
@@ -7106,8 +6891,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var t2 = this;
     return h(function* () {
       var n2 = yield t2.getOlmMachineOrThrow().getIdentity(new R(e87));
-      if (n2 === void 0)
-        throw Error(`Cannot withdraw verification of unknown user`);
+      if (n2 === void 0) throw Error(`Cannot withdraw verification of unknown user`);
       yield n2.withdrawVerification();
     })();
   }
@@ -7122,12 +6906,10 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var e87 = arguments, t2 = this;
     return h(function* () {
       var n2 = e87.length > 0 && e87[0] !== void 0 ? e87[0] : ae.Master, r2 = yield t2.olmMachine.getIdentity(new R(t2.userId));
-      if (!r2)
-        return null;
+      if (!r2) return null;
       try {
         var i2 = yield t2.olmMachine.crossSigningStatus();
-        if (!(i2.hasMaster && i2.hasUserSigning && i2.hasSelfSigning) || !r2.isVerified())
-          return null;
+        if (!(i2.hasMaster && i2.hasUserSigning && i2.hasSelfSigning) || !r2.isVerified()) return null;
         var a2;
         switch (n2) {
           case ae.Master:
@@ -7167,12 +6949,10 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     return h(function* () {
       var { createSecretStorageKey: n2, setupNewSecretStorage: r2, setupNewKeyBackup: i2 } = e87.length > 0 && e87[0] !== void 0 ? e87[0] : {}, a2 = r2 || !(yield t2.secretStorageHasAESKey());
       if (a2) {
-        if (!n2)
-          throw Error(`unable to create a new secret storage key, createSecretStorageKey is not set`);
+        if (!n2) throw Error(`unable to create a new secret storage key, createSecretStorageKey is not set`);
         t2.logger.info(`bootstrapSecretStorage: creating new secret storage key`);
         var o2 = yield n2();
-        if (!o2)
-          throw Error(`createSecretStorageKey() callback did not return a secret storage key`);
+        if (!o2) throw Error(`createSecretStorageKey() callback did not return a secret storage key`);
         yield t2.addSecretStorageKeyToSecretStorage(o2);
       }
       var s2 = yield t2.olmMachine.exportCrossSigningKeys();
@@ -7203,8 +6983,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
   addSecretStorageKeyToSecretStorage(e87) {
     var t2 = this;
     return h(function* () {
-      var _a2, _b;
-      var n2, r2, i2 = yield t2.secretStorage.addKey(ye, { passphrase: (_a2 = e87.keyInfo) == null ? void 0 : _a2.passphrase, name: (_b = e87.keyInfo) == null ? void 0 : _b.name, key: e87.privateKey });
+      var n2, r2, i2 = yield t2.secretStorage.addKey(ye, { passphrase: e87.keyInfo?.passphrase, name: e87.keyInfo?.name, key: e87.privateKey });
       yield t2.secretStorage.setDefaultKeyId(i2.keyId), (n2 = (r2 = t2.cryptoCallbacks).cacheSecretStorageKey) == null || n2.call(r2, i2.keyId, i2.keyInfo, e87.privateKey);
     })();
   }
@@ -7212,8 +6991,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var e87 = this;
     return h(function* () {
       var t2 = yield e87.secretStorage.getKey();
-      if (!t2)
-        return false;
+      if (!t2) return false;
       var [, n2] = t2;
       return n2.algorithm === ye;
     })();
@@ -7221,10 +6999,10 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
   getCrossSigningStatus() {
     var e87 = this;
     return h(function* () {
-      var t2 = yield e87.getOlmMachineOrThrow().getIdentity(new R(e87.userId)), n2 = !!(t2 == null ? void 0 : t2.masterKey) && !!(t2 == null ? void 0 : t2.selfSigningKey) && !!(t2 == null ? void 0 : t2.userSigningKey);
-      t2 == null ? void 0 : t2.free();
+      var t2 = yield e87.getOlmMachineOrThrow().getIdentity(new R(e87.userId)), n2 = !!t2?.masterKey && !!t2?.selfSigningKey && !!t2?.userSigningKey;
+      t2?.free();
       var r2 = yield xl(e87.secretStorage), i2 = yield e87.getOlmMachineOrThrow().crossSigningStatus();
-      return { publicKeysOnDevice: n2, privateKeysInSecretStorage: r2, privateKeysCachedLocally: { masterKey: !!(i2 == null ? void 0 : i2.hasMaster), userSigningKey: !!(i2 == null ? void 0 : i2.hasUserSigning), selfSigningKey: !!(i2 == null ? void 0 : i2.hasSelfSigning) } };
+      return { publicKeysOnDevice: n2, privateKeysInSecretStorage: r2, privateKeysCachedLocally: { masterKey: !!i2?.hasMaster, userSigningKey: !!i2?.hasUserSigning, selfSigningKey: !!i2?.hasSelfSigning } };
     })();
   }
   createRecoveryKeyFromPassphrase(e87) {
@@ -7249,21 +7027,15 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     return this.olmMachine.getVerificationRequests(new R(e87)).filter((e88) => e88.roomId === void 0).map((e88) => this.makeVerificationRequest(e88));
   }
   findVerificationRequestDMInProgress(e87, t2) {
-    if (!t2)
-      throw Error(`missing userId`);
-    var n2 = this.olmMachine.getVerificationRequests(new R(t2)).find((t3) => {
-      var _a2;
-      return ((_a2 = t3.roomId) == null ? void 0 : _a2.toString()) === e87;
-    });
-    if (n2)
-      return this.makeVerificationRequest(n2);
+    if (!t2) throw Error(`missing userId`);
+    var n2 = this.olmMachine.getVerificationRequests(new R(t2)).find((t3) => t3.roomId?.toString() === e87);
+    if (n2) return this.makeVerificationRequest(n2);
   }
   requestVerificationDM(e87, t2) {
     var n2 = this;
     return h(function* () {
       var r2 = yield n2.olmMachine.getIdentity(new R(e87));
-      if (!r2)
-        throw Error(`unknown userId ${e87}`);
+      if (!r2) throw Error(`unknown userId ${e87}`);
       try {
         var i2 = n2._supportedVerificationMethods.map((e88) => Al(e88)), a2 = yield r2.verificationRequestContent(i2), o2 = yield n2.sendVerificationRequestContent(t2, a2), s2 = yield r2.requestVerification(new P(t2), new rt(o2), i2);
         return n2.makeVerificationRequest(s2);
@@ -7286,8 +7058,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var e87 = this;
     return h(function* () {
       var t2 = yield e87.olmMachine.getIdentity(new R(e87.userId));
-      if (t2 === void 0)
-        throw Error(`cannot request verification for this device when there is no existing cross-signing key`);
+      if (t2 === void 0) throw Error(`cannot request verification for this device when there is no existing cross-signing key`);
       try {
         var [n2, r2] = yield t2.requestVerification(e87._supportedVerificationMethods.map(Al));
         return yield e87.outgoingRequestProcessor.makeOutgoingRequest(r2), e87.makeVerificationRequest(n2);
@@ -7300,8 +7071,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var n2 = this;
     return h(function* () {
       var r2 = yield n2.olmMachine.getDevice(new R(e87), new k(t2));
-      if (!r2)
-        throw Error(`Not a known device`);
+      if (!r2) throw Error(`Not a known device`);
       try {
         var [i2, a2] = r2.requestVerification(n2._supportedVerificationMethods.map(Al));
         return yield n2.outgoingRequestProcessor.makeOutgoingRequest(a2), n2.makeVerificationRequest(i2);
@@ -7321,8 +7091,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var n2 = this;
     return h(function* () {
       var r2 = _e(e87);
-      if (!t2)
-        throw Error(`storeSessionBackupPrivateKey: version is required`);
+      if (!t2) throw Error(`storeSessionBackupPrivateKey: version is required`);
       yield n2.backupManager.saveBackupDecryptionKey(w.fromBase64(r2), t2);
     })();
   }
@@ -7330,14 +7099,11 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var e87 = this;
     return h(function* () {
       var t2 = yield e87.secretStorage.get(`m.megolm_backup.v1`);
-      if (!t2)
-        throw Error(`loadSessionBackupPrivateKeyFromSecretStorage: missing decryption key in secret storage`);
+      if (!t2) throw Error(`loadSessionBackupPrivateKeyFromSecretStorage: missing decryption key in secret storage`);
       var n2 = yield e87.backupManager.getServerBackupInfo();
-      if (!n2 || !n2.version)
-        throw Error(`loadSessionBackupPrivateKeyFromSecretStorage: unable to get backup version`);
+      if (!n2 || !n2.version) throw Error(`loadSessionBackupPrivateKeyFromSecretStorage: unable to get backup version`);
       var r2 = w.fromBase64(t2);
-      if (!Il(r2, n2))
-        throw Error(`loadSessionBackupPrivateKeyFromSecretStorage: decryption key does not match backup info`);
+      if (!Il(r2, n2)) throw Error(`loadSessionBackupPrivateKeyFromSecretStorage: decryption key does not match backup info`);
       yield e87.backupManager.saveBackupDecryptionKey(r2, n2.version);
     })();
   }
@@ -7398,8 +7164,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var n2 = this;
     return h(function* () {
       var r2 = yield n2.backupManager.getServerBackupInfo();
-      if (!(r2 != null && r2.version))
-        throw Error(`No backup info available`);
+      if (!(r2 != null && r2.version)) throw Error(`No backup info available`);
       var i2 = yield Ul(r2.auth_data, e87);
       return yield n2.storeSessionBackupPrivateKey(i2, r2.version), n2.restoreKeyBackup(t2);
     })();
@@ -7408,11 +7173,9 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var t2 = this;
     return h(function* () {
       var { decryptionKey: n2, backupVersion: r2 } = yield t2.olmMachine.getBackupKeys();
-      if (!n2 || !r2)
-        throw Error(`No decryption key found in crypto store`);
+      if (!n2 || !r2) throw Error(`No decryption key found in crypto store`);
       var i2 = oe(n2.toBase64()), a2 = yield t2.backupManager.requestKeyBackupVersion(r2);
-      if (!a2)
-        throw Error(`Backup version to restore ${r2} not found on server`);
+      if (!a2) throw Error(`Backup version to restore ${r2} not found on server`);
       var o2 = yield t2.getBackupDecryptor(a2, i2);
       try {
         var s2;
@@ -7432,8 +7195,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var e87 = arguments, t2 = this;
     return h(function* () {
       var n2 = e87.length > 0 && e87[0] !== void 0 ? e87[0] : {};
-      if (!(yield t2.isCrossSigningReady()) || !(yield t2.isSecretStorageReady()))
-        throw Error(`Device dehydration requires cross-signing and secret storage to be set up`);
+      if (!(yield t2.isCrossSigningReady()) || !(yield t2.isSecretStorageReady())) throw Error(`Device dehydration requires cross-signing and secret storage to be set up`);
       return yield t2.dehydratedDeviceManager.start(n2 || {});
     })();
   }
@@ -7460,19 +7222,18 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
       }));
       yield r2.keyClaimManager.ensureSessionsForUsers(i2, Array.from(a2).map((e88) => new R(e88)));
       var o2 = { batch: [], eventType: l.RoomMessageEncrypted };
-      return yield Promise.all(t2.map(function() {
+      return yield Promise.all(t2.map((function() {
         var t3 = h(function* (t4) {
           var { userId: i3, deviceId: a3 } = t4, s2 = yield r2.olmMachine.getDevice(new R(i3), new k(a3));
           if (s2) {
             var c2 = JSON.parse(yield s2.encryptToDeviceEvent(e87, n2));
             o2.batch.push({ deviceId: a3, userId: i3, payload: c2 });
-          } else
-            r2.logger.warn(`encryptToDeviceMessages: unknown device ${i3}:${a3}`);
+          } else r2.logger.warn(`encryptToDeviceMessages: unknown device ${i3}:${a3}`);
         });
         return function(e88) {
           return t3.apply(this, arguments);
         };
-      }())), o2;
+      })())), o2;
     })();
   }
   resetEncryption(e87) {
@@ -7507,8 +7268,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
       r2.info(`Uploaded encrypted key blob: ${JSON.stringify(o2)}`);
       var s2 = n2.getOlmMachineOrThrow().queryKeysForUsers([new R(t2)]);
       yield n2.outgoingRequestProcessor.makeOutgoingRequest(s2), yield n2.keyClaimManager.ensureSessionsForUsers(r2, [new R(t2)]);
-      for (var c2 of yield n2.getOlmMachineOrThrow().shareRoomKeyBundleData(new R(t2), new P(e87), o2.content_uri, a2.mediaEncryptionInfo, T.identityBasedStrategy()))
-        yield n2.outgoingRequestProcessor.makeOutgoingRequest(c2);
+      for (var c2 of yield n2.getOlmMachineOrThrow().shareRoomKeyBundleData(new R(t2), new P(e87), o2.content_uri, a2.mediaEncryptionInfo, T.identityBasedStrategy())) yield n2.outgoingRequestProcessor.makeOutgoingRequest(c2);
     })();
   }
   receiveSyncChanges(e87) {
@@ -7521,7 +7281,6 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
   preprocessToDeviceMessages(e87) {
     var t2 = this;
     return h(function* () {
-      var _a2;
       var n2 = yield t2.receiveSyncChanges({ events: e87 }), r2 = [];
       for (var i2 of n2) {
         var a2 = JSON.parse(i2.rawEvent);
@@ -7532,7 +7291,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
         switch (i2.type) {
           case At.Decrypted:
             var c2 = i2.encryptionInfo;
-            r2.push({ message: a2, encryptionInfo: { sender: c2.sender.toString(), senderDevice: (_a2 = c2.senderDevice) == null ? void 0 : _a2.toString(), senderCurve25519KeyBase64: c2.senderCurve25519Key, senderVerified: c2.isSenderVerified() } });
+            r2.push({ message: a2, encryptionInfo: { sender: c2.sender.toString(), senderDevice: c2.senderDevice?.toString(), senderCurve25519KeyBase64: c2.senderCurve25519Key, senderVerified: c2.isSenderVerified() } });
             break;
           case At.PlainText:
             r2.push({ message: a2, encryptionInfo: null });
@@ -7556,8 +7315,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
   processDeviceLists(e87) {
     var t2 = this;
     return h(function* () {
-      var _a2, _b;
-      var n2 = new Ye((_a2 = e87.changed) == null ? void 0 : _a2.map((e88) => new R(e88)), (_b = e87.left) == null ? void 0 : _b.map((e88) => new R(e88)));
+      var n2 = new Ye(e87.changed?.map((e88) => new R(e88)), e87.left?.map((e88) => new R(e88)));
       yield t2.receiveSyncChanges({ devices: n2 });
     })();
   }
@@ -7565,8 +7323,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var n2 = this;
     return h(function* () {
       var r2 = t2.getContent(), i2 = new F();
-      if (r2.algorithm === `m.megolm.v1.aes-sha2`)
-        i2.algorithm = et.MegolmV1AesSha2;
+      if (r2.algorithm === `m.megolm.v1.aes-sha2`) i2.algorithm = et.MegolmV1AesSha2;
       else {
         n2.logger.warn(`Room ${e87.roomId}: ignoring crypto event with invalid algorithm ${r2.algorithm}`);
         return;
@@ -7611,8 +7368,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
   onRoomKeysUpdated(e87) {
     var t2 = this;
     return h(function* () {
-      for (var n2 of e87)
-        t2.onRoomKeyUpdated(n2);
+      for (var n2 of e87) t2.onRoomKeyUpdated(n2);
       t2.backupManager.maybeUploadKey();
     })();
   }
@@ -7628,8 +7384,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
             t2.logger.info(`Still unable to decrypt event ${e88.getId()} after receiving key`);
           });
         };
-        for (var i2 of n2)
-          r2(i2);
+        for (var i2 of n2) r2(i2);
       }
     }
   }
@@ -7639,12 +7394,10 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
       for (var n2 of e87) {
         t2.logger.debug(`Got withheld message for session ${n2.sessionId} in ${n2.roomId.toString()}`);
         var r2 = t2.eventDecryptor.getEventsPendingRoomKey(n2.roomId.toString(), n2.sessionId);
-        if (r2.length === 0)
-          return;
+        if (r2.length === 0) return;
         t2.logger.debug(`Retrying decryption on events:`, r2.map((e88) => `${e88.getId()}`));
-        for (var i2 of r2)
-          i2.attemptDecryption(t2, { isRetry: true }).catch((e88) => {
-          });
+        for (var i2 of r2) i2.attemptDecryption(t2, { isRetry: true }).catch((e88) => {
+        });
       }
     })();
   }
@@ -7670,9 +7423,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
   checkSecrets(e87) {
     var t2 = this;
     return h(function* () {
-      for (var n2 of yield t2.olmMachine.getSecretsFromInbox(e87))
-        if (yield t2.handleSecretReceived(e87, n2))
-          break;
+      for (var n2 of yield t2.olmMachine.getSecretsFromInbox(e87)) if (yield t2.handleSecretReceived(e87, n2)) break;
       yield t2.olmMachine.deleteSecretsFromInbox(e87);
     })();
   }
@@ -7680,21 +7431,20 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var t2 = this;
     return h(function* () {
       if (!(e87.isState() || e87.getUnsigned().transaction_id)) {
-        var n2 = function() {
+        var n2 = (function() {
           var n3 = h(function* (n4) {
             jl(e87) && (yield t2.onKeyVerificationEvent(n4));
           });
           return function(e88) {
             return n3.apply(this, arguments);
           };
-        }();
+        })();
         if (e87.isDecryptionFailure() || e87.isEncrypted()) {
           var r2 = setTimeout(() => e87.off(Se.Decrypted, i2), 300 * 1e3), i2 = (t3, a2) => {
             a2 || (clearTimeout(r2), e87.off(Se.Decrypted, i2), n2(t3));
           };
           e87.on(Se.Decrypted, i2);
-        } else
-          yield n2(e87);
+        } else yield n2(e87);
       }
     })();
   }
@@ -7702,8 +7452,7 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     var t2 = this;
     return h(function* () {
       var n2 = e87.getRoomId();
-      if (!n2)
-        throw Error(`missing roomId in the event`);
+      if (!n2) throw Error(`missing roomId in the event`);
       t2.logger.debug(`Incoming verification event ${e87.getId()} type ${e87.getType()} from ${e87.getSender()}`), yield t2.olmMachine.receiveVerificationEvent(JSON.stringify({ event_id: e87.getId(), type: e87.getType(), sender: e87.getSender(), state_key: e87.getStateKey(), content: e87.getContent(), origin_server_ts: e87.getTs() }), new P(n2)), e87.getType() === l.RoomMessage && e87.getContent().msgtype === ue.KeyVerificationRequest && t2.onIncomingKeyVerificationRequest(e87.getSender(), e87.getId()), t2.outgoingRequestsManager.doProcessOutgoingRequests().catch((e88) => {
         t2.logger.warn(`onKeyVerificationRequest: Error processing outgoing requests`, e88);
       });
@@ -7736,10 +7485,8 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
         var i2 = yield n2.olmMachine.decryptRoomEvent(Yl(e87), new P(e87.getRoomId()), new Be(r2));
         return n2.removeEventFromPendingList(e87), { clearEvent: JSON.parse(i2.event), claimedEd25519Key: i2.senderClaimedEd25519Key, senderCurve25519Key: i2.senderCurve25519Key, forwardingCurve25519KeyChain: i2.forwardingCurve25519KeyChain };
       } catch (t3) {
-        if (t3 instanceof gt)
-          n2.onMegolmDecryptionError(e87, t3, yield n2.perSessionBackupDownloader.getServerBackupInfo());
-        else
-          throw new g(v.UNKNOWN_ERROR, `Unknown error`);
+        if (t3 instanceof gt) n2.onMegolmDecryptionError(e87, t3, yield n2.perSessionBackupDownloader.getServerBackupInfo());
+        else throw new g(v.UNKNOWN_ERROR, `Unknown error`);
       }
     })();
   }
@@ -7748,13 +7495,10 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
     if (t2.code === D.MissingRoomKey || t2.code === D.UnknownMessageIndex) {
       this.perSessionBackupDownloader.onDecryptionKeyMissingError(e87.getRoomId(), r2.session_id);
       var o2 = e87.getMembershipAtEvent();
-      if (o2 && o2 !== a.Join && o2 !== a.Invite)
-        throw new g(v.HISTORICAL_MESSAGE_USER_NOT_JOINED, `This message was sent when we were not a member of the room.`, i2);
-      if (e87.getTs() <= this.olmMachine.deviceCreationTimeMs)
-        throw n2 === null ? new g(v.HISTORICAL_MESSAGE_NO_KEY_BACKUP, `This message was sent before this device logged in, and there is no key backup on the server.`, i2) : this.perSessionBackupDownloader.isKeyBackupDownloadConfigured() ? new g(v.HISTORICAL_MESSAGE_WORKING_BACKUP, `This message was sent before this device logged in. Key backup is working, but we still do not (yet) have the key.`, i2) : new g(v.HISTORICAL_MESSAGE_BACKUP_UNCONFIGURED, `This message was sent before this device logged in, and key backup is not working.`, i2);
+      if (o2 && o2 !== a.Join && o2 !== a.Invite) throw new g(v.HISTORICAL_MESSAGE_USER_NOT_JOINED, `This message was sent when we were not a member of the room.`, i2);
+      if (e87.getTs() <= this.olmMachine.deviceCreationTimeMs) throw n2 === null ? new g(v.HISTORICAL_MESSAGE_NO_KEY_BACKUP, `This message was sent before this device logged in, and there is no key backup on the server.`, i2) : this.perSessionBackupDownloader.isKeyBackupDownloadConfigured() ? new g(v.HISTORICAL_MESSAGE_WORKING_BACKUP, `This message was sent before this device logged in. Key backup is working, but we still do not (yet) have the key.`, i2) : new g(v.HISTORICAL_MESSAGE_BACKUP_UNCONFIGURED, `This message was sent before this device logged in, and key backup is not working.`, i2);
     }
-    if (t2.maybe_withheld)
-      throw new g(t2.maybe_withheld === `The sender has disabled encrypting to unverified devices.` ? v.MEGOLM_KEY_WITHHELD_FOR_UNVERIFIED_DEVICE : v.MEGOLM_KEY_WITHHELD, t2.maybe_withheld, i2);
+    if (t2.maybe_withheld) throw new g(t2.maybe_withheld === `The sender has disabled encrypting to unverified devices.` ? v.MEGOLM_KEY_WITHHELD_FOR_UNVERIFIED_DEVICE : v.MEGOLM_KEY_WITHHELD, t2.maybe_withheld, i2);
     switch (t2.code) {
       case D.MissingRoomKey:
         throw new g(v.MEGOLM_UNKNOWN_INBOUND_SESSION_ID, `The sender's device has not sent us the keys for this message.`, i2);
@@ -7773,18 +7517,15 @@ var Kl = [x.Sas, x.ScanQrCode, x.ShowQrCode, x.Reciprocate], ql = class extends 
   getEncryptionInfoForEvent(e87) {
     var t2 = this;
     return h(function* () {
-      if (!e87.getClearContent() || e87.isDecryptionFailure())
-        return null;
-      if (e87.status !== null)
-        return { shieldColour: ce.NONE, shieldReason: null };
+      if (!e87.getClearContent() || e87.isDecryptionFailure()) return null;
+      if (e87.status !== null) return { shieldColour: ce.NONE, shieldReason: null };
       var n2 = yield t2.olmMachine.getRoomEventEncryptionInfo(Yl(e87), new P(e87.getRoomId()));
       return Xl(t2.logger, n2);
     })();
   }
   getEventsPendingRoomKey(e87, t2) {
     var n2 = this.eventsPendingKey.get(e87);
-    if (!n2)
-      return [];
+    if (!n2) return [];
     var r2 = n2.get(t2);
     return r2 ? [...r2] : [];
   }
@@ -7807,8 +7548,7 @@ function Yl(e87) {
   return JSON.stringify({ event_id: e87.getId(), type: e87.getWireType(), sender: e87.getSender(), state_key: e87.getStateKey(), content: e87.getWireContent(), origin_server_ts: e87.getTs() });
 }
 function Xl(e87, t2) {
-  if (t2 === void 0)
-    return null;
+  if (t2 === void 0) return null;
   var n2 = t2.shieldState(false), r2;
   switch (n2.color) {
     case Yt.Grey:
@@ -7856,8 +7596,7 @@ function Zl(e87) {
 function Ql() {
   return Ql = h(function* (e87) {
     var t2, { logger: n2, legacyStore: r2 } = e87;
-    if (yield al(), !(yield r2.containsData()))
-      return;
+    if (yield al(), !(yield r2.containsData())) return;
     yield r2.startup();
     var i2 = null;
     if (yield r2.doTxn(`readonly`, [he.STORE_ACCOUNT], (e88) => {
@@ -7869,8 +7608,7 @@ function Ql() {
       return;
     }
     var a2 = yield r2.getMigrationState();
-    if (a2 >= _.MEGOLM_SESSIONS_MIGRATED)
-      return;
+    if (a2 >= _.MEGOLM_SESSIONS_MIGRATED) return;
     var o2 = yield tu(n2, r2), s2 = yield ru(n2, r2), c2 = 1 + o2 + s2;
     n2.info(`Migrating data from legacy crypto store. ${o2} olm sessions and ${s2} megolm sessions to migrate.`);
     var l2 = 0;
@@ -7888,26 +7626,23 @@ function $l(e87, t2, n2, r2, i2, a2, o2) {
 }
 function eu() {
   return eu = h(function* (e87, t2, n2, r2, i2, a2, o2) {
-    var _a2;
     var s2 = new je();
     s2.userId = new R(t2), s2.deviceId = new k(n2), yield r2.doTxn(`readonly`, [he.STORE_ACCOUNT], (e88) => r2.getAccount(e88, (e89) => {
       s2.pickledAccount = e89 ?? ``;
     }));
     var c2 = yield du(r2, i2, `m.megolm_backup.v1`);
     if (c2) {
-      for (var l2 = false, u2 = null; !l2; )
-        try {
-          u2 = yield Pl(e87), l2 = true;
-        } catch (e88) {
-          o2.info(`Failed to get backup version during migration, retrying in 2 seconds`, e88), yield fe(2e3);
-        }
-      if (u2 && u2.algorithm == `m.megolm_backup.v1.curve25519-aes-sha2`)
-        try {
-          var d2 = w.fromBase64(c2), f2 = (_a2 = u2.auth_data) == null ? void 0 : _a2.public_key;
-          d2.megolmV1PublicKey.publicKeyBase64 == f2 ? (s2.backupVersion = u2.version, s2.backupRecoveryKey = c2) : o2.debug(`The backup key to migrate does not match the active backup version`, `Cached pub key: ${d2.megolmV1PublicKey.publicKeyBase64}`, `Active pub key: ${f2}`);
-        } catch (e88) {
-          o2.warn(`Failed to check if the backup key to migrate matches the active backup version`, e88);
-        }
+      for (var l2 = false, u2 = null; !l2; ) try {
+        u2 = yield Pl(e87), l2 = true;
+      } catch (e88) {
+        o2.info(`Failed to get backup version during migration, retrying in 2 seconds`, e88), yield fe(2e3);
+      }
+      if (u2 && u2.algorithm == `m.megolm_backup.v1.curve25519-aes-sha2`) try {
+        var d2 = w.fromBase64(c2), f2 = u2.auth_data?.public_key;
+        d2.megolmV1PublicKey.publicKeyBase64 == f2 ? (s2.backupVersion = u2.version, s2.backupRecoveryKey = c2) : o2.debug(`The backup key to migrate does not match the active backup version`, `Cached pub key: ${d2.megolmV1PublicKey.publicKeyBase64}`, `Active pub key: ${f2}`);
+      } catch (e88) {
+        o2.warn(`Failed to check if the backup key to migrate matches the active backup version`, e88);
+      }
     }
     s2.privateCrossSigningMasterKey = yield du(r2, i2, `master`), s2.privateCrossSigningSelfSigningKey = yield du(r2, i2, `self_signing`), s2.privateCrossSigningUserSigningKey = yield du(r2, i2, `user_signing`), yield vt.migrateBaseData(s2, i2, a2, o2);
   }), eu.apply(this, arguments);
@@ -7937,8 +7672,7 @@ function ou() {
   return ou = h(function* (e87, t2, n2, r2, i2) {
     for (; ; ) {
       var a2 = yield t2.getEndToEndSessionsBatch();
-      if (a2 === null)
-        return;
+      if (a2 === null) return;
       e87.debug(`Migrating batch of ${a2.length} olm sessions`);
       var o2 = [];
       for (var s2 of a2) {
@@ -7954,16 +7688,14 @@ function su(e87, t2, n2, r2, i2) {
 }
 function cu() {
   return cu = h(function* (e87, t2, n2, r2, i2) {
-    var _a2;
     for (; ; ) {
       var a2 = yield t2.getEndToEndInboundGroupSessionsBatch();
-      if (a2 === null)
-        return;
+      if (a2 === null) return;
       e87.debug(`Migrating batch of ${a2.length} megolm sessions`);
       var o2 = [];
       for (var s2 of a2) {
         var c2 = s2.sessionData, l2 = new Tt();
-        l2.pickle = c2.session, l2.roomId = new P(c2.room_id), l2.senderKey = s2.senderKey, l2.senderSigningKey = (_a2 = c2.keysClaimed) == null ? void 0 : _a2.ed25519, l2.backedUp = !s2.needsBackup, l2.imported = c2.untrusted === true, o2.push(l2);
+        l2.pickle = c2.session, l2.roomId = new P(c2.room_id), l2.senderKey = s2.senderKey, l2.senderSigningKey = c2.keysClaimed?.ed25519, l2.backedUp = !s2.needsBackup, l2.imported = c2.untrusted === true, o2.push(l2);
       }
       yield vt.migrateMegolmSessions(o2, n2, r2, e87), yield t2.deleteEndToEndInboundGroupSessionsBatch(a2), i2(a2.length);
     }
@@ -7982,17 +7714,16 @@ function uu() {
           i2 = e89;
         });
       }), t2.debug(`Migrating ${Object.keys(i2).length} sets of room settings`);
-      for (var [a2, o2] of Object.entries(i2))
-        try {
-          var s2 = new F();
-          if (o2.algorithm !== `m.megolm.v1.aes-sha2`) {
-            t2.warn(`Room ${a2}: ignoring room with invalid algorithm ${o2.algorithm}`);
-            continue;
-          }
-          s2.algorithm = et.MegolmV1AesSha2, s2.sessionRotationPeriodMs = o2.rotation_period_ms, s2.sessionRotationPeriodMessages = o2.rotation_period_msgs, yield r2.setRoomSettings(new P(a2), s2);
-        } catch (e88) {
-          t2.warn(`Room ${a2}: ignoring settings ${JSON.stringify(o2)} which caused error ${e88}`);
+      for (var [a2, o2] of Object.entries(i2)) try {
+        var s2 = new F();
+        if (o2.algorithm !== `m.megolm.v1.aes-sha2`) {
+          t2.warn(`Room ${a2}: ignoring room with invalid algorithm ${o2.algorithm}`);
+          continue;
         }
+        s2.algorithm = et.MegolmV1AesSha2, s2.sessionRotationPeriodMs = o2.rotation_period_ms, s2.sessionRotationPeriodMessages = o2.rotation_period_msgs, yield r2.setRoomSettings(new P(a2), s2);
+      } catch (e88) {
+        t2.warn(`Room ${a2}: ignoring settings ${JSON.stringify(o2)} which caused error ${e88}`);
+      }
       t2.debug(`Completed room settings migration`), yield n2.setMigrationState(_.ROOM_SETTINGS_MIGRATED);
     }
   }), uu.apply(this, arguments);
@@ -8007,10 +7738,8 @@ function fu() {
         e87.getSecretStorePrivateKey(r3, t3, n2);
       });
     });
-    if (r2 && r2.ciphertext && r2.iv && r2.mac)
-      return yield pe(r2, t2, n2);
-    if (r2 instanceof Uint8Array)
-      return _e(r2);
+    if (r2 && r2.ciphertext && r2.iv && r2.mac) return yield pe(r2, t2, n2);
+    if (r2 instanceof Uint8Array) return _e(r2);
   }), fu.apply(this, arguments);
 }
 function pu(e87) {
@@ -8041,7 +7770,7 @@ function gu() {
     var t2 = null;
     return yield e87.doTxn(`readonly`, `account`, (n2) => {
       e87.getCrossSigningKeys(n2, (e88) => {
-        var n3 = e88 == null ? void 0 : e88.master;
+        var n3 = e88?.master;
         n3 && Object.keys(n3.keys).length != 0 && (t2 = Object.values(n3.keys)[0]);
       });
     }), t2;
@@ -8092,12 +7821,11 @@ function Su() {
     var l2 = new ql(e87, c2, t2, n2, r2, i2, a2);
     if (yield c2.registerRoomKeyUpdatedCallback((e88) => l2.onRoomKeysUpdated(e88)), yield c2.registerRoomKeysWithheldCallback((e88) => l2.onRoomKeysWithheld(e88)), yield c2.registerUserIdentityUpdatedCallback((e88) => l2.onUserIdentityUpdated(e88)), yield c2.registerDevicesUpdatedCallback((e88) => l2.onDevicesUpdated(e88)), l2.checkSecrets(`m.megolm_backup.v1`), yield c2.registerReceiveSecretCallback((e88, t3) => l2.checkSecrets(e88)), yield c2.outgoingRequests(), s2 && (yield s2.containsData()) && (yield s2.getMigrationState()) < _.INITIAL_OWN_KEY_QUERY_DONE) {
       e87.debug(`Performing initial key query after migration`);
-      for (var u2 = false; !u2; )
-        try {
-          yield l2.userHasCrossSigningKeys(n2), u2 = true;
-        } catch (t3) {
-          e87.error(`Failed to check for cross-signing keys after migration, retrying`, t3);
-        }
+      for (var u2 = false; !u2; ) try {
+        yield l2.userHasCrossSigningKeys(n2), u2 = true;
+      } catch (t3) {
+        e87.error(`Failed to check for cross-signing keys after migration, retrying`, t3);
+      }
       yield pu({ legacyCryptoStore: s2, rustCrypto: l2, logger: e87 }), yield s2.setMigrationState(_.INITIAL_OWN_KEY_QUERY_DONE);
     }
     return l2;

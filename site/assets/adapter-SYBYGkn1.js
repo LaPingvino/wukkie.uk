@@ -2,8 +2,7 @@ import { t as e } from "./chunk-Dmt67uKV.js";
 import { t } from "./defineProperty-Df_FyI5P.js";
 import { t as n } from "./combine-D_M9jo5P.js";
 function r(e2) {
-  if (Array.isArray(e2))
-    return e2;
+  if (Array.isArray(e2)) return e2;
 }
 function i(e2, t2) {
   var n2 = e2 == null ? null : typeof Symbol < `u` && e2[Symbol.iterator] || e2[`@@iterator`];
@@ -11,21 +10,16 @@ function i(e2, t2) {
     var r2, i2, a2, o2, s2 = [], c2 = true, l2 = false;
     try {
       if (a2 = (n2 = n2.call(e2)).next, t2 === 0) {
-        if (Object(n2) !== n2)
-          return;
+        if (Object(n2) !== n2) return;
         c2 = false;
-      } else
-        for (; !(c2 = (r2 = a2.call(n2)).done) && (s2.push(r2.value), s2.length !== t2); c2 = true)
-          ;
+      } else for (; !(c2 = (r2 = a2.call(n2)).done) && (s2.push(r2.value), s2.length !== t2); c2 = true) ;
     } catch (e3) {
       l2 = true, i2 = e3;
     } finally {
       try {
-        if (!c2 && n2.return != null && (o2 = n2.return(), Object(o2) !== o2))
-          return;
+        if (!c2 && n2.return != null && (o2 = n2.return(), Object(o2) !== o2)) return;
       } finally {
-        if (l2)
-          throw i2;
+        if (l2) throw i2;
       }
     }
     return s2;
@@ -33,14 +27,12 @@ function i(e2, t2) {
 }
 function a(e2, t2) {
   (t2 == null || t2 > e2.length) && (t2 = e2.length);
-  for (var n2 = 0, r2 = Array(t2); n2 < t2; n2++)
-    r2[n2] = e2[n2];
+  for (var n2 = 0, r2 = Array(t2); n2 < t2; n2++) r2[n2] = e2[n2];
   return r2;
 }
 function o(e2, t2) {
   if (e2) {
-    if (typeof e2 == `string`)
-      return a(e2, t2);
+    if (typeof e2 == `string`) return a(e2, t2);
     var n2 = {}.toString.call(e2).slice(8, -1);
     return n2 === `Object` && e2.constructor && (n2 = e2.constructor.name), n2 === `Map` || n2 === `Set` ? Array.from(e2) : n2 === `Arguments` || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n2) ? a(e2, t2) : void 0;
   }
@@ -52,7 +44,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
 function c(e2, t2) {
   return r(e2) || i(e2, t2) || o(e2, t2) || s();
 }
-var l = e((e2) => {
+var l = e(((e2) => {
   Object.defineProperty(e2, `__esModule`, { value: true }), e2.bind = void 0;
   function t2(e3, t3) {
     var n2 = t3.type, r2 = t3.listener, i2 = t3.options;
@@ -61,20 +53,17 @@ var l = e((e2) => {
     };
   }
   e2.bind = t2;
-}), u = e((e2) => {
+})), u = e(((e2) => {
   var t2 = e2 && e2.__assign || function() {
     return t2 = Object.assign || function(e3) {
-      for (var t3, n3 = 1, r3 = arguments.length; n3 < r3; n3++)
-        for (var i3 in t3 = arguments[n3], t3)
-          Object.prototype.hasOwnProperty.call(t3, i3) && (e3[i3] = t3[i3]);
+      for (var t3, n3 = 1, r3 = arguments.length; n3 < r3; n3++) for (var i3 in t3 = arguments[n3], t3) Object.prototype.hasOwnProperty.call(t3, i3) && (e3[i3] = t3[i3]);
       return e3;
     }, t2.apply(this, arguments);
   };
   Object.defineProperty(e2, `__esModule`, { value: true }), e2.bindAll = void 0;
   var n2 = l();
   function r2(e3) {
-    if (e3 !== void 0)
-      return typeof e3 == `boolean` ? { capture: e3 } : e3;
+    if (e3 !== void 0) return typeof e3 == `boolean` ? { capture: e3 } : e3;
   }
   function i2(e3, n3) {
     return n3 == null ? e3 : t2(t2({}, e3), { options: t2(t2({}, r2(n3)), r2(e3.options)) });
@@ -91,7 +80,7 @@ var l = e((e2) => {
     };
   }
   e2.bindAll = a2;
-}), d = e((e2) => {
+})), d = e(((e2) => {
   Object.defineProperty(e2, `__esModule`, { value: true }), e2.bindAll = e2.bind = void 0;
   var t2 = l();
   Object.defineProperty(e2, `bind`, { enumerable: true, get: function() {
@@ -101,7 +90,7 @@ var l = e((e2) => {
   Object.defineProperty(e2, `bindAll`, { enumerable: true, get: function() {
     return n2.bindAll;
   } });
-}), f = `data-pdnd-honey-pot`;
+})), f = `data-pdnd-honey-pot`;
 function p(e2) {
   return e2 instanceof Element && e2.hasAttribute(`data-pdnd-honey-pot`);
 }
@@ -200,12 +189,10 @@ function oe() {
   return { bindEvents: t2, getOnPostDispatch: n2 };
 }
 function C(e2) {
-  if (Array.isArray(e2))
-    return a(e2);
+  if (Array.isArray(e2)) return a(e2);
 }
 function w(e2) {
-  if (typeof Symbol < `u` && e2[Symbol.iterator] != null || e2[`@@iterator`] != null)
-    return Array.from(e2);
+  if (typeof Symbol < `u` && e2[Symbol.iterator] != null || e2[`@@iterator`] != null) return Array.from(e2);
 }
 function T() {
   throw TypeError(`Invalid attempt to spread non-iterable instance.
@@ -229,14 +216,13 @@ var se = D(function() {
 }), O = D(function() {
   var e2 = navigator.userAgent;
   return e2.includes(`AppleWebKit`) && !e2.includes(`Chrome`);
-}), ce = d(), k = { isLeavingWindow: Symbol(`leaving`), isEnteringWindow: Symbol(`entering`) };
+}), ce = d(), k = { isLeavingWindow: /* @__PURE__ */ Symbol(`leaving`), isEnteringWindow: /* @__PURE__ */ Symbol(`entering`) };
 function le(e2) {
   var t2 = e2.dragLeave;
   return O() ? t2.hasOwnProperty(k.isLeavingWindow) : false;
 }
 (function() {
-  if (typeof window > `u` || !O())
-    return;
+  if (typeof window > `u` || !O()) return;
   function e2() {
     return { enterCount: 0, isOverWindow: false };
   }
@@ -264,7 +250,7 @@ function fe(e2) {
 }
 function pe(e2) {
   var t2 = e2.onDragEnd;
-  return [{ type: `pointermove`, listener: /* @__PURE__ */ function() {
+  return [{ type: `pointermove`, listener: /* @__PURE__ */ (function() {
     var e3 = 0;
     return function() {
       if (e3 < 20) {
@@ -273,23 +259,23 @@ function pe(e2) {
       }
       t2();
     };
-  }() }, { type: `pointerdown`, listener: t2 }];
+  })() }, { type: `pointerdown`, listener: t2 }];
 }
 function A(e2) {
   return { altKey: e2.altKey, button: e2.button, buttons: e2.buttons, ctrlKey: e2.ctrlKey, metaKey: e2.metaKey, shiftKey: e2.shiftKey, clientX: e2.clientX, clientY: e2.clientY, pageX: e2.pageX, pageY: e2.pageY };
 }
-var j = function(e2) {
+var j = (function(e2) {
   var t2 = [], n2 = null, r2 = function() {
     t2 = [...arguments], !n2 && (n2 = requestAnimationFrame(function() {
       n2 = null, e2.apply(void 0, t2);
     }));
   };
   return r2.cancel = function() {
-    n2 && (n2 = (cancelAnimationFrame(n2), null));
+    n2 &&= (cancelAnimationFrame(n2), null);
   }, r2;
-}(function(e2) {
+})(function(e2) {
   return e2();
-}), M = /* @__PURE__ */ function() {
+}), M = /* @__PURE__ */ (function() {
   var e2 = null;
   function t2(t3) {
     e2 = { frameId: requestAnimationFrame(function() {
@@ -297,10 +283,10 @@ var j = function(e2) {
     }), fn: t3 };
   }
   function n2() {
-    e2 && (e2 = (cancelAnimationFrame(e2.frameId), e2.fn(), null));
+    e2 &&= (cancelAnimationFrame(e2.frameId), e2.fn(), null);
   }
   return { schedule: t2, flush: n2 };
-}();
+})();
 function me(e2) {
   var t2 = e2.source, n2 = e2.initial, r2 = e2.dispatchEvent, i2 = { dropTargets: [] };
   function a2(e3) {
@@ -333,17 +319,13 @@ function I(e2) {
 }
 function L(e2) {
   var t2 = e2.current, n2 = e2.next;
-  if (t2.length !== n2.length)
-    return true;
-  for (var r2 = 0; r2 < t2.length; r2++)
-    if (t2[r2].element !== n2[r2].element)
-      return true;
+  if (t2.length !== n2.length) return true;
+  for (var r2 = 0; r2 < t2.length; r2++) if (t2[r2].element !== n2[r2].element) return true;
   return false;
 }
 function R(e2) {
   var t2 = e2.event, n2 = e2.dragType, r2 = e2.getDropTargetsOver, i2 = e2.dispatchEvent;
-  if (!F())
-    return;
+  if (!F()) return;
   var a2 = he({ event: t2, dragType: n2, getDropTargetsOver: r2 });
   P.isActive = true;
   var o2 = { current: a2 };
@@ -379,8 +361,7 @@ function R(e2) {
   s2.start({ nativeSetDragImage: I(t2) });
 }
 function z(e2) {
-  var _a;
-  var t2 = e2.event, n2 = (_a = e2.current[0]) == null ? void 0 : _a.dropEffect;
+  var t2 = e2.event, n2 = e2.current[0]?.dropEffect;
   n2 != null && t2.dataTransfer && (t2.dataTransfer.dropEffect = n2);
 }
 function he(e2) {
@@ -390,8 +371,7 @@ function he(e2) {
 var B = { canStart: F, start: R }, V = /* @__PURE__ */ new Map();
 function ge(e2) {
   var t2 = e2.typeKey, n2 = e2.mount, r2 = V.get(t2);
-  if (r2)
-    return r2.usageCount++, r2;
+  if (r2) return r2.usageCount++, r2;
   var i2 = { typeKey: t2, unmount: n2(), usageCount: 1 };
   return V.set(t2, i2), i2;
 }
@@ -456,23 +436,20 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
     try {
       o2 || n2.return == null || n2.return();
     } finally {
-      if (s2)
-        throw a2;
+      if (s2) throw a2;
     }
   } };
 }
 function ve(e2, t2) {
   if (e2) {
-    if (typeof e2 == `string`)
-      return K(e2, t2);
+    if (typeof e2 == `string`) return K(e2, t2);
     var n2 = {}.toString.call(e2).slice(8, -1);
     return n2 === `Object` && e2.constructor && (n2 = e2.constructor.name), n2 === `Map` || n2 === `Set` ? Array.from(e2) : n2 === `Arguments` || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n2) ? K(e2, t2) : void 0;
   }
 }
 function K(e2, t2) {
   (t2 == null || t2 > e2.length) && (t2 = e2.length);
-  for (var n2 = 0, r2 = Array(t2); n2 < t2; n2++)
-    r2[n2] = e2[n2];
+  for (var n2 = 0, r2 = Array(t2); n2 < t2; n2++) r2[n2] = e2[n2];
   return r2;
 }
 function q(e2) {
@@ -489,22 +466,16 @@ function ye(e2) {
     return D(n(H(e3.element, { attribute: a2, value: `true` }), s2(e3)));
   }
   function l2(e3) {
-    var _a, _b;
     var t3 = e3.source, n2 = e3.target, a3 = e3.input, s3 = e3.result, c3 = s3 === void 0 ? [] : s3;
-    if (n2 == null)
-      return c3;
-    if (!(n2 instanceof Element))
-      return n2 instanceof Node ? l2({ source: t3, target: n2.parentElement, input: a3, result: c3 }) : c3;
+    if (n2 == null) return c3;
+    if (!(n2 instanceof Element)) return n2 instanceof Node ? l2({ source: t3, target: n2.parentElement, input: a3, result: c3 }) : c3;
     var u3 = n2.closest(o2);
-    if (u3 == null)
-      return c3;
+    if (u3 == null) return c3;
     var d3 = i2.get(u3);
-    if (d3 == null)
-      return c3;
+    if (d3 == null) return c3;
     var f3 = { input: a3, source: t3, element: d3.element };
-    if (d3.canDrop && !d3.canDrop(f3))
-      return l2({ source: t3, target: d3.element.parentElement, input: a3, result: c3 });
-    var p3 = ((_a = d3.getData) == null ? void 0 : _a.call(d3, f3)) ?? {}, m2 = ((_b = d3.getDropEffect) == null ? void 0 : _b.call(d3, f3)) ?? r2, h2 = { data: p3, element: d3.element, dropEffect: m2, isActiveDueToStickiness: false };
+    if (d3.canDrop && !d3.canDrop(f3)) return l2({ source: t3, target: d3.element.parentElement, input: a3, result: c3 });
+    var p3 = d3.getData?.call(d3, f3) ?? {}, m2 = d3.getDropEffect?.call(d3, f3) ?? r2, h2 = { data: p3, element: d3.element, dropEffect: m2, isActiveDueToStickiness: false };
     return l2({ source: t3, target: d3.element.parentElement, input: a3, result: [].concat(E(c3), [h2]) });
   }
   function u2(e3) {
@@ -559,8 +530,7 @@ function ye(e2) {
   }
   function p2(e3) {
     var t3 = e3.source, n2 = e3.target, r3 = e3.input, a3 = e3.current, o3 = l2({ source: t3, target: n2, input: r3 });
-    if (o3.length >= a3.length)
-      return o3;
+    if (o3.length >= a3.length) return o3;
     for (var s3 = q(a3), c3 = q(o3), u3 = [], d3 = 0; d3 < s3.length; d3++) {
       var f3, p3 = s3[d3], m2 = c3[d3];
       if (m2 != null) {
@@ -568,14 +538,11 @@ function ye(e2) {
         continue;
       }
       var h2 = u3[d3 - 1], g2 = s3[d3 - 1];
-      if ((h2 == null ? void 0 : h2.element) !== (g2 == null ? void 0 : g2.element))
-        break;
+      if (h2?.element !== g2?.element) break;
       var _2 = i2.get(p3.element);
-      if (!_2)
-        break;
+      if (!_2) break;
       var v2 = { input: r3, source: t3, element: _2.element };
-      if (_2.canDrop && !_2.canDrop(v2) || !((f3 = _2.getIsSticky) != null && f3.call(_2, v2)))
-        break;
+      if (_2.canDrop && !_2.canDrop(v2) || !((f3 = _2.getIsSticky) != null && f3.call(_2, v2))) break;
       u3.push(W(W({}, p3), {}, { isActiveDueToStickiness: true }));
     }
     return q(u3);
@@ -610,23 +577,20 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
     try {
       o2 || n2.return == null || n2.return();
     } finally {
-      if (s2)
-        throw a2;
+      if (s2) throw a2;
     }
   } };
 }
 function xe(e2, t2) {
   if (e2) {
-    if (typeof e2 == `string`)
-      return J(e2, t2);
+    if (typeof e2 == `string`) return J(e2, t2);
     var n2 = {}.toString.call(e2).slice(8, -1);
     return n2 === `Object` && e2.constructor && (n2 = e2.constructor.name), n2 === `Map` || n2 === `Set` ? Array.from(e2) : n2 === `Arguments` || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n2) ? J(e2, t2) : void 0;
   }
 }
 function J(e2, t2) {
   (t2 == null || t2 > e2.length) && (t2 = e2.length);
-  for (var n2 = 0, r2 = Array(t2); n2 < t2; n2++)
-    r2[n2] = e2[n2];
+  for (var n2 = 0, r2 = Array(t2); n2 < t2; n2++) r2[n2] = e2[n2];
   return r2;
 }
 function Y(e2, t2) {
@@ -695,7 +659,7 @@ function Ce() {
 function we(e2) {
   var t2 = e2.typeKey, n2 = e2.mount, r2 = e2.dispatchEventToSource, i2 = e2.onPostDispatch, a2 = e2.defaultDropEffect, o2 = Ce(), s2 = ye({ typeKey: t2, defaultDropEffect: a2 });
   function c2(e3) {
-    r2 == null ? void 0 : r2(e3), s2.dispatchEvent(e3), o2.dispatchEvent(e3), i2 == null ? void 0 : i2(e3);
+    r2?.(e3), s2.dispatchEvent(e3), o2.dispatchEvent(e3), i2?.(e3);
   }
   function l2(e3) {
     var t3 = e3.event, n3 = e3.dragType;
@@ -719,7 +683,6 @@ function ke(e2) {
 }
 var Q = oe(), $ = we({ typeKey: `element`, defaultDropEffect: `move`, mount: function(e2) {
   return n(Q.bindEvents(), (0, Oe.bind)(document, { type: `dragstart`, listener: function(t2) {
-    var _a, _b;
     if (e2.canStart(t2) && !t2.defaultPrevented && t2.dataTransfer) {
       var n2 = t2.target;
       if (n2 instanceof HTMLElement) {
@@ -737,14 +700,13 @@ var Q = oe(), $ = we({ typeKey: `element`, defaultDropEffect: `move`, mount: fun
               return;
             }
           }
-          var s2 = ((_a = r2.getInitialDataForExternal) == null ? void 0 : _a.call(r2, a2)) ?? null;
-          if (s2)
-            for (var l2 = 0, u2 = Object.entries(s2); l2 < u2.length; l2++) {
-              var d2 = c(u2[l2], 2), f2 = d2[0], p2 = d2[1];
-              t2.dataTransfer.setData(f2, p2 ?? ``);
-            }
+          var s2 = r2.getInitialDataForExternal?.call(r2, a2) ?? null;
+          if (s2) for (var l2 = 0, u2 = Object.entries(s2); l2 < u2.length; l2++) {
+            var d2 = c(u2[l2], 2), f2 = d2[0], p2 = d2[1];
+            t2.dataTransfer.setData(f2, p2 ?? ``);
+          }
           Te() && !t2.dataTransfer.types.includes(`text/plain`) && !t2.dataTransfer.types.includes(`text/uri-list`) && t2.dataTransfer.setData(X, Ee), t2.dataTransfer.setData(De, ``);
-          var h2 = { type: `element`, payload: { element: r2.element, dragHandle: r2.dragHandle ?? null, data: ((_b = r2.getInitialData) == null ? void 0 : _b.call(r2, a2)) ?? {} }, startedFrom: `internal` };
+          var h2 = { type: `element`, payload: { element: r2.element, dragHandle: r2.dragHandle ?? null, data: r2.getInitialData?.call(r2, a2) ?? {} }, startedFrom: `internal` };
           e2.start({ event: t2, dragType: h2 });
         }
       }
