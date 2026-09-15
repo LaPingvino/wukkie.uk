@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/rust-crypto-CRXVu00j.js","assets/defineProperty-Df_FyI5P.js","assets/events-CLlx15qY.js","assets/chunk-Dmt67uKV.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/rust-crypto-QOX-X2W5.js","assets/defineProperty-Df_FyI5P.js","assets/events-CLlx15qY.js","assets/chunk-Dmt67uKV.js"])))=>i.map(i=>d[i]);
 import { a as e, n as t, r as n, s as r, t as i } from "./chunk-Dmt67uKV.js";
 import { t as a } from "./preload-helper-DhKjosWM.js";
 import { t as o } from "./defineProperty-Df_FyI5P.js";
@@ -28332,7 +28332,7 @@ Date.now: "${Date.now()}`);
         var i2 = t2.getDeviceId();
         if (i2 === null) throw Error(`Cannot enable encryption on MatrixClient with unknown deviceId: ensure deviceId is passed in createClient().`);
         t2.logger.debug(`Downloading Rust crypto library`);
-        var o2 = yield (yield a(() => import("./rust-crypto-CRXVu00j.js").then(async (m2) => {
+        var o2 = yield (yield a(() => import("./rust-crypto-QOX-X2W5.js").then(async (m2) => {
           await m2.__tla;
           return m2;
         }), __vite__mapDeps([0,1,2,3]))).initRustCrypto({
@@ -28942,7 +28942,8 @@ Date.now: "${Date.now()}`);
       }, void 0, {
         prefix: rA.V3,
         priority: `low`,
-        localTimeoutMs: 2e4
+        localTimeoutMs: 2e4,
+        inhibitLogoutEmit: true
       });
       return this.urlPreviewCache[r2] = i2, i2.catch(() => {
         this.urlPreviewCache[r2] === i2 && delete this.urlPreviewCache[r2];
