@@ -61679,11 +61679,11 @@ a=extmap-allow-mixed`) !== -1) {
   function cve({ info: e10, renderImage: t10 }) {
     let n10 = G(), r10 = z_(), [i10, a10] = Ks((0, A.useCallback)(async () => {
       let t11 = e10.thumbnail_info, i11 = e10.thumbnail_file?.url ?? e10.thumbnail_url, a11 = e10.thumbnail_file;
-      if (typeof i11 != `string` || typeof t11?.mimetype != `string`) throw Error(`Failed to load thumbnail`);
+      if (typeof i11 != `string`) throw Error(`Failed to load thumbnail`);
       let o10 = vf(n10, i11, r10);
       if (!o10) throw Error(`Invalid media URL`);
       if (a11) {
-        let e11 = await bf(o10, (e12) => $d(e12, t11.mimetype ?? `application/octet-stream`, a11));
+        let e11 = await bf(o10, (e12) => $d(e12, t11?.mimetype ?? `application/octet-stream`, a11));
         return URL.createObjectURL(e11);
       }
       return o10;
@@ -61693,7 +61693,7 @@ a=extmap-allow-mixed`) !== -1) {
       r10
     ]));
     return (0, A.useEffect)(() => {
-      a10();
+      a10().catch(() => void 0);
     }, [
       a10
     ]), i10.status === H.Success ? t10(i10.data) : null;
