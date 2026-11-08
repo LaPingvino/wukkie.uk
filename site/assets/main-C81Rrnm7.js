@@ -122480,8 +122480,12 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
   function v3(e10, t10) {
     let n10 = zze(e10);
     if (n10) throw Error(n10);
-    let { host: r10 } = new URL(e10);
-    if (!(Bze(r10, t10.getDomain()) || _3.has(r10))) {
+    let { host: r10 } = new URL(e10), i10 = ``;
+    try {
+      i10 = new URL(t10.getHomeserverUrl()).host;
+    } catch {
+    }
+    if (!(Bze(r10, t10.getDomain()) || r10 === i10 || r10 === window.location.host || _3.has(r10))) {
       if (!window.confirm(`This room's breakout rooms run on ${r10}, which is not your server. Breakouts send it proof of your Matrix identity (${t10.getUserId()}). Continue?`)) throw Error(`Not sending your identity to ${r10}.`);
       _3.add(r10);
     }
