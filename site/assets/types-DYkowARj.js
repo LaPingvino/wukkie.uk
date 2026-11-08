@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/rust-crypto-CuJ7LGHc.js","assets/defineProperty-Df_FyI5P.js","assets/events-CLlx15qY.js","assets/chunk-Dmt67uKV.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/rust-crypto-BUBc-R9r.js","assets/defineProperty-Df_FyI5P.js","assets/events-CLlx15qY.js","assets/chunk-Dmt67uKV.js"])))=>i.map(i=>d[i]);
 import { a as e, n as t, r as n, s as r, t as i } from "./chunk-Dmt67uKV.js";
 import { t as a } from "./preload-helper-DhKjosWM.js";
 import { t as o } from "./defineProperty-Df_FyI5P.js";
@@ -23434,8 +23434,18 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
   ];
   AN = class e2 extends O {
     constructor(e3, t2, n2, r2, i2, a2) {
-      super(), this.proxyBaseUrl = e3, this.roomSubscriptionInfo = n2, this.client = r2, this.timeoutMS = i2, this.connId = a2, o(this, `lists`, void 0), o(this, `listModifiedCount`, 0), o(this, `terminated`, false), o(this, `needsResend`, false), o(this, `forceReinit`, false), o(this, `extensions`, {}), o(this, `desiredRoomSubscriptions`, /* @__PURE__ */ new Set()), o(this, `confirmedRoomSubscriptions`, /* @__PURE__ */ new Set()), o(this, `customSubscriptions`, /* @__PURE__ */ new Map()), o(this, `roomIdToCustomSubscription`, /* @__PURE__ */ new Map()), o(this, `pendingReq`, void 0), o(this, `abortController`, void 0), this.lists = /* @__PURE__ */ new Map(), t2.forEach((e4, t3) => {
-        this.lists.set(t3, new wN(e4));
+      super(), this.proxyBaseUrl = e3, this.roomSubscriptionInfo = n2, this.client = r2, this.timeoutMS = i2, this.connId = a2, o(this, `lists`, void 0), o(this, `listModifiedCount`, 0), o(this, `terminated`, false), o(this, `forceReinit`, false), o(this, `extensions`, {}), o(this, `desiredRoomSubscriptions`, /* @__PURE__ */ new Set()), o(this, `confirmedRoomSubscriptions`, /* @__PURE__ */ new Set()), o(this, `customSubscriptions`, /* @__PURE__ */ new Map()), o(this, `roomIdToCustomSubscription`, /* @__PURE__ */ new Map()), o(this, `pendingReq`, void 0), o(this, `abortController`, void 0), o(this, `abortedByUs`, false), o(this, `initialRanges`, /* @__PURE__ */ new Map()), this.lists = /* @__PURE__ */ new Map(), t2.forEach((e4, t3) => {
+        this.lists.set(t3, new wN(e4)), e4.ranges && this.initialRanges.set(t3, e4.ranges.map((e5) => [
+          ...e5
+        ]));
+      });
+    }
+    shrinkToInitialWindows() {
+      this.initialRanges.forEach((e3, t2) => {
+        var n2;
+        (n2 = this.lists.get(t2)) == null || n2.updateListRange(e3.map((e4) => [
+          ...e4
+        ]));
       });
     }
     static create(t2) {
@@ -23579,18 +23589,17 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
       this.emit(EN.Lifecycle, e3, t2, n2);
     }
     resend() {
-      this.needsResend = true;
     }
     resendInterrupting() {
       var e3;
-      this.needsResend = true, (e3 = this.abortController) == null || e3.abort(), this.abortController = new AbortController();
+      this.abortedByUs = true, (e3 = this.abortController) == null || e3.abort(), this.abortController = new AbortController();
     }
     poke() {
       this.terminated || this.resendInterrupting();
     }
     stop() {
       var e3;
-      this.terminated = true, (e3 = this.abortController) == null || e3.abort(), this.removeAllListeners(EN.Lifecycle), this.removeAllListeners(EN.RoomData);
+      this.terminated = true, this.abortedByUs = true, (e3 = this.abortController) == null || e3.abort(), this.removeAllListeners(EN.Lifecycle), this.removeAllListeners(EN.RoomData);
     }
     posStorageKey() {
       return `mxjssdk_sss_pos_${this.client.getUserId() ?? `@unknown:unknown`}_${this.client.getDeviceId() ?? `nodevice`}_${this.connId ?? `main`}`;
@@ -23633,7 +23642,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         } catch {
         }
         for (var o2 = 0, s2 = 0, c2 = /* @__PURE__ */ new Map(), l2 = 0, u2 = 350, d2 = 12, f2 = function* () {
-          e3.needsResend = false, e3.forceReinit && (e3.forceReinit = false, n2 = void 0, e3.persistPos(void 0), e3.lists.forEach((e4) => e4.setModified(true)), e3.confirmedRoomSubscriptions = /* @__PURE__ */ new Set());
+          e3.forceReinit && (e3.forceReinit = false, n2 = void 0, e3.persistPos(void 0), e3.shrinkToInitialWindows(), e3.lists.forEach((e4) => e4.setModified(true)), e3.confirmedRoomSubscriptions = /* @__PURE__ */ new Set());
           var t3;
           try {
             var r3 = {};
@@ -23643,48 +23652,51 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
             var i3 = Object.entries(r3).some((e4) => {
               var [t4, n3] = e4;
               return c2.get(t4) !== JSON.stringify(n3.ranges ?? []);
-            }), a3 = n2 === void 0, f3 = a3 ? 0 : l2 > 0 ? Math.min(u2, e3.timeoutMS) : e3.timeoutMS;
-            !a3 && l2 > 0 && --l2;
-            var p2 = yN({
+            }), a3 = jN(e3.desiredRoomSubscriptions, e3.confirmedRoomSubscriptions).size > 0, f3 = n2 === void 0, p2 = f3 ? 0 : l2 > 0 ? Math.min(u2, e3.timeoutMS) : e3.timeoutMS;
+            !f3 && l2 > 0 && --l2;
+            var m2 = yN({
               lists: r3,
               pos: n2,
-              timeout: f3,
-              clientTimeout: a3 || i3 ? Math.max(f3 + bN, xN) : f3 + bN,
-              extensions: yield e3.getExtensionRequest(a3)
+              timeout: p2,
+              clientTimeout: f3 || i3 || a3 ? Math.max(p2 + bN, xN) : p2 + bN,
+              extensions: yield e3.getExtensionRequest(f3)
             }, e3.connId ? {
               conn_id: e3.connId
-            } : {}), m2 = jN(e3.desiredRoomSubscriptions, e3.confirmedRoomSubscriptions), h2 = jN(e3.confirmedRoomSubscriptions, e3.desiredRoomSubscriptions);
-            if (h2.size > 0 && (p2.unsubscribe_rooms = Array.from(h2)), m2.size > 0) {
-              p2.room_subscriptions = {};
-              for (var g2 of m2) {
-                var _2 = e3.roomIdToCustomSubscription.get(g2), v2 = e3.roomSubscriptionInfo;
-                _2 && e3.customSubscriptions.has(_2) && (v2 = e3.customSubscriptions.get(_2)), p2.room_subscriptions[g2] = v2;
+            } : {}), h2 = jN(e3.desiredRoomSubscriptions, e3.confirmedRoomSubscriptions), g2 = jN(e3.confirmedRoomSubscriptions, e3.desiredRoomSubscriptions);
+            if (g2.size > 0 && (m2.unsubscribe_rooms = Array.from(g2)), h2.size > 0) {
+              m2.room_subscriptions = {};
+              for (var _2 of h2) {
+                var v2 = e3.roomIdToCustomSubscription.get(_2), y2 = e3.roomSubscriptionInfo;
+                v2 && e3.customSubscriptions.has(v2) && (y2 = e3.customSubscriptions.get(v2)), m2.room_subscriptions[_2] = y2;
               }
             }
-            e3.pendingReq = e3.client.slidingSync(p2, e3.proxyBaseUrl, e3.abortController.signal), t3 = yield e3.pendingReq, o2 = 0;
-            for (var y2 of m2) e3.confirmedRoomSubscriptions.add(y2);
-            for (var b2 of h2) e3.confirmedRoomSubscriptions.delete(b2);
+            e3.abortedByUs = false, e3.pendingReq = e3.client.slidingSync(m2, e3.proxyBaseUrl, e3.abortController.signal), t3 = yield e3.pendingReq, o2 = 0;
+            for (var b2 of h2) e3.confirmedRoomSubscriptions.add(b2);
+            for (var x2 of g2) e3.confirmedRoomSubscriptions.delete(x2);
             e3.lists.forEach((e4) => {
               e4.setModified(false);
             });
-            for (var [x2, S2] of Object.entries(r3)) c2.set(x2, JSON.stringify(S2.ranges ?? []));
+            for (var [S2, ee2] of Object.entries(r3)) c2.set(S2, JSON.stringify(ee2.ranges ?? []));
             t3.lists = t3.lists ?? {}, t3.rooms = t3.rooms ?? {}, t3.extensions = t3.extensions ?? {};
-            var ee2 = t3.extensions.to_device;
-            Array.isArray(ee2?.events) && ee2.events.length > 0 && (l2 = d2), Object.keys(t3.lists).forEach((n3) => {
+            var C2 = t3.extensions.to_device;
+            Array.isArray(C2?.events) && C2.events.length > 0 && (l2 = d2), Object.keys(t3.lists).forEach((n3) => {
               var r4 = e3.lists.get(n3);
               !r4 || !t3 || (r4.joinedCount = t3.lists[n3].count);
             }), e3.invokeLifecycleListeners(CN.RequestFinished, t3);
           } catch (t4) {
             if (t4.httpStatus) {
-              if (e3.invokeLifecycleListeners(CN.RequestFinished, null, t4), t4.httpStatus === 400) return e3.resetup(), n2 = void 0, e3.persistPos(void 0), yield _E(50), 0;
-            } else if (e3.needsResend || t4.name === `AbortError`) return 0;
+              e3.invokeLifecycleListeners(CN.RequestFinished, null, t4);
+              var te2 = t4.errcode;
+              if (t4.httpStatus === 400 && (!te2 || te2 === `M_UNKNOWN_POS`)) return e3.resetup(), n2 = void 0, e3.persistPos(void 0), e3.shrinkToInitialWindows(), yield _E(50), 0;
+            } else if (e3.abortedByUs || e3.terminated) return 0;
+            else t4.name === `AbortError` && e3.invokeLifecycleListeners(CN.RequestFinished, null, t4);
             D.error(t4), o2 += 1;
-            var C2 = Math.min(3e4, 1e3 * 2 ** Math.min(o2 - 1, 5));
-            yield _E(C2 + Math.floor(C2 * 0.2 * Math.random()));
+            var ne2 = Math.min(3e4, 1e3 * 2 ** Math.min(o2 - 1, 5));
+            yield _E(ne2 + Math.floor(ne2 * 0.2 * Math.random()));
           }
           if (!t3) return 0;
           try {
-            for (var te2 in yield e3.onPreExtensionsResponse(t3.extensions), t3.rooms) yield e3.invokeRoomDataListeners(te2, t3.rooms[te2]);
+            for (var w2 in yield e3.onPreExtensionsResponse(t3.extensions), t3.rooms) yield e3.invokeRoomDataListeners(w2, t3.rooms[w2]);
             e3.invokeLifecycleListeners(CN.Complete, t3), yield e3.onPostExtensionsResponse(t3.extensions), s2 = 0, n2 = t3.pos, e3.persistPos(n2);
           } catch (r4) {
             s2 += 1, s2 >= 3 ? (D.error(`SlidingSync(${e3.connId ?? `main`}): response processing failed ${s2}x; advancing pos past the poisoned batch`, r4), s2 = 0, n2 = t3.pos, e3.persistPos(n2)) : (D.error(`SlidingSync(${e3.connId ?? `main`}): response processing failed; keeping pos for redelivery (attempt ${s2})`, r4), yield _E(1e3 * s2));
@@ -23763,32 +23775,35 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
   }
   var XN = (e2) => e2.event_id;
   function ZN(e2, t2) {
+    var n2, r2;
     if (!e2 || t2.initial) return YN(t2);
-    var n2 = {};
-    for (var [r2, i2] of Object.entries(t2)) i2 != null && (n2[r2] = i2);
-    var a2 = PN(PN({}, e2), n2), o2 = /* @__PURE__ */ new Map();
-    for (var s2 of (c2 = e2.required_state) ?? []) {
-      var c2;
-      o2.set(`${s2.type}|${s2.state_key}`, s2);
-    }
-    for (var l2 of (u2 = t2.required_state) ?? []) {
+    var i2 = {};
+    for (var [a2, o2] of Object.entries(t2)) o2 != null && (i2[a2] = o2);
+    var s2 = PN(PN({}, e2), i2);
+    e2.invite_state && !t2.invite_state && ((n2 = t2.timeline) != null && n2.length || (r2 = t2.required_state) != null && r2.length) && delete s2.invite_state;
+    var c2 = /* @__PURE__ */ new Map();
+    for (var l2 of (u2 = e2.required_state) ?? []) {
       var u2;
-      o2.set(`${l2.type}|${l2.state_key}`, l2);
+      c2.set(`${l2.type}|${l2.state_key}`, l2);
     }
-    a2.required_state = [
-      ...o2.values()
+    for (var d2 of (f2 = t2.required_state) ?? []) {
+      var f2;
+      c2.set(`${d2.type}|${d2.state_key}`, d2);
+    }
+    s2.required_state = [
+      ...c2.values()
     ];
-    var d2 = e2.timeline ?? [], f2 = t2.timeline ?? [];
-    if (d2.length === 0) a2.timeline = f2, a2.prev_batch = t2.prev_batch;
-    else if (t2.limited) a2.timeline = f2, a2.prev_batch = t2.prev_batch;
+    var p2 = e2.timeline ?? [], m2 = t2.timeline ?? [];
+    if (p2.length === 0) s2.timeline = m2, s2.prev_batch = t2.prev_batch;
+    else if (t2.limited) s2.timeline = m2, s2.prev_batch = t2.prev_batch;
     else {
-      var p2 = new Set(d2.map(XN)), m2 = [
-        ...d2,
-        ...f2.filter((e3) => !XN(e3) || !p2.has(XN(e3)))
+      var h2 = new Set(p2.map(XN)), g2 = [
+        ...p2,
+        ...m2.filter((e3) => !XN(e3) || !h2.has(XN(e3)))
       ];
-      m2.length > zN && f2.length > 0 && t2.prev_batch ? (a2.timeline = f2, a2.prev_batch = t2.prev_batch) : (a2.timeline = m2, a2.prev_batch = e2.prev_batch);
+      g2.length > zN && m2.length > 0 && t2.prev_batch ? (s2.timeline = m2, s2.prev_batch = t2.prev_batch) : (s2.timeline = g2, s2.prev_batch = e2.prev_batch);
     }
-    return YN(a2);
+    return YN(s2);
   }
   let QN, $N, eP, tP, nP, rP, iP, aP, oP;
   QN = class {
@@ -24327,7 +24342,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
           return;
         }
         n2.limited && !f2 && !d2 && t2.getLiveTimeline().setPaginationToken(n2.prev_batch ?? null, N.BACKWARDS);
-        var te2 = !r2.liveSyncedRooms.has(t2.roomId);
+        var te2 = !r2.liveSyncedRooms.has(t2.roomId) && (!!n2.initial || r2.lastPos === void 0);
         yield r2.injectRoomEvents(t2, o2, s2, te2), t2.addEphemeralEvents(c2);
         var ne2 = e2.getUserId(), w2 = ne2 ? t2.currentState.getStateEvents(k.RoomMember, ne2) : null, re2 = w2 == null || (i2 = w2.getContent()) == null ? void 0 : i2.membership;
         t2.updateMyMembership(re2 ?? j.Join), t2.setMSC4186SummaryData(n2.heroes, n2.joined_count, n2.invited_count), t2.recalculate(), n2.initial && a2 && (e2.store.storeRoom(t2), e2.emit(X.Room, t2)), r2.addNotifications(s2);
@@ -28338,7 +28353,7 @@ Date.now: "${Date.now()}`);
         var i2 = t2.getDeviceId();
         if (i2 === null) throw Error(`Cannot enable encryption on MatrixClient with unknown deviceId: ensure deviceId is passed in createClient().`);
         t2.logger.debug(`Downloading Rust crypto library`);
-        var o2 = yield (yield a(() => import("./rust-crypto-CuJ7LGHc.js").then(async (m2) => {
+        var o2 = yield (yield a(() => import("./rust-crypto-BUBc-R9r.js").then(async (m2) => {
           await m2.__tla;
           return m2;
         }), __vite__mapDeps([0,1,2,3]))).initRustCrypto({
