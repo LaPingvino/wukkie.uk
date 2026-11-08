@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/rust-crypto-BUBc-R9r.js","assets/defineProperty-Df_FyI5P.js","assets/events-CLlx15qY.js","assets/chunk-Dmt67uKV.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/rust-crypto-BOC-Z_00.js","assets/defineProperty-Df_FyI5P.js","assets/events-CLlx15qY.js","assets/chunk-Dmt67uKV.js"])))=>i.map(i=>d[i]);
 import { a as e, n as t, r as n, s as r, t as i } from "./chunk-Dmt67uKV.js";
 import { t as a } from "./preload-helper-DhKjosWM.js";
 import { t as o } from "./defineProperty-Df_FyI5P.js";
@@ -25505,6 +25505,7 @@ Date.now: "${Date.now()}`);
     getActiveFocus() {
       if (this.focusActive) if (cF(this.focusActive)) {
         if (this.focusActive.focus_selection === `oldest_membership`) return this.getOldestMembership()?.getPreferredFoci()[0];
+        if (this.focusActive.focus_selection === `multi_sfu`) return this.fociPreferred?.[0];
       } else this.logger.warn(`Unknown own ActiveFocus type. This makes it impossible to connect to an SFU.`);
       else return this.getOldestMembership()?.getPreferredFoci()[0];
     }
@@ -25710,7 +25711,10 @@ Date.now: "${Date.now()}`);
         scope: `m.room`,
         device_id: this.deviceId,
         expires: e3,
-        focus_active: {
+        focus_active: this.focusActive && cF(this.focusActive) ? {
+          type: `livekit`,
+          focus_selection: this.focusActive.focus_selection
+        } : {
           type: `livekit`,
           focus_selection: `oldest_membership`
         },
@@ -28353,7 +28357,7 @@ Date.now: "${Date.now()}`);
         var i2 = t2.getDeviceId();
         if (i2 === null) throw Error(`Cannot enable encryption on MatrixClient with unknown deviceId: ensure deviceId is passed in createClient().`);
         t2.logger.debug(`Downloading Rust crypto library`);
-        var o2 = yield (yield a(() => import("./rust-crypto-BUBc-R9r.js").then(async (m2) => {
+        var o2 = yield (yield a(() => import("./rust-crypto-BOC-Z_00.js").then(async (m2) => {
           await m2.__tla;
           return m2;
         }), __vite__mapDeps([0,1,2,3]))).initRustCrypto({
