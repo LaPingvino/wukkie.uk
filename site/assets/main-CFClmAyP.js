@@ -21430,80 +21430,89 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         roomId: n10.current.roomId
       }), Q_(null), n10.current = null);
     }
-    let [r10, i10] = (0, A.useState)(n10.current?.roomId ?? null), [a10, o10] = (0, A.useState)(null), [s10, c10] = (0, A.useState)(``), [l10, u10] = (0, A.useState)(``), [d10, p10] = (0, A.useState)(false), [m10, h10] = (0, A.useState)(n10.current?.audio ?? Y_), [g10, _10] = (0, A.useState)(n10.current?.video ?? X_), [v10, y10] = (0, A.useState)(Sde), [b10, x10] = (0, A.useState)(n10.current?.isVoiceRoom ?? false), S10 = (0, A.useRef)(r10);
-    S10.current = r10;
-    let C10 = (0, A.useRef)(false), [w10] = K(U, `callAutoJoin`), T10 = !!n10.current, [E10, D10] = (0, A.useState)(false), ee2 = (0, A.useRef)(T10);
+    let [r10, i10] = (0, A.useState)(n10.current?.roomId ?? null), [a10, o10] = (0, A.useState)(null), [s10, c10] = (0, A.useState)(``), [l10, u10] = (0, A.useState)(``), [d10, p10] = (0, A.useState)(false), [m10, h10] = (0, A.useState)(0), g10 = (0, A.useRef)(m10);
+    g10.current = m10;
+    let [_10, v10] = (0, A.useState)(n10.current?.audio ?? Y_), [y10, b10] = (0, A.useState)(n10.current?.video ?? X_), [x10, S10] = (0, A.useState)(Sde), [C10, w10] = (0, A.useState)(n10.current?.isVoiceRoom ?? false), T10 = (0, A.useRef)(r10);
+    T10.current = r10;
+    let E10 = (0, A.useRef)(false), [D10] = K(U, `callAutoJoin`), ee2 = !!n10.current, [O10, k10] = (0, A.useState)(false), te2 = (0, A.useRef)(ee2);
     (0, A.useEffect)(() => {
       n10.current = null;
     }, []);
-    let O10 = (0, A.useCallback)(() => {
-      ee2.current = true, D10(false);
-    }, []), { roomIdOrAlias: k10 } = jo(), te2 = (0, A.useCallback)((e11, t11 = false) => {
-      i10(e11), q_(`state`, `setActiveCallRoomId`, {
+    let ne2 = (0, A.useCallback)(() => {
+      te2.current = true, k10(false);
+    }, []), { roomIdOrAlias: re2 } = jo(), ie2 = (0, A.useCallback)((e11, t11 = false) => {
+      i10(e11), h10((e12) => e12 + 1), c10(``), u10(``), p10(false), q_(`state`, `setActiveCallRoomId`, {
         roomId: e11,
         isVoiceRoom: t11,
-        callAutoJoin: w10,
-        pendingJoin: e11 ? !w10 : false
-      }), C10.current = false, ee2.current = false, D10(e11 ? !w10 : false), e11 === null ? Q_(null) : (x10(t11), y10(!t11), h10(Y_), _10(X_), Q_({
+        callAutoJoin: D10,
+        pendingJoin: e11 ? !D10 : false
+      }), E10.current = false, te2.current = false, k10(e11 ? !D10 : false), e11 === null ? Q_(null) : (w10(t11), S10(!t11), v10(Y_), b10(X_), Q_({
         roomId: e11,
         audio: Y_,
         video: X_,
         isVoiceRoom: t11
       }));
     }, [
-      w10
-    ]), ne2 = (0, A.useCallback)((e11) => {
+      D10
+    ]), ae2 = (0, A.useCallback)((e11) => {
       o10(e11);
     }, [
       o10
-    ]), re2 = (0, A.useCallback)((e11, t11) => {
+    ]), oe2 = (0, A.useCallback)((e11, t11) => {
       q_(`livekit`, `setLkCredentials`, {
         url: e11.substring(0, 30) + `...`
       }), c10(e11), u10(t11);
-    }, []), ie2 = (0, A.useCallback)((e11) => {
+    }, []), se2 = (0, A.useCallback)((e11) => {
       q_(`livekit`, `setLkConnected`, {
         connected: e11
       }), p10(e11);
-    }, []), ae2 = (0, A.useCallback)(() => {
-      q_(`state`, `hangUp`), i10(null), c10(``), u10(``), p10(false), x10(false), D10(false), Q_(null);
+    }, []), ce2 = (0, A.useCallback)(() => {
+      q_(`state`, `hangUp`), i10(null), h10((e11) => e11 + 1), c10(``), u10(``), p10(false), w10(false), k10(false), Q_(null);
     }, []);
     (0, A.useEffect)(() => {
       let e11 = () => {
-        let e12 = S10.current;
+        let e12 = T10.current;
         e12 && Q_({
           roomId: e12,
-          audio: m10,
-          video: g10,
-          isVoiceRoom: b10
+          audio: _10,
+          video: y10,
+          isVoiceRoom: C10
         });
       };
       return window.addEventListener(`beforeunload`, e11), () => window.removeEventListener(`beforeunload`, e11);
     }, [
-      m10,
-      g10,
-      b10
+      _10,
+      y10,
+      C10
     ]), (0, A.useEffect)(() => {
       if (!d10) return;
-      let e11 = S10.current;
-      if (!e11 || C10.current) return;
-      C10.current = true;
-      let n11 = t10.getRoom(e11);
-      n11 && f.callMembershipsForRoom(n11).filter((e12) => e12.sender !== t10.getUserId()).length === 0 && (async () => {
-        let r11 = n11;
+      let e11 = T10.current;
+      if (!e11 || E10.current) return;
+      let n11 = g10.current;
+      E10.current = true;
+      let r11 = t10.getRoom(e11);
+      r11 && f.callMembershipsForRoom(r11).filter((e12) => e12.sender !== t10.getUserId()).length === 0 && (async () => {
+        let i11 = r11;
         try {
-          await r11.forceLoadMembers?.();
+          await i11.forceLoadMembers?.();
         } catch {
         }
-        let i11 = n11.currentState.getJoinedMemberCount() <= 2, a11 = n11.getJoinedMembers().map((e12) => e12.userId).filter((e12) => e12 !== t10.getUserId());
+        if (g10.current !== n11 || T10.current !== e11) {
+          q_(`notify`, `Call ended before m.call.notify went out; not ringing`, {
+            roomId: e11
+          });
+          return;
+        }
+        let a11 = r11.currentState.getJoinedMemberCount() <= 2, o11 = r11.getJoinedMembers().map((e12) => e12.userId).filter((e12) => e12 !== t10.getUserId());
         q_(`notify`, `Sending m.call.notify`, {
           roomId: e11,
-          isDm: i11
+          isDm: a11
         }), t10.sendEvent(e11, `m.call.notify`, {
           call_id: ``,
           application: `m.call`,
-          "m.mentions": i11 ? {
+          "m.mentions": a11 ? {
             room: false,
-            user_ids: a11
+            user_ids: o11
           } : {
             room: true
           },
@@ -21514,81 +21523,83 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
       d10,
       t10
     ]);
-    let oe2 = (0, A.useCallback)(async () => {
-      let e11 = !m10;
-      h10(e11), q_(`media`, `toggleAudio`, {
+    let le2 = (0, A.useCallback)(async () => {
+      let e11 = !_10;
+      v10(e11), q_(`media`, `toggleAudio`, {
         newState: e11
       });
     }, [
-      m10
-    ]), se2 = (0, A.useCallback)(async () => {
-      let e11 = !g10;
-      _10(e11), q_(`media`, `toggleVideo`, {
+      _10
+    ]), ue2 = (0, A.useCallback)(async () => {
+      let e11 = !y10;
+      b10(e11), q_(`media`, `toggleVideo`, {
         newState: e11
       });
     }, [
-      g10
-    ]), ce2 = (0, A.useCallback)(async () => {
-      y10(!v10);
+      y10
+    ]), de2 = (0, A.useCallback)(async () => {
+      S10(!x10);
     }, [
-      v10
-    ]), le2 = (0, A.useCallback)((e11) => {
-      h10(e11);
-    }, []), ue2 = (0, A.useCallback)((e11) => {
-      _10(e11);
-    }, []), de2 = (0, A.useCallback)(() => {
-      x10((e11) => !e11);
-    }, []), fe2 = (0, A.useMemo)(() => ({
+      x10
+    ]), fe2 = (0, A.useCallback)((e11) => {
+      v10(e11);
+    }, []), pe2 = (0, A.useCallback)((e11) => {
+      b10(e11);
+    }, []), me2 = (0, A.useCallback)(() => {
+      w10((e11) => !e11);
+    }, []), he2 = (0, A.useMemo)(() => ({
       activeCallRoomId: r10,
-      setActiveCallRoomId: te2,
+      setActiveCallRoomId: ie2,
       viewedCallRoomId: a10,
-      setViewedCallRoomId: ne2,
+      setViewedCallRoomId: ae2,
       lkUrl: s10,
       lkToken: l10,
       lkConnected: d10,
-      setLkCredentials: re2,
-      setLkConnected: ie2,
-      hangUp: ae2,
-      isAudioEnabled: m10,
-      isVideoEnabled: g10,
-      setAudioEnabled: le2,
-      setVideoEnabled: ue2,
-      toggleAudio: oe2,
-      toggleVideo: se2,
-      isChatOpen: v10,
-      isCallViewOpen: b10,
-      toggleChat: ce2,
-      toggleCallView: de2,
-      pendingJoin: E10,
-      joinConfirmedRef: ee2,
-      confirmJoin: O10
+      callSession: m10,
+      setLkCredentials: oe2,
+      setLkConnected: se2,
+      hangUp: ce2,
+      isAudioEnabled: _10,
+      isVideoEnabled: y10,
+      setAudioEnabled: fe2,
+      setVideoEnabled: pe2,
+      toggleAudio: le2,
+      toggleVideo: ue2,
+      isChatOpen: x10,
+      isCallViewOpen: C10,
+      toggleChat: de2,
+      toggleCallView: me2,
+      pendingJoin: O10,
+      joinConfirmedRef: te2,
+      confirmJoin: ne2
     }), [
       r10,
-      te2,
+      ie2,
       a10,
-      ne2,
+      ae2,
       s10,
       l10,
       d10,
-      re2,
-      ie2,
-      ae2,
       m10,
-      g10,
-      le2,
-      ue2,
       oe2,
       se2,
-      v10,
-      b10,
       ce2,
+      _10,
+      y10,
+      fe2,
+      pe2,
+      le2,
+      ue2,
+      x10,
+      C10,
       de2,
-      E10,
-      ee2,
-      O10
+      me2,
+      O10,
+      te2,
+      ne2
     ]);
     return (0, j.jsx)(J_.Provider, {
-      value: fe2,
+      value: he2,
       children: e10
     });
   }
@@ -59104,7 +59115,7 @@ a=extmap-allow-mixed`) !== -1) {
     ]), (0, A.useEffect)(() => {
       if (!n10 || !e10 || !t10) return;
       let r11 = false;
-      return (async () => {
+      return v10(null), (async () => {
         try {
           if (q_(`sfu`, `Connecting to LiveKit`, {
             url: e10
@@ -59237,120 +59248,123 @@ a=extmap-allow-mixed`) !== -1) {
   }
   const pk = (0, A.createContext)(null);
   function r_e({ children: e10 }) {
-    let { activeCallRoomId: t10, pendingJoin: n10, joinConfirmedRef: r10, setLkCredentials: i10, setLkConnected: a10, lkUrl: o10, lkToken: s10, hangUp: c10, isAudioEnabled: l10, isVideoEnabled: u10 } = $_(), d10 = G(), p10 = Kl(), m10 = (0, A.useRef)(null);
+    let { activeCallRoomId: t10, pendingJoin: n10, joinConfirmedRef: r10, setLkCredentials: i10, setLkConnected: a10, lkUrl: o10, lkToken: s10, callSession: c10, hangUp: l10, isAudioEnabled: u10, isVideoEnabled: d10 } = $_(), p10 = G(), m10 = Kl(), h10 = (0, A.useRef)(null), [g10, _10] = (0, A.useState)(null);
     (0, A.useEffect)(() => {
-      if (!t10 || !d10?.getUserId() || n10 && !r10.current || m10.current === t10) return;
-      m10.current = t10;
-      let e11 = p10[`org.matrix.msc4143.rtc_foci`], a11 = e11?.find((e12) => e12.type === `livekit` && e12.livekit_service_url)?.livekit_service_url ?? ``, o11 = a11, s11 = d10.getRoom(t10);
-      if (s11) try {
-        let e12 = f.callMembershipsForRoom(s11), t11 = 1 / 0;
+      if (!t10) {
+        _10(null);
+        return;
+      }
+      if (!p10?.getUserId() || n10 && !r10.current) return;
+      let e11 = `${t10}#${c10}`;
+      if (h10.current === e11) return;
+      _10(null);
+      let a11 = m10[`org.matrix.msc4143.rtc_foci`], o11 = a11?.find((e12) => e12.type === `livekit` && e12.livekit_service_url)?.livekit_service_url ?? ``, s11 = o11, l11 = p10.getRoom(t10);
+      if (l11) try {
+        let e12 = f.callMembershipsForRoom(l11), t11 = 1 / 0;
         for (let n11 of e12) {
           let e13 = n11.createdTs?.() ?? n11.created_ts ?? Date.now();
           if (e13 < t11) {
             let r11 = (n11.getPreferredFoci?.() ?? []).find((e14) => e14.type === `livekit` && e14.livekit_service_url);
-            r11?.livekit_service_url && (t11 = e13, o11 = r11.livekit_service_url);
+            r11?.livekit_service_url && (t11 = e13, s11 = r11.livekit_service_url);
           }
         }
-        o11 !== a11 && q_(`sfu`, `Using oldest member focus (federated)`, {
-          serviceUrl: o11,
-          ownServiceUrl: a11
+        s11 !== o11 && q_(`sfu`, `Using oldest member focus (federated)`, {
+          serviceUrl: s11,
+          ownServiceUrl: o11
         });
       } catch (e12) {
         q_(`error`, `Failed to resolve active focus`, e12);
       }
-      if (!o11) {
+      if (!s11) {
         q_(`error`, `No livekit_service_url found`, {
-          rtcFoci: e11
-        });
+          rtcFoci: a11
+        }), _10(`Calls aren't set up on this server (no LiveKit service in .well-known).`);
         return;
       }
-      let c11 = t10;
+      let u11 = t10;
       q_(`sfu`, `Fetching SFU token`, {
-        serviceUrl: o11,
-        roomId: c11
+        serviceUrl: s11,
+        roomId: u11
       });
-      let l11 = false;
-      return e_e(d10, o11, c11, d10.getDeviceId() ?? `UNKNOWN`).then((e12) => {
-        l11 || (q_(`sfu`, `Got SFU credentials`, {
-          url: e12.url
-        }), i10(e12.url, e12.jwt));
+      let d11 = false;
+      return e_e(p10, s11, u11, p10.getDeviceId() ?? `UNKNOWN`).then((t11) => {
+        d11 || (q_(`sfu`, `Got SFU credentials`, {
+          url: t11.url
+        }), h10.current = e11, i10(t11.url, t11.jwt));
       }).catch((e12) => {
-        l11 || q_(`error`, `SFU token fetch failed`, e12);
+        d11 || (q_(`error`, `SFU token fetch failed`, e12), _10(`Couldn't get access to the call: ${e12 instanceof Error ? e12.message : String(e12)}. Hang up and try again.`));
       }), () => {
-        l11 = true;
+        d11 = true;
       };
     }, [
       t10,
+      c10,
       n10,
-      d10,
       p10,
+      m10,
       i10,
       r10
-    ]), (0, A.useEffect)(() => {
-      t10 || (m10.current = null);
-    }, [
-      t10
     ]);
-    let h10 = !!(t10 && o10 && s10 && (!n10 || r10.current)), g10 = (0, A.useRef)(false);
+    let v10 = !!(t10 && o10 && s10 && (!n10 || r10.current)), y10 = (0, A.useRef)(false);
     (0, A.useEffect)(() => {
-      !h10 && t10 === null ? g10.current = true : g10.current = false;
+      !v10 && t10 === null ? y10.current = true : y10.current = false;
     }, [
-      h10,
+      v10,
       t10
     ]);
-    let [_10] = (0, A.useState)(() => new t_e()), v10 = dk({
+    let [b10] = (0, A.useState)(() => new t_e()), x10 = dk({
       url: o10,
       token: s10,
-      connect: h10,
-      initialAudio: l10,
-      initialVideo: u10,
-      e2eeKeyProvider: t10 && d10.getRoom(t10)?.hasEncryptionStateEvent() ? _10 : void 0,
+      connect: v10,
+      initialAudio: u10,
+      initialVideo: d10,
+      e2eeKeyProvider: t10 && p10.getRoom(t10)?.hasEncryptionStateEvent() ? b10 : void 0,
       onDisconnected: (0, A.useCallback)(() => {
-        if (g10.current) {
+        if (y10.current) {
           q_(`sfu`, `LiveKit disconnected (intentional, skipping hangUp)`);
           return;
         }
-        q_(`sfu`, `LiveKit disconnected unexpectedly, hanging up`), c10();
+        q_(`sfu`, `LiveKit disconnected unexpectedly, hanging up`), l10();
       }, [
-        c10
+        l10
       ])
-    }), y10 = (0, A.useRef)(false);
+    }), S10 = (0, A.useRef)(false);
     (0, A.useEffect)(() => {
-      let e11 = v10.connectionState === $O.Connected;
-      e11 !== y10.current && (y10.current = e11, a10(e11));
+      let e11 = x10.connectionState === $O.Connected;
+      e11 !== S10.current && (S10.current = e11, a10(e11));
     }, [
-      v10.connectionState,
+      x10.connectionState,
       a10
     ]);
-    let b10 = (0, A.useRef)(false);
+    let C10 = (0, A.useRef)(false);
     (0, A.useEffect)(() => {
-      !d10 || b10.current || (b10.current = true, n_e(d10));
+      !p10 || C10.current || (C10.current = true, n_e(p10));
     }, [
-      d10
+      p10
     ]);
-    let x10 = (0, A.useRef)(0), S10 = (0, A.useRef)(0), C10 = (0, A.useRef)(0), w10 = (0, A.useRef)(v10.connectionState);
-    w10.current = v10.connectionState;
-    let T10 = (0, A.useRef)(null);
+    let w10 = (0, A.useRef)(0), T10 = (0, A.useRef)(0), E10 = (0, A.useRef)(0), D10 = (0, A.useRef)(x10.connectionState);
+    D10.current = x10.connectionState;
+    let ee2 = (0, A.useRef)(null);
     (0, A.useEffect)(() => {
-      if (!t10 || !d10 || n10 && !r10.current) return;
-      let e11 = d10.getRoom(t10);
+      if (!t10 || !p10 || n10 && !r10.current) return;
+      let e11 = p10.getRoom(t10);
       if (!e11) return;
-      let i11 = d10.matrixRTC.getRoomSession(e11);
-      T10.current = i11, x10.current = 0;
-      let a11 = e11.hasEncryptionStateEvent(), o11 = v10.connectionState;
+      let i11 = p10.matrixRTC.getRoomSession(e11);
+      ee2.current = i11, w10.current = 0;
+      let a11 = e11.hasEncryptionStateEvent(), o11 = x10.connectionState;
       q_(`e2ee`, `\u2500\u2500 E2EE KEY TIMING FIX ACTIVE (patch-15) \u2500\u2500`), q_(`e2ee`, `Room encrypted: ${a11}, LiveKit state: ${o11}`);
       let s11 = (e12, t11, n11) => {
-        x10.current++;
-        let r11 = w10.current;
-        q_(`e2ee`, `Key #${x10.current} received from ${n11} (idx=${t11}, ${e12.length}B)`, {
+        w10.current++;
+        let r11 = D10.current;
+        q_(`e2ee`, `Key #${w10.current} received from ${n11} (idx=${t11}, ${e12.length}B)`, {
           lkConnected: r11 === $O.Connected,
           lkState: r11,
-          msSinceRtcJoin: S10.current ? Date.now() - S10.current : `n/a`,
-          msSinceLkConnect: C10.current ? Date.now() - C10.current : `not yet`
-        }), _10.setEncryptionKey(e12, t11, n11);
+          msSinceRtcJoin: T10.current ? Date.now() - T10.current : `n/a`,
+          msSinceLkConnect: E10.current ? Date.now() - E10.current : `not yet`
+        }), b10.setEncryptionKey(e12, t11, n11);
       };
       a11 ? (i11.on(Lt.EncryptionKeyChanged, s11), q_(`e2ee`, `EncryptionKeyChanged listener registered`)) : q_(`e2ee`, `Room NOT encrypted \u2014 skipping key management`);
-      let c11 = p10[`org.matrix.msc4143.rtc_foci`]?.find((e12) => e12.type === `livekit`), l11 = c11 ? [
+      let c11 = m10[`org.matrix.msc4143.rtc_foci`]?.find((e12) => e12.type === `livekit`), l11 = c11 ? [
         {
           type: `livekit`,
           livekit_service_url: c11.livekit_service_url ?? ``,
@@ -59363,7 +59377,7 @@ a=extmap-allow-mixed`) !== -1) {
         lkState: o11,
         useToDevice: true,
         manageMediaKeys: a11
-      }), S10.current = Date.now(), i11.joinRoomSession(l11, {
+      }), T10.current = Date.now(), i11.joinRoomSession(l11, {
         type: `livekit`,
         focus_selection: `oldest_membership`
       }, {
@@ -59371,46 +59385,46 @@ a=extmap-allow-mixed`) !== -1) {
         useExperimentalToDeviceTransport: true
       }), a11 && (q_(`e2ee`, `Re-emitting our encryption keys (initial)`), i11.reemitEncryptionKeys()), () => {
         q_(`sfu`, `Leaving MatrixRTCSession`, {
-          keysReceived: x10.current,
-          sessionDurationMs: Date.now() - S10.current
-        }), i11.off(Lt.EncryptionKeyChanged, s11), i11.leaveRoomSession(), T10.current = null, S10.current = 0;
+          keysReceived: w10.current,
+          sessionDurationMs: Date.now() - T10.current
+        }), i11.off(Lt.EncryptionKeyChanged, s11), i11.leaveRoomSession(), ee2.current = null, T10.current = 0;
       };
     }, [
       t10,
       n10,
-      d10,
       p10,
-      _10,
+      m10,
+      b10,
       r10
     ]), (0, A.useEffect)(() => {
-      if (v10.connectionState !== $O.Connected) return;
-      C10.current = Date.now();
-      let e11 = T10.current;
-      if (q_(`e2ee`, `LiveKit connected (${S10.current ? Date.now() - S10.current : `n/a`}ms after RTC join, ${x10.current} keys already received)`), !e11) {
+      if (x10.connectionState !== $O.Connected) return;
+      E10.current = Date.now();
+      let e11 = ee2.current;
+      if (q_(`e2ee`, `LiveKit connected (${T10.current ? Date.now() - T10.current : `n/a`}ms after RTC join, ${w10.current} keys already received)`), !e11) {
         q_(`e2ee`, `WARNING: LiveKit connected but no MatrixRTC session \u2014 keys will NOT be exchanged`);
         return;
       }
-      (t10 ? d10.getRoom(t10) : null)?.hasEncryptionStateEvent() ? (q_(`e2ee`, `Re-emitting our encryption keys (on LK connect)`), e11.reemitEncryptionKeys()) : q_(`e2ee`, `Room not encrypted \u2014 no keys to re-emit`);
+      (t10 ? p10.getRoom(t10) : null)?.hasEncryptionStateEvent() ? (q_(`e2ee`, `Re-emitting our encryption keys (on LK connect)`), e11.reemitEncryptionKeys()) : q_(`e2ee`, `Room not encrypted \u2014 no keys to re-emit`);
     }, [
-      v10.connectionState,
+      x10.connectionState,
       t10,
-      d10
+      p10
     ]);
-    let E10 = {
-      room: v10.room,
-      localParticipant: v10.localParticipant,
-      remoteParticipants: v10.remoteParticipants,
-      connectionState: v10.connectionState,
-      isMicEnabled: v10.isMicEnabled,
-      isCamEnabled: v10.isCamEnabled,
-      isScreenShareEnabled: v10.isScreenShareEnabled,
-      toggleMicrophone: v10.toggleMicrophone,
-      toggleCamera: v10.toggleCamera,
-      toggleScreenShare: v10.toggleScreenShare,
-      error: v10.error
+    let O10 = {
+      room: x10.room,
+      localParticipant: x10.localParticipant,
+      remoteParticipants: x10.remoteParticipants,
+      connectionState: x10.connectionState,
+      isMicEnabled: x10.isMicEnabled,
+      isCamEnabled: x10.isCamEnabled,
+      isScreenShareEnabled: x10.isScreenShareEnabled,
+      toggleMicrophone: x10.toggleMicrophone,
+      toggleCamera: x10.toggleCamera,
+      toggleScreenShare: x10.toggleScreenShare,
+      error: g10 ?? x10.error
     };
     return (0, j.jsx)(pk.Provider, {
-      value: E10,
+      value: O10,
       children: e10
     });
   }
@@ -155738,9 +155752,10 @@ ${this.lineIntent(e10)}`, n10 = this.textArea.prevLine(e10)?.end ?? 0, r10 = new
       s10,
       c10
     ]), x10 = (0, A.useCallback)((e11) => {
-      (0, X7.isKeyHotkey)(`alt+j`, e11) && g10 && (e11.preventDefault(), a10(g10, true));
+      (0, X7.isKeyHotkey)(`alt+j`, e11) && g10 && (e11.preventDefault(), i10 !== g10 && a10(g10, true));
     }, [
       g10,
+      i10,
       a10
     ]), S10 = (0, A.useCallback)((e11) => {
       (0, X7.isKeyHotkey)(`alt+p`, e11) && (e11.preventDefault(), o10((e12) => !e12));
